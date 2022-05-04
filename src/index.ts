@@ -8,12 +8,13 @@ import { Plugin, loadEnv, ViteDevServer } from 'vite'
 /**
  * Laravel plugin for Vite.
  *
- * @param entryPoints - Relative paths of the scripts to be compiled.
+ * @param entrypoints - Relative paths of the scripts to be compiled.
  */
-export default function laravel(entryPoints: string[]): Plugin {
-    if (!Array.isArray(entryPoints)) {
-        throw new Error('laravel: entryPoints should be an array. E.g. [\'resources/js/app.js\']')
+export default function laravel(entrypoints: string|string[]): Plugin {
+    if (typeof entrypoints === 'string') {
+        entrypoints = [entrypoints];
     }
+    entrypoints = entrypoints.map(entrypoint => entrypoint.replace(/^\/+/, ''))
 
     return {
         name: 'laravel',
@@ -25,7 +26,7 @@ export default function laravel(entryPoints: string[]): Plugin {
                 manifest: true,
                 outDir: path.join('public', 'build'),
                 rollupOptions: {
-                    input: entryPoints.map(entryPoint => entryPoint.replace(/^\/+/, '')),
+                    input: entrypoints,
                 },
             },
         }),
