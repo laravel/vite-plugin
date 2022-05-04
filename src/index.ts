@@ -70,10 +70,17 @@ function configureServer(server: ViteDevServer) {
         })
     })
 
-    process.on('SIGINT', () => {
-        fs.rmSync(hotFile)
+    const clean = () => {
+        if (fs.existsSync(hotFile)) {
+            fs.rmSync(hotFile)
+        }
         process.exit()
-    })
+    }
+
+    process.on('exit', clean)
+    process.on('SIGHUP', clean)
+    process.on('SIGINT', clean)
+    process.on('SIGTERM', clean)
 }
 
 /**
