@@ -19,17 +19,23 @@ export default function laravel(entrypoints: string|string[]): Plugin {
     return {
         name: 'laravel',
         enforce: 'post',
-        config: (_, { command }) => ({
-            base: command === 'build' ? '/build/' : '',
-            publicDir: false,
-            build: {
-                manifest: true,
-                outDir: path.join('public', 'build'),
-                rollupOptions: {
-                    input: entrypoints,
+        config: (_, { command, mode }) => {
+            const env = loadEnv(mode, process.cwd(), '')
+            const assetUrl = env.ASSET_URL ?? ''
+            const base = assetUrl + (assetUrl.endsWith('/') ? '' : '/') + 'build/'
+
+            return {
+                base: command === 'build' ? base : '',
+                publicDir: false,
+                build: {
+                    manifest: true,
+                    outDir: path.join('public', 'build'),
+                    rollupOptions: {
+                        input: entrypoints,
+                    },
                 },
-            },
-        }),
+            }
+        },
         configureServer,
     }
 }
