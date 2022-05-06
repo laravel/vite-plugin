@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { AddressInfo } from 'net'
-import { Server as TlsServer } from 'node:tls'
+import { Server as TlsServer } from 'tls'
 import path from 'path'
 import colors from 'picocolors'
 import { Plugin, loadEnv, ViteDevServer } from 'vite'
