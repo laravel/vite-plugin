@@ -8,5 +8,8 @@
     "strict": true,
     "declaration": true,
     "esModuleInterop": true
-  }
+  },
+  "include": [
+    "./src/*.ts"
+  ]
 }
