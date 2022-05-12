@@ -1,34 +1,34 @@
 {
-  "name": "vite-plugin-laravel",
-  "version": "0.1.0",
-  "description": "Laravel plugin for Vite",
-  "keywords": [
-    "laravel",
-    "vite",
-    "vite-plugin"
-  ],
-  "homepage": "https://github.com/laravel/vite-plugin-laravel",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/laravel/vite-plugin-laravel"
-  },
-  "license": "MIT",
-  "author": "Laravel",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "lint": "eslint --ext .ts ./src ./tests",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "@types/node": "^17.0.31",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.21.0",
-    "eslint": "^8.14.0",
-    "picocolors": "^1.0.0",
-    "typescript": "^4.6.4",
-    "vite": "^2.9.6",
-    "vitest": "^0.12.4"
-  }
+    "name": "vite-plugin-laravel",
+    "version": "0.1.0",
+    "description": "Laravel plugin for Vite",
+    "keywords": [
+        "laravel",
+        "vite",
+        "vite-plugin"
+    ],
+    "homepage": "https://github.com/laravel/vite-plugin-laravel",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/laravel/vite-plugin-laravel"
+    },
+    "license": "MIT",
+    "author": "Laravel",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "lint": "eslint --ext .ts ./src ./tests",
+        "test": "vitest run"
+    },
+    "devDependencies": {
+        "@types/node": "^17.0.31",
+        "@typescript-eslint/eslint-plugin": "^5.21.0",
+        "@typescript-eslint/parser": "^5.21.0",
+        "eslint": "^8.14.0",
+        "picocolors": "^1.0.0",
+        "typescript": "^4.6.4",
+        "vite": "^2.9.6",
+        "vitest": "^0.12.4"
+    }
 }
