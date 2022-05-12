@@ -3,7 +3,7 @@ import { AddressInfo } from 'net'
 import { Server as TlsServer } from 'tls'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, ViteDevServer, UserConfig } from 'vite'
+import { Plugin, loadEnv, ViteDevServer, UserConfig, ConfigEnv } from 'vite'
 
 interface PluginConfig {
     /**
@@ -38,12 +38,16 @@ interface PluginConfig {
     ssrOutputDirectory: string
 }
 
+interface LaravelPlugin extends Plugin {
+    config: (config: UserConfig, env: ConfigEnv) => UserConfig
+}
+
 /**
  * Laravel plugin for Vite.
  *
  * @param config - A config object or relative path(s) of the scripts to be compiled.
  */
-export default function laravel(config: string|string[]|Partial<PluginConfig>): Plugin {
+export default function laravel(config: string|string[]|Partial<PluginConfig>): LaravelPlugin {
     const pluginConfig = resolvePluginConfig(config)
 
     return {

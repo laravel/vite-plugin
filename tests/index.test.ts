@@ -1,4 +1,3 @@
-import { UserConfig } from 'vite'
 import { describe, expect, it } from 'vitest'
 import laravel from '../src'
 
@@ -6,7 +5,7 @@ describe('vite-plugin-laravel', () => {
     it('accepts a single input', () => {
         const plugin = laravel('resources/js/app.js')
 
-        const config = plugin.config({}, { command: 'build', mode: 'development' }) as UserConfig
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
 
         expect(plugin.name).toBe('laravel')
         expect(config.base).toBe('/build/')
@@ -14,7 +13,7 @@ describe('vite-plugin-laravel', () => {
         expect(config.build?.outDir).toBe('public/build')
         expect(config.build?.rollupOptions?.input).toBe('resources/js/app.js')
 
-        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' }) as UserConfig
+        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' })
 
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build?.manifest).toBe(false)
@@ -28,7 +27,7 @@ describe('vite-plugin-laravel', () => {
             'resources/js/other.js',
         ])
 
-        const config = plugin.config({}, { command: 'build', mode: 'development' }) as UserConfig
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
 
         expect(plugin.name).toBe('laravel')
         expect(config.base).toBe('/build/')
@@ -36,7 +35,7 @@ describe('vite-plugin-laravel', () => {
         expect(config.build?.outDir).toBe('public/build')
         expect(config.build?.rollupOptions?.input).toEqual(['resources/js/app.js', 'resources/js/other.js'])
 
-        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' }) as UserConfig
+        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' })
 
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build?.manifest).toBe(false)
@@ -53,7 +52,7 @@ describe('vite-plugin-laravel', () => {
             ssrOutputDirectory: 'other-ssr-output',
         })
 
-        const config = plugin.config({}, { command: 'build', mode: 'development' }) as UserConfig
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
 
         expect(plugin.name).toBe('laravel')
         expect(config.base).toBe('/other-build/')
@@ -61,7 +60,7 @@ describe('vite-plugin-laravel', () => {
         expect(config.build?.outDir).toBe('other-public/other-build')
         expect(config.build?.rollupOptions?.input).toBe('resources/js/app.js')
 
-        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' }) as UserConfig
+        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' })
 
         expect(ssrConfig.base).toBe('/other-build/')
         expect(ssrConfig.build?.manifest).toBe(false)
@@ -75,7 +74,7 @@ describe('vite-plugin-laravel', () => {
             ssr: 'resources/js/ssr.js',
         })
 
-        const config = plugin.config({}, { command: 'build', mode: 'development' }) as UserConfig
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
 
         expect(plugin.name).toBe('laravel')
         expect(config.base).toBe('/build/')
@@ -83,7 +82,7 @@ describe('vite-plugin-laravel', () => {
         expect(config.build?.outDir).toBe('public/build')
         expect(config.build?.rollupOptions?.input).toBe('resources/js/app.js')
 
-        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' }) as UserConfig
+        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' })
 
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build?.manifest).toBe(false)
@@ -95,7 +94,7 @@ describe('vite-plugin-laravel', () => {
         process.env.ASSET_URL = 'http://example.com'
         const plugin = laravel('resources/js/app.js')
 
-        const config = plugin.config({}, { command: 'build', mode: 'development' }) as UserConfig
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
 
         expect(config.base).toBe('http://example.com/build/')
     })
