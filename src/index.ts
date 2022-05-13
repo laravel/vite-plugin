@@ -2,7 +2,7 @@ import fs from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig } from 'vite'
 
 interface PluginConfig {
     /**
@@ -52,6 +52,8 @@ interface LaravelPlugin extends Plugin {
  */
 export default function laravel(config: string|string[]|Partial<PluginConfig>): LaravelPlugin {
     const pluginConfig = resolvePluginConfig(config)
+    let viteDevServerUrl: string
+    let resolvedConfig: ResolvedConfig
 
     return {
         name: 'laravel',
@@ -71,6 +73,17 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
                         input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
                     },
                 },
+                server: {
+                    origin: '__laravel_vite_placeholder__',
+                },
+            }
+        },
+        configResolved(config) {
+            resolvedConfig = config
+        },
+        transform(code) {
+            if (resolvedConfig.command === 'serve') {
+                return code.replace('__laravel_vite_placeholder__', viteDevServerUrl)
             }
         },
         configureServer(server) {
@@ -83,7 +96,8 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
                 if (isAddressInfo(address)) {
                     const protocol = server.config.server.https ? 'https' : 'http'
                     const host = address.family === 'IPv6' ? `[${address.address}]` : address.address
-                    fs.writeFileSync(hotFile, `${protocol}://${host}:${address.port}`)
+                    viteDevServerUrl = `${protocol}://${host}:${address.port}`
+                    fs.writeFileSync(hotFile, viteDevServerUrl)
 
                     const appUrl = loadEnv('', process.cwd(), 'APP_URL').APP_URL
 
