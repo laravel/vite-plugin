@@ -94,17 +94,21 @@ function configureServer(server: ViteDevServer) {
     const hotFile = path.join('public', 'hot')
 
     server.httpServer?.once('listening', () => {
-        const protocol = server.config.server.https ? 'https' : 'http'
-        const { address, port } = server.httpServer?.address() as AddressInfo
+        const address = server.httpServer?.address()
+        const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
 
-        fs.writeFileSync(hotFile, `${protocol}://${address}:${port}`)
+        if (isAddressInfo(address)) {
+            const protocol = server.config.server.https ? 'https' : 'http'
+            const host = address.family === 'IPv6' ? `[${address.address}]` : address.address
+            fs.writeFileSync(hotFile, `${protocol}://${host}:${address.port}`)
 
-        const appUrl = loadEnv('', process.cwd(), 'APP_URL').APP_URL
+            const appUrl = loadEnv('', process.cwd(), 'APP_URL').APP_URL
 
-        setTimeout(() => {
-            server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
-            server.config.logger.info(`\n  > APP_URL: ` + colors.cyan(appUrl))
-        })
+            setTimeout(() => {
+                server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
+                server.config.logger.info(`\n  > APP_URL: ` + colors.cyan(appUrl))
+            })
+        }
     })
 
     const clean = () => {
