@@ -2,7 +2,7 @@ import fs from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, ViteDevServer, UserConfig, ConfigEnv } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv } from 'vite'
 
 interface PluginConfig {
     /**
@@ -73,55 +73,40 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
                 },
             }
         },
-        configureServer,
-    }
-}
+        configureServer(server) {
+            const hotFile = path.join('public', 'hot')
 
-/**
- * Standalone plugin to configure the hot server for Laravel.
- */
-export function configureLaravelHotServer(): Plugin {
-    return {
-        name: 'laravel:hot-server',
-        configureServer,
-    }
-}
+            server.httpServer?.once('listening', () => {
+                const address = server.httpServer?.address()
 
-/**
- * Vite hook for configuring the dev server.
- */
-function configureServer(server: ViteDevServer) {
-    const hotFile = path.join('public', 'hot')
+                const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
+                if (isAddressInfo(address)) {
+                    const protocol = server.config.server.https ? 'https' : 'http'
+                    const host = address.family === 'IPv6' ? `[${address.address}]` : address.address
+                    fs.writeFileSync(hotFile, `${protocol}://${host}:${address.port}`)
 
-    server.httpServer?.once('listening', () => {
-        const address = server.httpServer?.address()
-        const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
+                    const appUrl = loadEnv('', process.cwd(), 'APP_URL').APP_URL
 
-        if (isAddressInfo(address)) {
-            const protocol = server.config.server.https ? 'https' : 'http'
-            const host = address.family === 'IPv6' ? `[${address.address}]` : address.address
-            fs.writeFileSync(hotFile, `${protocol}://${host}:${address.port}`)
-
-            const appUrl = loadEnv('', process.cwd(), 'APP_URL').APP_URL
-
-            setTimeout(() => {
-                server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
-                server.config.logger.info(`\n  > APP_URL: ` + colors.cyan(appUrl))
+                    setTimeout(() => {
+                        server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
+                        server.config.logger.info(`\n  > APP_URL: ` + colors.cyan(appUrl))
+                    })
+                }
             })
-        }
-    })
 
-    const clean = () => {
-        if (fs.existsSync(hotFile)) {
-            fs.rmSync(hotFile)
+            const clean = () => {
+                if (fs.existsSync(hotFile)) {
+                    fs.rmSync(hotFile)
+                }
+                process.exit()
+            }
+
+            process.on('exit', clean)
+            process.on('SIGHUP', clean)
+            process.on('SIGINT', clean)
+            process.on('SIGTERM', clean)
         }
-        process.exit()
     }
-
-    process.on('exit', clean)
-    process.on('SIGHUP', clean)
-    process.on('SIGINT', clean)
-    process.on('SIGTERM', clean)
 }
 
 /**
