@@ -1,6 +1,5 @@
 import fs from 'fs'
 import { AddressInfo } from 'net'
-import { Server as TlsServer } from 'tls'
 import path from 'path'
 import colors from 'picocolors'
 import { Plugin, loadEnv, ViteDevServer, UserConfig, ConfigEnv } from 'vite'
@@ -91,7 +90,7 @@ function configureServer(server: ViteDevServer) {
     const hotFile = path.join('public', 'hot')
 
     server.httpServer?.once('listening', () => {
-        const protocol = server.httpServer instanceof TlsServer ? 'https' : 'http'
+        const protocol = server.config.server.https ? 'https' : 'http'
         const { address, port } = server.httpServer?.address() as AddressInfo
 
         fs.writeFileSync(hotFile, `${protocol}://${address}:${port}`)
