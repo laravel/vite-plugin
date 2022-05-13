@@ -7,6 +7,8 @@ import { Plugin, loadEnv, ViteDevServer, UserConfig, ConfigEnv } from 'vite'
 interface PluginConfig {
     /**
      * The path or path of the entry points to compile.
+     *
+     * @example 'resources/js/app.js'
      */
     input: string|string[]|undefined
 
@@ -26,6 +28,8 @@ interface PluginConfig {
 
     /**
      * The path of the SSR entry point.
+     *
+     * @example 'resources/js/ssr.js'
      */
     ssr: string|string[]|undefined
 
