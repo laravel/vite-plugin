@@ -97,5 +97,41 @@ describe('vite-plugin-laravel', () => {
         const config = plugin.config({}, { command: 'build', mode: 'development' })
 
         expect(config.base).toBe('http://example.com/build/')
+
+        delete process.env.ASSET_URL
+    })
+
+    it('prevents setting an empty publicDirectory', () => {
+        expect(() => laravel({ publicDirectory: '' }))
+            .toThrowError('publicDirectory must be a subdirectory');
+    })
+
+    it('prevents setting an empty buildDirectory', () => {
+        expect(() => laravel({ buildDirectory: '' }))
+            .toThrowError('buildDirectory must be a subdirectory');
+    })
+
+    it('handles surrounding slashes on directories', () => {
+        const plugin = laravel({
+            publicDirectory: '/public/test/',
+            buildDirectory: '/build/test/',
+            ssrOutputDirectory: '/ssr-output/test/',
+        })
+
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
+
+        expect(config.base).toBe('/build/test/')
+        expect(config.build.outDir).toBe('public/test/build/test')
+
+        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'development' })
+
+        expect(ssrConfig.build.outDir).toBe('ssr-output/test')
+    })
+
+    it('prevents empty input', () => {
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /* @ts-ignore */
+        expect(() => laravel())
+            .toThrowError('Laravel plugin requires configuration.')
     })
 })

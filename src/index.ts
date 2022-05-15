@@ -140,6 +140,10 @@ function laravelVersion(): string {
  * Convert the users configuration into a standard structure with defaults.
  */
 function resolvePluginConfig(config: string|string[]|Partial<PluginConfig>): PluginConfig {
+    if (config === undefined) {
+        throw new Error('Laravel plugin requires configuration.')
+    }
+
     if (typeof config === 'string' || Array.isArray(config)) {
         config = { input: config }
     }
@@ -148,7 +152,7 @@ function resolvePluginConfig(config: string|string[]|Partial<PluginConfig>): Plu
         config.publicDirectory = config.publicDirectory.trim().replace(/^\/+/, '')
 
         if (config.publicDirectory === '') {
-            throw new Error('publicDirectory must be a subdirectory. E.g. \'public\'')
+            throw new Error('publicDirectory must be a subdirectory. E.g. \'public\'.')
         }
     }
 
@@ -156,8 +160,12 @@ function resolvePluginConfig(config: string|string[]|Partial<PluginConfig>): Plu
         config.buildDirectory = config.buildDirectory.trim().replace(/^\/+/, '').replace(/\/+$/, '')
 
         if (config.buildDirectory === '') {
-            throw new Error('buildDirectory must be a subdirectory E.g. \'build\'')
+            throw new Error('buildDirectory must be a subdirectory. E.g. \'build\'.')
         }
+    }
+
+    if (typeof config.ssrOutputDirectory === 'string') {
+        config.ssrOutputDirectory = config.ssrOutputDirectory.trim().replace(/^\/+/, '').replace(/\/+$/, '')
     }
 
     return {
