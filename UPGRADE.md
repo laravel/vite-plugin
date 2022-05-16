@@ -255,11 +255,15 @@ If you are using React and hot-module replacement, you will need to include an a
 @vite('resources/js/app.js')
 ```
 
-This loads a React "refresh runtime" in development mode only.
+This loads a React "refresh runtime" in development mode only, which is required for hot module replacement to work correctly.
 
 ### JavaScript files containing JSX must use a `.jsx` extension
 
-Vite requires a `.jsx` extension for JavaScript files containing JSX. See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vite's creator for more information.
+You will need to rename any `.js` files containing JSX to instead have a `.jsx` extension.
+
+See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vite's creator for more information.
+
+> **Note:** If you are using Tailwind, remember to update the paths in your `tailwind.config.js` file.
 
 ### Remove Laravel Mix
 
@@ -340,4 +344,16 @@ In most cases you won't need a dedicated SSR configuration file. You may also re
 
 ```shell
 rm webpack.ssr.mix.js
+```
+
+You may now add additional scripts to your `package.json`:
+
+```diff
+  "scripts": {
+      "dev": "vite",
+-     "build": "vite build"
++     "build": "vite build",
++     "ssr:build": "vite build --ssr",
++     "ssr:serve": "node storage/framework/ssr/ssr.js"
+  }
 ```
