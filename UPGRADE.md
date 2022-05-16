@@ -312,9 +312,9 @@ If you are using other PostCSS plugins, such as `postcss-import`, you will need 
 If you were only using `postcss-import` to import Tailwind, then you may import Tailwind as follows:
 
 ```diff
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+- @import 'tailwindcss/base';
+- @import 'tailwindcss/components';
+- @import 'tailwindcss/utilities';
 + @tailwind base
 + @tailwind components
 + @tailwind utilities
