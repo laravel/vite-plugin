@@ -323,7 +323,7 @@ npm remove postcss-import
 
 ### Optional: Git ignore the build directory
 
-Vite will place all of your build assets into a `build` subdirectory inside your public directory. If you prefer not to build your assets on deploy instead of committing them to your repository, then you may wish to add this directory to your `.gitignore` file:
+Vite will place all of your build assets into a `build` subdirectory inside your public directory. If you prefer to build your assets on deploy, instead of committing them to your repository, then you may wish to add this directory to your `.gitignore` file:
 
 ```gitignore
 /public/build
@@ -356,4 +356,10 @@ You may now add additional scripts to your `package.json`:
 +     "ssr:build": "vite build --ssr",
 +     "ssr:serve": "node storage/framework/ssr/ssr.js"
   }
+```
+
+If you prefer to build your assets on deploy, instead of committing them to your repository, then you may wish to add the SSR output directory to your `.gitignore` file:
+
+```gitignore
+/storage/ssr
 ```
