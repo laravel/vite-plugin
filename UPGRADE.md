@@ -33,6 +33,7 @@ cd vite-plugin-laravel
 Build the plugin:
 
 ```
+npm install
 npm run build
 ```
 
