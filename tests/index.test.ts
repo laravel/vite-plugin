@@ -17,7 +17,7 @@ describe('vite-plugin-laravel', () => {
 
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build?.manifest).toBe(false)
-        expect(ssrConfig.build?.outDir).toBe('storage/framework/ssr')
+        expect(ssrConfig.build?.outDir).toBe('storage/ssr')
         expect(ssrConfig.build?.rollupOptions?.input).toBe('resources/js/app.js')
     })
 
@@ -39,7 +39,7 @@ describe('vite-plugin-laravel', () => {
 
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build?.manifest).toBe(false)
-        expect(ssrConfig.build?.outDir).toBe('storage/framework/ssr')
+        expect(ssrConfig.build?.outDir).toBe('storage/ssr')
         expect(ssrConfig.build?.rollupOptions?.input).toEqual(['resources/js/app.js', 'resources/js/other.js'])
     })
 
@@ -86,7 +86,7 @@ describe('vite-plugin-laravel', () => {
 
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build?.manifest).toBe(false)
-        expect(ssrConfig.build?.outDir).toBe('storage/framework/ssr')
+        expect(ssrConfig.build?.outDir).toBe('storage/ssr')
         expect(ssrConfig.build?.rollupOptions?.input).toBe('resources/js/ssr.js')
     })
 

@@ -359,7 +359,7 @@ You may now add additional scripts to your `package.json`:
 -     "build": "vite build"
 +     "build": "vite build",
 +     "ssr:build": "vite build --ssr",
-+     "ssr:serve": "node storage/framework/ssr/ssr.js"
++     "ssr:serve": "node storage/ssr/ssr.js"
   }
 ```
 
