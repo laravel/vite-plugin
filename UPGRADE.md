@@ -15,7 +15,11 @@ npm install --save-dev vite
 You may also need to install additional Vite plugins for your project, such as the Vue or React plugins:
 
 ```shell
+# Vue
 npm install --save-dev @vitejs/plugin-vue
+
+# React
+npm install --save-dev @vitejs/plugin-react
 ```
 
 **The following is only temporary until the package is published.**
