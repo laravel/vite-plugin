@@ -22,7 +22,7 @@ npm install --save-dev @vitejs/plugin-vue
 npm install --save-dev @vitejs/plugin-react
 ```
 
-**The following is only temporary until the package is published.**
+#### The following is only temporary until the package is published.
 
 The Laravel plugin for Vite is currently not published to NPM, so you will need to install and link it manually.
 
