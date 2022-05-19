@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import laravel from '../src'
 
-describe('vite-plugin-laravel', () => {
+describe('laravel-vite-plugin', () => {
     it('accepts a single input', () => {
         const plugin = laravel('resources/js/app.js')
 

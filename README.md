@@ -1,4 +1,4 @@
-# Vite plugin for Laravel
+# Laravel Vite plugin
 
 ## Introduction
 
@@ -12,7 +12,7 @@ Coming soon.
 
 ## Contributing
 
-Thank you for considering contributing to vite-plugin-laravel! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Thank you for considering contributing to the Laravel Vite plugin! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
 ## Code of Conduct
 
@@ -20,8 +20,8 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 ## Security Vulnerabilities
 
-Please review [our security policy](https://github.com/laravel/vite-plugin-laravel/security/policy) on how to report security vulnerabilities.
+Please review [our security policy](https://github.com/laravel/vite-plugin/security/policy) on how to report security vulnerabilities.
 
 ## License
 
-vite-plugin-laravel is open-sourced software licensed under the [MIT license](LICENSE.md).
+The Laravel Vite plugin is open-sourced software licensed under the [MIT license](LICENSE.md).

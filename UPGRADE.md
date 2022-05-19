@@ -30,8 +30,8 @@ In another terminal, clone the plugin somewhere on your machine:
 
 ```shell
 cd ~/Code/
-git clone git@github.com:laravel-labs/vite-plugin-laravel.git
-cd vite-plugin-laravel
+git clone git@github.com:laravel-labs/vite-plugin.git laravel-vite-plugin
+cd laravel-vite-plugin
 ```
 
 Build the plugin:
@@ -50,7 +50,7 @@ npm link
 Back in your project, install the plugin:
 
 ```shell
-npm link --save-dev vite-plugin-laravel
+npm link --save-dev laravel-vite-plugin
 ```
 
 ### Configure Vite
@@ -59,7 +59,7 @@ Create a `vite.config.js` file in the root of your project:
 
 ```js
 import { defineConfig } from 'vite'
-import laravel from 'vite-plugin-laravel'
+import laravel from 'laravel-vite-plugin'
 // import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
