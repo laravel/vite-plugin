@@ -1,4 +1,4 @@
-# Laravel Vite plugin
+# Laravel Vite Plugin
 
 ## Introduction
 
