@@ -6,7 +6,7 @@
 
 ### Install Vite and the Laravel Plugin
 
-First you will need to install [Vite](https://vitejs.dev/) and the [`laravel-vite-plugin`](https://www.npmjs.com/package/laravel-vite-plugin) using your npm package manager of choice:
+First you will need to install [Vite](https://vitejs.dev/) and the [Laravel Vite Plugin](https://www.npmjs.com/package/laravel-vite-plugin) using your npm package manager of choice:
 
 ```shell
 npm install --save-dev vite laravel-vite-plugin
