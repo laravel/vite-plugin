@@ -1,5 +1,10 @@
 # Laravel Vite Plugin
 
+<a href="https://github.com/laravel/vite-plugin/actions"><img src="https://github.com/laravel/vite-plugin/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://www.npmjs.com/package/vite-plugin"><img src="https://img.shields.io/npm/dt/vite-plugin" alt="Total Downloads"></a>
+<a href="https://www.npmjs.com/package/vite-plugin"><img src="https://img.shields.io/npm/v/vite-plugin" alt="Latest Stable Version"></a>
+<a href="https://www.npmjs.com/package/vite-plugin"><img src="https://img.shields.io/npm/l/vite-plugin" alt="License"></a>
+
 ## Introduction
 
 Vite is a modern frontend build tool that provides an extremely fast development environment and bundles your code for production.
