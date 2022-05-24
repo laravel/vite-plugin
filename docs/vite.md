@@ -5,14 +5,15 @@
 - [Installation & Setup](#installation)
 - [Running Vite](#running-vite)
 - [Working With JavaScript](#working-with-scripts)
+  - [Vue](#vue)
+  - [React](#react)
+  - [URL Processing](#url-processing)
 - [Working With Stylesheets](#working-with-stylesheets)
+  - [Tailwind CSS](#tailwindcss)
+  - [PostCSS](#postcss)
 - [Custom Base URLs](#custom-base-urls)
 - [Environment Variables](#environment-variables)
 - [Server-Side Rendering (SSR)](#ssr)
-
-
-- [Static Assets](#static-assets)
-
 
 <a name="introduction"></a>
 ## Introduction
@@ -83,6 +84,7 @@ laravel([
 ]),
 ```
 
+<a name="vue"></a>
 ### Vue
 
 There are a few additional options you may want when using Vue with Laravel:
@@ -114,6 +116,7 @@ export default defineConfig({
 })
 ```
 
+<a name="react"></a>
 ### React
 
 * You will need to use a `.jsx` extension on any files containing JSX.
@@ -123,6 +126,11 @@ export default defineConfig({
 @viteReactRefresh
 @vite('resources/js/app.jsx')
 ```
+
+<a name="url-processing"></a>
+### URL Processing
+
+// TODO
 
 <a name="working-with-stylesheets"></a>
 ## Working With Stylesheets
@@ -134,6 +142,16 @@ import '../css/app.css'
 ```
 
 When you import the JavaScript using the `@vite` Blade directive, Laravel will automatically load any stylesheets referenced in those files.
+
+<a name="tailwindcss"></a>
+### Tailwind CSS
+
+// TODO
+
+<a name="postcss"></a>
+### PostCSS
+
+// TODO
 
 <a name="custom-base-urls"></a>
 ## Custom Base URLs
