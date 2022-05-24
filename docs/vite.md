@@ -65,7 +65,7 @@ export default defineConfig({
 })
 ```
 
-Entry points may also be TypeScript, JSX, or TSX files. You may also include your own additional Vite configuration, such as the common `@` resolve alias above.
+Entry points may also be TypeScript, JSX, or TSX files. You can also include your own additional Vite configuration, such as the common `@` resolve alias above.
 
 The compiled entry point can be loaded using the `@vite` Blade directive, typically within the `<head>` of your main layout file:
 
@@ -78,10 +78,19 @@ When running Vite in development mode, Laravel will automatically launch the Vit
 If you have multiple entry points, you can pass an array of paths to the Laravel plugin:
 
 ```js
-laravel([
-    'resources/js/app.js',
-    'resources/js/admin.js',
-]),
+import { defineConfig } from 'vite'
+import laravel from 'laravel-vite-plugin'
+
+export default defineConfig({
+    plugins: [
+        laravel([
+            'resources/js/app.js',
+            'resources/js/admin.js',
+        ]),
+    ],
+
+    // ...
+})
 ```
 
 <a name="vue"></a>
