@@ -143,15 +143,24 @@ import '../css/app.css'
 
 When you import the JavaScript using the `@vite` Blade directive, Laravel will automatically load any stylesheets referenced in those files.
 
-<a name="tailwindcss"></a>
-### Tailwind CSS
-
-// TODO
-
 <a name="postcss"></a>
 ### PostCSS
 
-// TODO
+Vite supports PostCSS out of the box, however you will want to specify your PostCSS configuration e.g. via a `postcss.config.js`.
+
+```js
+module.exports = {
+    plugins: {
+        autoprefixer: {},
+        // ...
+    }
+}
+```
+
+<a name="tailwindcss"></a>
+### Tailwind CSS
+
+As Tailwind utilises PostCSS under the hood, it is supported by Vite without any additional plugins. Just ensure you have PostCSS configured [as shown above](#postcss).
 
 <a name="custom-base-urls"></a>
 ## Custom Base URLs
@@ -186,4 +195,27 @@ import.meta.env.VITE_SENTRY_DSN_PUBLIC
 <a name="ssr"></a>
 ## Server-Side Rendering (SSR)
 
-// TODO
+The Laravel Vite Plugin makes it painless to set up Server-Side Rending. You can get started by adding the SSR entry point to the plugin configuration:
+
+```js
+import { defineConfig } from 'vite'
+import laravel from 'laravel-vite-plugin'
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: 'resources/js/app.js',
+            ssr: 'resources/js/ssr.js',
+        }),
+    ],
+
+    // ...
+})
+```
+
+To create the SSR build and start the SSR server, you may run the following commands...
+
+```sh
+npm run ssr:build
+npm run ssr:serve
+```
