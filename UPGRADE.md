@@ -143,16 +143,12 @@ Inertia makes use of a `require()` call that is more complex to replicate with V
 The following function can be used instead:
 
 ```js
-function resolvePageComponent(name, pages) {
-    for (const path in pages) {
-        if (path.endsWith(`${name.replace('.', '/')}.vue`)) {
-            return typeof pages[path] === 'function'
-                ? pages[path]()
-                : pages[path]
-        }
+export function resolvePageComponent(path, pages) {
+    if (typeof pages[path] === undefined) {
+        throw new Error(`Page not found: ${path}`)
     }
 
-    throw new Error(`Page not found: ${name}`)
+    return pages[path]()
 }
 ```
 
@@ -160,7 +156,7 @@ function resolvePageComponent(name, pages) {
   createInertiaApp({
       title: (title) => `${title} - ${appName}`,
 -     resolve: (name) => require(`./Pages/${name}.vue`),
-+     resolve: (name) => resolvePageComponent(name, import.meta.glob('./Pages/**/*.vue')),
++     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
       setup({ el, app, props, plugin }) {
           return createApp({ render: () => h(app, props) })
               .use(plugin)
@@ -284,9 +280,9 @@ If you were only using `postcss-import` to import Tailwind, then you may import 
 - @import 'tailwindcss/base';
 - @import 'tailwindcss/components';
 - @import 'tailwindcss/utilities';
-+ @tailwind base
-+ @tailwind components
-+ @tailwind utilities
++ @tailwind base;
++ @tailwind components;
++ @tailwind utilities;
 ```
 
 And then remove the plugin:
