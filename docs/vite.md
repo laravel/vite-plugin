@@ -9,8 +9,8 @@
   - [React](#react)
   - [URL Processing](#url-processing)
 - [Working With Stylesheets](#working-with-stylesheets)
-  - [Tailwind CSS](#tailwindcss)
   - [PostCSS](#postcss)
+  - [Tailwind CSS](#tailwindcss)
 - [Custom Base URLs](#custom-base-urls)
 - [Environment Variables](#environment-variables)
 - [Server-Side Rendering (SSR)](#ssr)
@@ -143,6 +143,8 @@ import '../css/app.css'
 
 When you import the JavaScript using the `@vite` Blade directive, Laravel will automatically load any stylesheets referenced in those files.
 
+You can learn more about Vite's CSS support on the [Vite docs](https://vitejs.dev/guide/features.html#css).
+
 <a name="postcss"></a>
 ### PostCSS
 
@@ -213,7 +215,7 @@ export default defineConfig({
 })
 ```
 
-To create the SSR build and start the SSR server, you may run the following commands...
+Then to create build and start the SSR server, you may run the following commands...
 
 ```sh
 npm run ssr:build
