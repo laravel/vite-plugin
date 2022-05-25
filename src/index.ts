@@ -55,6 +55,12 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
 
+    const ziggy = 'vendor/tightenco/ziggy/dist/index.es.js';
+    const defaultAliases: Record<string, string> = {
+        ...(fs.existsSync(ziggy) ? { ziggy } : undefined),
+        '@': '/resources/js',
+    };
+
     return {
         name: 'laravel',
         enforce: 'post',
@@ -76,6 +82,20 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
                 server: {
                     origin: '__laravel_vite_placeholder__',
                 },
+                resolve: {
+                    alias: Array.isArray(userConfig.resolve?.alias)
+                        ? [
+                            ...userConfig.resolve?.alias ?? [],
+                            ...Object.keys(defaultAliases).map(alias => ({
+                                find: alias,
+                                replacement: defaultAliases[alias]
+                            }))
+                        ]
+                        : {
+                            ...defaultAliases,
+                            ...userConfig.resolve?.alias,
+                        }
+                }
             }
         },
         configResolved(config) {
