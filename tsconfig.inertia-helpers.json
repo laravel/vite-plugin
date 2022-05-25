@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "outDir": "inertia-helpers",
+        "target": "ES2020",
+        "module": "ES2020",
+    },
+    "include": [
+        "./src/inertia-helpers/index.ts"
+    ]
+}
