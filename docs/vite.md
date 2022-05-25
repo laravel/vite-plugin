@@ -77,7 +77,7 @@ npm run build
 <a name="entry-points"></a>
 ### Entry Points
 
-Out of the box the Laravel plugin will look for your entry point at `resources/js/app.js`, so with that file in place, the only thing you will need to do is add the `@vite` directive to the `<head>` of your application.
+Out of the box the Laravel plugin will look for your entry point at `resources/js/app.js`, so with that file already in place with a fresh Laravel installation, the only thing you will need to do is add the `@vite` directive to the `<head>` of your application.
 
 ```blade
 <!doctype html>
@@ -183,14 +183,14 @@ export default defineConfig({
 <a name="react"></a>
 ### React
 
-When using Vite with React, you will need to ensure that you any files that contain JSX have the `.jsx` or `.tsx` extension, remembering to update you entry point, if required, as [shown above](#entry-points).
+When using Vite with React, you will need to ensure that you any files that contain JSX have the `.jsx` or `.tsx` extension, remembering to update you entry point, if required, as [shown above](#entry-points). You will also need to include the additional `@viteReactRefresh` directive alongside your existing `@vite` directive.
 
 ```blade
 @viteReactRefresh
 @vite('resources/js/app.jsx')
 ```
 
-The `@viteReactRefresh` directive must be called before the `@vite` directive.
+The `@viteReactRefresh` directive must be called **before** the `@vite` directive.
 
 
 <a name="url-processing"></a>
@@ -268,7 +268,16 @@ import.meta.env.VITE_SENTRY_DSN_PUBLIC
 <a name="ssr"></a>
 ## Server-Side Rendering (SSR)
 
-The Laravel plugin makes it painless to set up Server-Side Rending. You can get started by expanding the plugin configuration and adding the SSR entry point:
+The Laravel plugin makes it painless to set up Server-Side Rending with Vite. All you need to do is create your SSR entry point at `resources/js/ssr.js`. No additional configuration is required.
+
+Then to build and start the SSR server, you may run the following commands...
+
+```sh
+npm run ssr:build
+npm run ssr:serve
+```
+
+However, if you would like to specify a different entry point to the default location, you may augment your `vite.config.js` to include both the SSR and non-SSR entrypoints.
 
 ```js
 import { defineConfig } from 'vite'
@@ -284,9 +293,3 @@ export default defineConfig({
 })
 ```
 
-Then to build and start the SSR server, you may run the following commands...
-
-```sh
-npm run ssr:build
-npm run ssr:serve
-```
