@@ -34,7 +34,7 @@ Laravel integrates seamlessly with Vite by providing an official plugin and Blad
 
 ### Installing Node
 
-Before running Vite and the Laravel Vite Plugin, you must first ensure that Node.js and NPM are installed on your machine:
+Before running Vite and the Laravel plugin, you must first ensure that Node.js and NPM are installed on your machine:
 
 ```sh
 node -v
@@ -48,9 +48,9 @@ You can easily install the latest version of Node and NPM using simple graphical
 ./sail npm -v
 ```
 
-### Installing Vite and the Laravel Vite Plugin
+### Installing Vite and the Laravel plugin
 
-The only remaining step is to install your npm dependencies. Within a fresh installation of Laravel, you'll find a `package.json` file in the root of your directory structure. The default `package.json` file already includes everything you need to get started using Vite and the Laravel Vite Plugin. Think of this file like your `composer.json` file, except it defines Node dependencies instead of PHP dependencies. You may install the dependencies it references by running:
+The only remaining step is to install your npm dependencies. Within a fresh installation of Laravel, you'll find a `package.json` file in the root of your directory structure. The default `package.json` file already includes everything you need to get started using Vite and the Laravel plugin. Think of this file like your `composer.json` file, except it defines Node dependencies instead of PHP dependencies. You may install the dependencies it references by running:
 
 ```sh
 npm install
@@ -268,7 +268,7 @@ import.meta.env.VITE_SENTRY_DSN_PUBLIC
 <a name="ssr"></a>
 ## Server-Side Rendering (SSR)
 
-The Laravel Vite Plugin makes it painless to set up Server-Side Rending. You can get started by expanding the plugin configuration and adding the SSR entry point:
+The Laravel plugin makes it painless to set up Server-Side Rending. You can get started by expanding the plugin configuration and adding the SSR entry point:
 
 ```js
 import { defineConfig } from 'vite'
