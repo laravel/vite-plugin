@@ -198,7 +198,10 @@ The `@viteReactRefresh` directive must be called **before** the `@vite` directiv
 <a name="url-processing"></a>
 ### URL Processing
 
-// TODO
+TODO: // expand this section.
+Notes:
+- Absolute paths are assumed to be already in you public directory and are not handled by Vite in any way.
+- Relative paths are relative to the current file.
 
 <a name="working-with-stylesheets"></a>
 ## Working With Stylesheets
