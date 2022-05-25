@@ -142,17 +142,9 @@ Inertia makes use of a `require()` call that is more complex to replicate with V
 
 The following function can be used instead:
 
-```js
-function resolvePageComponent(path, pages) {
-    if (typeof pages[path] === undefined) {
-        throw new Error(`Page not found: ${path}`)
-    }
-
-    return pages[path]()
-}
-```
-
 ```diff
++ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
+
   createInertiaApp({
       title: (title) => `${title} - ${appName}`,
 -     resolve: (name) => require(`./Pages/${name}.vue`),
