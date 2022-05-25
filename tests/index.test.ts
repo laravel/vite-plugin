@@ -19,6 +19,9 @@ describe('laravel-vite-plugin', () => {
 
         const serveConfig = plugin.config({}, { command: 'serve', mode: 'development' })
         expect(serveConfig.base).toBe('')
+        expect(buildConfig.server.host).toBeUndefined()
+        expect(buildConfig.server.port).toBeUndefined()
+        expect(buildConfig.server.strictPort).toBeUndefined()
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
         expect(ssrConfig.base).toBe('/build/')
@@ -187,5 +190,31 @@ describe('laravel-vite-plugin', () => {
         }, { command: 'build', mode: 'development' })
 
         expect(config.resolve.alias).toContainEqual({ find: 'ziggy', replacement: 'vendor/tightenco/ziggy/dist/index.es.js' })
+    })
+
+    it('configures the Vite server when inside a Sail container', () => {
+        process.env.LARAVEL_SAIL = '1'
+        const plugin = laravel()
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        expect(config.server.host).toBe('0.0.0.0')
+        expect(config.server.port).toBe(5173)
+        expect(config.server.strictPort).toBe(true)
+
+        delete process.env.LARAVEL_SAIL
+    })
+
+    it('allows the Vite port to be configured when inside a Sail container', () => {
+        process.env.LARAVEL_SAIL = '1'
+        process.env.VITE_PORT = '1234'
+        const plugin = laravel()
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        expect(config.server.host).toBe('0.0.0.0')
+        expect(config.server.port).toBe(1234)
+        expect(config.server.strictPort).toBe(true)
+
+        delete process.env.LARAVEL_SAIL
+        delete process.env.VITE_PORT
     })
 })
