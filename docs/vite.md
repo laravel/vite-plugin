@@ -5,12 +5,14 @@
 - [Installation & Setup](#installation)
 - [Running Vite](#running-vite)
 - [Working With JavaScript](#working-with-scripts)
+  - [Entry Points](#entry-points)
   - [Vue](#vue)
   - [React](#react)
   - [URL Processing](#url-processing)
 - [Working With Stylesheets](#working-with-stylesheets)
   - [PostCSS](#postcss)
   - [Tailwind CSS](#tailwindcss)
+  - [Pre-processors](#pre-processors)
 - [Custom Base URLs](#custom-base-urls)
 - [Environment Variables](#environment-variables)
 - [Server-Side Rendering (SSR)](#ssr)
@@ -30,23 +32,63 @@ Laravel integrates seamlessly with Vite by providing an official plugin and Blad
 <a name="installation"></a>
 ## Installation & Setup
 
-// TODO
+### Installing Node
+
+Before running Vite and the Laravel Vite Plugin, you must first ensure that Node.js and NPM are installed on your machine:
+
+```sh
+node -v
+npm -v
+```
+
+You can easily install the latest version of Node and NPM using simple graphical installers from [the official Node website](https://nodejs.org/en/download/). Or, if you are using [Laravel Sail](https://laravel.com/docs/{{version}}/sail), you may invoke Node and NPM through Sail:
+
+```sh
+./sail node -v
+./sail npm -v
+```
+
+### Installing Vite and the Laravel Vite Plugin
+
+The only remaining step is to install your npm dependencies. Within a fresh installation of Laravel, you'll find a `package.json` file in the root of your directory structure. The default `package.json` file already includes everything you need to get started using Vite and the Laravel Vite Plugin. Think of this file like your `composer.json` file, except it defines Node dependencies instead of PHP dependencies. You may install the dependencies it references by running:
+
+```sh
+npm install
+```
 
 <a name="running-vite"></a>
 ## Running Vite
+
+There are two ways you can run Vite. You may run the development server, which is useful while you are developing locally. It will automatically detect changes to your files and those changes will be instantly reflected in any open browser windows.
+
+Running the build command on the other hand will version and bundle your application's assets and get them ready for you to deploy to production.
 
 ```shell
 // Run the Vite development server
 npm run dev
 
-// Build and version the assets
+// Build and version the assets for production
 npm run build
 ```
 
 <a name="working-with-scripts"></a>
 ## Working With JavaScript
 
-To get started, you'll need to configure your JavaScript entry point with the Laravel plugin in your `vite.config.js`:
+<a name="entry-points"></a>
+### Entry Points
+
+Out of the box the Laravel plugin will look for your entry point at `resources/js/app.js`, so with that file in place, the only thing you will need to do is add the `@vite` directive to the `<head>` of your application.
+
+```blade
+<!doctype html>
+<head>
+    <!-- ... -->
+
+    @vite
+</head>
+```
+
+If you would like to change the default entry point to your application, you should pass the path to the Laravel plugin in your `vite.config.js`. Entry points may be JavaScript, TypeScript, JSX, or TSX files.
 
 ```js
 import { defineConfig } from 'vite'
@@ -54,28 +96,18 @@ import laravel from 'laravel-vite-plugin'
 
 export default defineConfig({
     plugins: [
-        laravel('resources/js/app.js'),
+        laravel('resources/js/entry-point.js'),
     ],
-
-    resolve: {
-        alias: {
-            '@': '/resources/js',
-        },
-    },
 })
 ```
 
-Entry points may also be TypeScript, JSX, or TSX files. You can also include your own additional Vite configuration, such as the common `@` resolve alias above.
-
-The compiled entry point can be loaded using the `@vite` Blade directive, typically within the `<head>` of your main layout file:
+The compiled entry point can then be loaded by specifying the same path in the `@vite` Blade directive...
 
 ```blade
-@vite('resources/js/app.js')
+@vite('resources/js/entry-point.js')
 ```
 
-When running Vite in development mode, Laravel will automatically launch the Vite hot module replacement client to display your code changes instantly. When running Vite in build mode, your assets will be automatically versioned, and Laravel will load the latest version for you.
-
-If you have multiple entry points, you can pass an array of paths to the Laravel plugin:
+If you have multiple entry points, you can also pass an array of paths to the Laravel plugin:
 
 ```js
 import { defineConfig } from 'vite'
@@ -88,8 +120,35 @@ export default defineConfig({
             'resources/js/admin.js',
         ]),
     ],
+})
+```
 
-    // ...
+### Aliases
+
+The Laravel plugin comes with two common aliases to help you hit the ground running, with the Ziggy alias only being applied if it is installed.
+
+```sh
+{
+    '@' => 'resources/js',
+    'ziggy' => 'vendor/tightenco/ziggy/dist/index.es.js'
+}
+```
+
+You may overwrite the `"@"` alias by adding your own too the `vite.config.js`...
+
+```js
+import { defineConfig } from 'vite'
+import laravel from 'laravel-vite-plugin'
+
+export default defineConfig({
+    plugins: [
+        laravel('resources/ts/app.tsx')
+    ],
+    resolve: {
+        alias: {
+            '@': 'resources/ts',
+        }
+    }
 })
 ```
 
@@ -98,6 +157,8 @@ export default defineConfig({
 
 There are a few additional options you may want when using Vue with Laravel:
 
+// TODO: expand on _why_
+
 ```js
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
@@ -105,7 +166,7 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
     plugins: [
-        laravel('resources/js/app.js'),
+        laravel(),
 
         vue({
             template: {
@@ -116,25 +177,21 @@ export default defineConfig({
             },
         }),
     ],
-
-    resolve: {
-        alias: {
-            '@': '/resources/js',
-        },
-    },
 })
 ```
 
 <a name="react"></a>
 ### React
 
-* You will need to use a `.jsx` extension on any files containing JSX.
-* You will need to load the React refresh runtime from vite to enable hot module replacement. The `@viteReactRefresh` directive must be called before the `@vite` directive and it will automatically know when you are in development mode.
+When using Vite with React, you will need to ensure that you any files that contain JSX have the `.jsx` or `.tsx` extension, remembering to update you entry point, if required, as [shown above](#entry-points).
 
 ```blade
 @viteReactRefresh
 @vite('resources/js/app.jsx')
 ```
+
+The `@viteReactRefresh` directive must be called before the `@vite` directive.
+
 
 <a name="url-processing"></a>
 ### URL Processing
@@ -150,7 +207,7 @@ When using Vite, it is recommended to import your stylesheets from within your J
 import '../css/app.css'
 ```
 
-When you import the JavaScript using the `@vite` Blade directive, Laravel will automatically load any stylesheets referenced in those files.
+When you import the JavaScript using the `@vite` Blade directive, Laravel will automatically load any stylesheets referenced in those files for you.
 
 You can learn more about Vite's CSS support on the [Vite docs](https://vitejs.dev/guide/features.html#css).
 
@@ -173,16 +230,21 @@ module.exports = {
 
 As Tailwind utilises PostCSS under the hood, it is supported by Vite without any additional plugins. Just ensure you have PostCSS configured [as shown above](#postcss).
 
+<a name="pre-processors"></a>
+### Pre-processors
+
+Vite does also supports CSS pre-processors. You should read the [Vite docs](https://vitejs.dev/guide/features.html#css-pre-processors) for more information.
+
 <a name="custom-base-urls"></a>
 ## Custom Base URLs
 
-If your Vite compiled assets are deployed to a CDN separate from your application, you will need to change the base URL generated by the `@vite` directive. You may do so by specifying the `ASSET_URL` environment variable:
+If your Vite compiled assets are deployed to a different domain separate from your application e.g. via a CDN, you will need to change the base URL generated by the `@vite` directive. You may do so by specifying the `ASSET_URL` environment variable:
 
 ```
 ASSET_URL=https://cdn.example.com
 ```
 
-After configuring the asset URL, the `@vite` directive will prefix the configured URL when generating URLs to assets:
+After configuring the asset URL, the `@vite` directive will now prefix the configured URL when generating URLs to assets:
 
 ```
 https://cdn.example.com/build/assets/app.9dce8d17.js
@@ -191,7 +253,7 @@ https://cdn.example.com/build/assets/app.9dce8d17.js
 <a name="environment-variables"></a>
 ## Environment Variables
 
-You may inject environment variables into your JavaScript by prefixing one of the environment variables in your `.env` file with `VITE_`:
+You may inject environment variables into your JavaScript by prefixing them with `VITE_` in your `.env` file:
 
 ```env
 VITE_SENTRY_DSN_PUBLIC=http://example.com
@@ -219,12 +281,10 @@ export default defineConfig({
             ssr: 'resources/js/ssr.js',
         }),
     ],
-
-    // ...
 })
 ```
 
-Then to create build and start the SSR server, you may run the following commands...
+Then to build and start the SSR server, you may run the following commands...
 
 ```sh
 npm run ssr:build
