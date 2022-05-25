@@ -8,7 +8,7 @@ interface PluginConfig {
     /**
      * The path or path of the entry points to compile.
      *
-     * @example 'resources/js/app.js'
+     * @default 'resources/js/app.js'
      */
     input: string|string[]|undefined
 
@@ -29,7 +29,7 @@ interface PluginConfig {
     /**
      * The path of the SSR entry point.
      *
-     * @example 'resources/js/ssr.js'
+     * @default 'resources/js/ssr.js'
      */
     ssr: string|string[]|undefined
 
@@ -50,7 +50,7 @@ interface LaravelPlugin extends Plugin {
  *
  * @param config - A config object or relative path(s) of the scripts to be compiled.
  */
-export default function laravel(config: string|string[]|Partial<PluginConfig>): LaravelPlugin {
+export default function laravel(config?: string|string[]|Partial<PluginConfig>): LaravelPlugin {
     const pluginConfig = resolvePluginConfig(config)
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
@@ -159,13 +159,9 @@ function laravelVersion(): string {
 /**
  * Convert the users configuration into a standard structure with defaults.
  */
-function resolvePluginConfig(config: string|string[]|Partial<PluginConfig>): PluginConfig {
-    if (config === undefined) {
-        throw new Error('Laravel plugin requires configuration.')
-    }
-
-    if (typeof config === 'string' || Array.isArray(config)) {
-        config = { input: config }
+function resolvePluginConfig(config?: string|string[]|Partial<PluginConfig>): PluginConfig {
+    if (typeof config === 'undefined' || typeof config === 'string' || Array.isArray(config)) {
+        config = { input: config, ssr: config }
     }
 
     if (typeof config.publicDirectory === 'string') {
@@ -189,10 +185,10 @@ function resolvePluginConfig(config: string|string[]|Partial<PluginConfig>): Plu
     }
 
     return {
-        input: config.input,
+        input: config.input ?? 'resources/js/app.js',
         publicDirectory: config.publicDirectory ?? 'public',
         buildDirectory: config.buildDirectory ?? 'build',
-        ssr: config.ssr,
+        ssr: config.ssr ?? 'resources/js/ssr.js',
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'storage/ssr',
     }
 }
