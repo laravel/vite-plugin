@@ -81,6 +81,11 @@ export default function laravel(config?: string|string[]|Partial<PluginConfig>):
                 },
                 server: {
                     origin: '__laravel_vite_placeholder__',
+                    ...(process.env.LARAVEL_SAIL ? {
+                        host: '0.0.0.0',
+                        port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173,
+                        strictPort: true,
+                    } : undefined)
                 },
                 resolve: {
                     alias: Array.isArray(userConfig.resolve?.alias)
