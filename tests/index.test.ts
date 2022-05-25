@@ -128,6 +128,45 @@ describe('laravel-vite-plugin', () => {
         expect(ssrConfig.build.outDir).toBe('ssr-output/test')
     })
 
+    it('provides an @ alias by default', () => {
+        const plugin = laravel('resources/js/app.js')
+
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
+
+        expect(config.resolve.alias['@']).toBe('/resources/js')
+    })
+
+    it('respects a users existing @ alias', () => {
+        const plugin = laravel('resources/js/app.js')
+
+        const config = plugin.config({
+            resolve: {
+                alias: {
+                    '@': '/somewhere/else'
+                }
+            }
+        }, { command: 'build', mode: 'development' })
+
+        expect(config.resolve.alias['@']).toBe('/somewhere/else')
+    })
+
+    it('appends an Alias object when using an alias array', () => {
+        const plugin = laravel('resources/js/app.js')
+
+        const config = plugin.config({
+            resolve: {
+                alias: [
+                    { find: '@', replacement: '/something/else' }
+                ],
+            }
+        }, { command: 'build', mode: 'development' })
+
+        expect(config.resolve.alias).toEqual([
+            { find: '@', replacement: '/something/else' },
+            { find: '@', replacement: '/resources/js' },
+        ])
+    })
+
     it('prevents empty input', () => {
         /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
         /* @ts-ignore */

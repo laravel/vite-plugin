@@ -76,6 +76,17 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
                 server: {
                     origin: '__laravel_vite_placeholder__',
                 },
+                resolve: {
+                    alias: Array.isArray(userConfig.resolve?.alias)
+                        ? [
+                            ...userConfig.resolve?.alias ?? [],
+                            { find: '@', replacement: '/resources/js' },
+                        ]
+                        : {
+                            '@': '/resources/js',
+                            ...userConfig.resolve?.alias,
+                        }
+                }
             }
         },
         configResolved(config) {
