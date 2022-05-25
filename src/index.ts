@@ -55,6 +55,12 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
 
+    const ziggy = 'vendor/tightenco/ziggy/dist/index.es.js';
+    const defaultAliases: Record<string, string> = {
+        ...(fs.existsSync(ziggy) ? { ziggy } : undefined),
+        '@': '/resources/js',
+    };
+
     return {
         name: 'laravel',
         enforce: 'post',
@@ -80,10 +86,13 @@ export default function laravel(config: string|string[]|Partial<PluginConfig>): 
                     alias: Array.isArray(userConfig.resolve?.alias)
                         ? [
                             ...userConfig.resolve?.alias ?? [],
-                            { find: '@', replacement: '/resources/js' },
+                            ...Object.keys(defaultAliases).map(alias => ({
+                                find: alias,
+                                replacement: defaultAliases[alias]
+                            }))
                         ]
                         : {
-                            '@': '/resources/js',
+                            ...defaultAliases,
                             ...userConfig.resolve?.alias,
                         }
                 }

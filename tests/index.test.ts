@@ -1,7 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest'
 import laravel from '../src'
+import fs from 'fs'
 
 describe('laravel-vite-plugin', () => {
+    afterEach(() => {
+        vi.clearAllMocks()
+    })
+
     it('accepts a single input', () => {
         const plugin = laravel('resources/js/app.js')
 
@@ -165,6 +170,30 @@ describe('laravel-vite-plugin', () => {
             { find: '@', replacement: '/something/else' },
             { find: '@', replacement: '/resources/js' },
         ])
+    })
+
+    it('provides an ziggy alias when installed', () => {
+        vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true)
+
+        const plugin = laravel('resources/js/app.js')
+
+        const config = plugin.config({}, { command: 'build', mode: 'development' })
+
+        expect(config.resolve.alias['ziggy']).toBe('vendor/tightenco/ziggy/dist/index.es.js')
+    })
+
+    it('provides an ziggy alias when installed and using an alias array', () => {
+        vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true)
+
+        const plugin = laravel('resources/js/app.js')
+
+        const config = plugin.config({
+            resolve: {
+                alias: [],
+            }
+        }, { command: 'build', mode: 'development' })
+
+        expect(config.resolve.alias).toContainEqual({ find: 'ziggy', replacement: 'vendor/tightenco/ziggy/dist/index.es.js' })
     })
 
     it('prevents empty input', () => {
