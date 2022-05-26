@@ -198,10 +198,32 @@ The `@viteReactRefresh` directive must be called **before** the `@vite` directiv
 <a name="url-processing"></a>
 ### URL Processing
 
-TODO: // expand this section.
-Notes:
-- Absolute paths are assumed to be already in you public directory and are not handled by Vite in any way.
-- Relative paths are relative to the current file.
+When referencing assets in your application's HTML, CSS, or JS, there are a couple of things to keep in mind. If you reference assets with an absolute URL, Vite will not include the asset in the build. If you are doing this, you should ensure that the image is available in your public directory.
+
+When referencing relative asset URLs, you should keep in mind that the paths are relative to the current file you are working in. Any assets references via a relative URL will be re-written, versioned, and bundled by Vite.
+
+Consider the following project structure...
+
+```
+public
+  taylor.png
+resources
+  js
+    Pages
+      Welcome.vue
+  images
+    abigal.png
+```
+
+The following demonstrates how relative and absolute URLs will be treated by Vite...
+
+```html
+<!-- The asset is not handled by Vite and wll not be included in the build -->
+<img src="/taylor.png">
+
+<!-- The asset will be re-written, versioned, and bundled by Vite -->
+<img src="../../images/abigal.jpg" />
+```
 
 <a name="working-with-stylesheets"></a>
 ## Working With Stylesheets
