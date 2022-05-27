@@ -8,6 +8,7 @@
 - [Running Vite](#running-vite)
 - [Working With JavaScript](#working-with-scripts)
   - [Entry Points](#entry-points)
+  - [Aliases](#aliases)
   - [Vue](#vue)
   - [React](#react)
   - [URL Processing](#url-processing)
@@ -29,7 +30,7 @@ Laravel integrates seamlessly with Vite by providing an official plugin and Blad
 <a name="vite-or-mix"></a>
 ### Choosing Between Vite and Laravel Mix
 
-Vite is a modern build tool that focuses on rich JavaScript applications. If you are building a Single Page Application (SPA), including those build with tools like InertiaJS, Vite will be the perfect fit for you.
+Vite focuses on building rich JavaScript applications. If you are building a Single Page Application (SPA), including those built with tools like InertiaJS, Vite will be the perfect fit for you.
 
 Vite also works well when used with traditional Server-Side Rendered applications with JavaScript "sprinkles", however it does lack some features that Laravel Mix supports, such as the ability to copy arbitrary assets into the build that are not referenced directly in your JavaScript application.
 
@@ -129,6 +130,7 @@ export default defineConfig({
 })
 ```
 
+<a name="aliases"></a>
 ### Aliases
 
 The Laravel plugin comes with two common aliases to help you hit the ground running, with the Ziggy alias only being applied if it is installed.
