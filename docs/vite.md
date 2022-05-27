@@ -3,6 +3,8 @@
 - [Introduction](#introduction)
   - [Choosing Between Vite and Laravel Mix](#vite-or-mix)
 - [Installation & Setup](#installation)
+  - [Installing Node](#installing-node)
+  - [Installing Vite and the Laravel plugin](#installing-vite-and-laravel-plugin)
 - [Running Vite](#running-vite)
 - [Working With JavaScript](#working-with-scripts)
   - [Entry Points](#entry-points)
@@ -34,6 +36,7 @@ Vite also works well when used with traditional Server-Side Rendered application
 <a name="installation"></a>
 ## Installation & Setup
 
+<a name="installing-node"></a>
 ### Installing Node
 
 Before running Vite and the Laravel plugin, you must first ensure that Node.js and NPM are installed on your machine:
@@ -50,6 +53,7 @@ You can easily install the latest version of Node and NPM using simple graphical
 ./sail npm -v
 ```
 
+<a name="installing-vite-and-laravel-plugin"></a>
 ### Installing Vite and the Laravel plugin
 
 The only remaining step is to install your npm dependencies. Within a fresh installation of Laravel, you'll find a `package.json` file in the root of your directory structure. The default `package.json` file already includes everything you need to get started using Vite and the Laravel plugin. Think of this file like your `composer.json` file, except it defines Node dependencies instead of PHP dependencies. You may install the dependencies it references by running:
