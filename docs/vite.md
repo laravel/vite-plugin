@@ -27,9 +27,9 @@ Laravel integrates seamlessly with Vite by providing an official plugin and Blad
 <a name="vite-or-mix"></a>
 ### Choosing Between Vite and Laravel Mix
 
-Vite focuses on building rich JavaScript applications. If you are developing a Single Page Application (SPA), including those built with tools like InertiaJS, Vite will be the perfect fit for you.
+Vite focuses on building rich JavaScript applications. If you are developing a Single Page Application (SPA), including those developed with tools like InertiaJS, Vite will be the perfect fit.
 
-Vite also works well when used with traditional Server-Side Rendered applications with JavaScript "sprinkles", however it does lack some features that Laravel Mix supports, such as the ability to copy arbitrary assets into the build that are not referenced directly in your JavaScript application.
+Vite also works well with traditional Server-Side Rendered applications with JavaScript "sprinkles". It lacks some features that Laravel Mix supports, such as the ability to copy arbitrary assets into the build that are not referenced directly in your JavaScript application.
 
 <a name="installation"></a>
 ## Installation & Setup
@@ -37,7 +37,7 @@ Vite also works well when used with traditional Server-Side Rendered application
 <a name="installing-node"></a>
 ### Installing Node
 
-Before running Vite and the Laravel plugin, you must first ensure that Node.js and NPM are installed on your machine:
+You must ensure that Node.js and NPM are installed before running Vite and the Laravel plugin:
 
 ```sh
 node -v
@@ -54,7 +54,7 @@ You can easily install the latest version of Node and NPM using simple graphical
 <a name="installing-vite-and-laravel-plugin"></a>
 ### Installing Vite & The Laravel Plugin
 
-The only remaining step is to install your npm dependencies. Within a fresh installation of Laravel, you'll find a `package.json` file in the root of your directory structure. The default `package.json` file already includes everything you need to get started using Vite and the Laravel plugin. Think of this file like your `composer.json` file, except it defines Node dependencies instead of PHP dependencies. You may install the dependencies it references by running:
+The only remaining step is to install your npm dependencies. Within a fresh installation of Laravel, you'll find a `package.json` file in the root of your directory structure. The default `package.json` file already includes everything you need to get started using Vite and the Laravel plugin. You may install the dependencies by running:
 
 ```sh
 npm install
@@ -63,9 +63,9 @@ npm install
 <a name="running-vite"></a>
 ## Running Vite
 
-There are two ways you can run Vite. You may run the development server, which is useful while you are developing locally. It will automatically detect changes to your files and those changes will be instantly reflected in any open browser windows.
+There are two ways you can run Vite. You may run the development server, which is useful while developing locally. It will automatically detect changes to your files and instantly reflect them in any open browser windows.
 
-Running the build command on the other hand will version and bundle your application's assets and get them ready for you to deploy to production.
+On the other hand, running the build command will version and bundle your application's assets and get them ready for you to deploy to production.
 
 ```shell
 # Run the Vite development server
@@ -81,7 +81,7 @@ npm run build
 <a name="entry-points"></a>
 ### Entry Points
 
-Out of the box the Laravel plugin will look for your entry point at `resources/js/app.js`, so with that file already in place with a fresh Laravel installation, the only thing you will need to do is add the `@vite` directive to the `<head>` of your application.
+Out of the box, the Laravel plugin will look for your entry point at `resources/js/app.js`, so with that file already in place with a fresh Laravel installation, the only thing you will need to do is add the `@vite` directive to the `<head>` of your application.
 
 ```blade
 <!doctype html>
@@ -92,7 +92,7 @@ Out of the box the Laravel plugin will look for your entry point at `resources/j
 </head>
 ```
 
-If you would like to change the default entry point to your application, you should pass the path to the Laravel plugin in your `vite.config.js`. Entry points may be JavaScript, TypeScript, JSX, or TSX files.
+If you want to change the default entry point to your application, you should pass the path to the Laravel plugin in your `vite.config.js`. Entry points may be JavaScript, TypeScript, JSX, or TSX files.
 
 ```js
 import { defineConfig } from 'vite'
@@ -130,7 +130,7 @@ export default defineConfig({
 <a name="aliases"></a>
 ### Aliases
 
-The Laravel plugin comes with two common aliases to help you hit the ground running, with the Ziggy alias only being applied if it is installed.
+The Laravel plugin provides two common aliases to help you hit the ground running, with the Ziggy alias only being applied when installed.
 
 ```js
 {
@@ -139,7 +139,7 @@ The Laravel plugin comes with two common aliases to help you hit the ground runn
 }
 ```
 
-You may overwrite the `"@"` alias by adding your own to the `vite.config.js`...
+You may overwrite the `'@'` alias by adding your own to the `vite.config.js`...
 
 ```js
 import { defineConfig } from 'vite'
@@ -147,13 +147,13 @@ import laravel from 'laravel-vite-plugin'
 
 export default defineConfig({
     plugins: [
-        laravel('resources/ts/app.tsx')
+        laravel('resources/ts/app.tsx'),
     ],
     resolve: {
         alias: {
             '@': 'resources/ts',
-        }
-    }
+        },
+    },
 })
 ```
 
@@ -195,7 +195,7 @@ export default defineConfig({
 <a name="react"></a>
 ### React
 
-When using Vite with React, you will need to ensure that you any files that contain JSX have the `.jsx` or `.tsx` extension, remembering to update you entry point, if required, as [shown above](#entry-points). You will also need to include the additional `@viteReactRefresh` directive alongside your existing `@vite` directive.
+When using Vite with React, you will need to ensure that any files containing JSX have the `.jsx` or `.tsx` extension, remembering to update your entry point, if required, as [shown above](#entry-points). You will also need to include the additional `@viteReactRefresh` directive alongside your existing `@vite` directive.
 
 ```blade
 @viteReactRefresh
@@ -208,11 +208,11 @@ The `@viteReactRefresh` directive must be called **before** the `@vite` directiv
 <a name="url-processing"></a>
 ### URL Processing
 
-When referencing assets in your application's HTML, CSS, or JS, there are a couple of things to keep in mind. If you reference assets with an absolute URL, Vite will not include the asset in the build. If you are doing this, you should ensure that the image is available in your public directory.
+When referencing assets in your application's HTML, CSS, or JS, there are a couple of things to consider. If you reference assets with an absolute path, Vite will not include the asset in the build. You should ensure that the image is available in your public directory.
 
-When referencing relative asset URLs, you should keep in mind that the paths are relative to the current file you are working in. Any assets references via a relative URL will be re-written, versioned, and bundled by Vite.
+When referencing relative asset paths, you should remember that the paths are relative to the file where they are referenced. Any assets referenced via a relative path will be re-written, versioned, and bundled by Vite.
 
-Consider the following project structure...
+Consider the following project structure:
 
 ```
 public/
@@ -225,13 +225,13 @@ resources/
     abigail.png
 ```
 
-The following demonstrates how relative and absolute URLs will be treated by Vite...
+The following demonstrates how Vite will treat relative and absolute URLs:
 
 ```html
-<!-- The asset is not handled by Vite and wll not be included in the build -->
+<!-- This asset is not handled by Vite and will not be included in the build -->
 <img src="/taylor.png">
 
-<!-- The asset will be re-written, versioned, and bundled by Vite -->
+<!-- This asset will be re-written, versioned, and bundled by Vite -->
 <img src="../../images/abigail.png">
 ```
 
@@ -251,7 +251,7 @@ Vite supports <a href="https://vitejs.dev/guide/features.html#postcss">PostCSS</
 <a name="custom-base-urls"></a>
 ## Custom Base URLs
 
-If your Vite compiled assets are deployed to a different domain separate from your application e.g. via a CDN, you will need to specify the `ASSET_URL` environment variable.
+If your Vite compiled assets are deployed to a domain separate from your application, e.g. via a CDN, you must specify the `ASSET_URL` environment variable:
 
 ```env
 ASSET_URL=https://cdn.example.com
@@ -263,7 +263,7 @@ After configuring the asset URL, all re-written URLs to your assets will be pref
 https://cdn.example.com/build/assets/app.9dce8d17.js
 ```
 
-Keep in mind that [absolute URLs are not re-written by Vite](#url-processing), so they will not be prefixed.
+Remember that [absolute URLs are not re-written by Vite](#url-processing), so they will not be prefixed.
 
 <a name="environment-variables"></a>
 ## Environment Variables
@@ -274,7 +274,7 @@ You may inject environment variables into your JavaScript by prefixing them with
 VITE_SENTRY_DSN_PUBLIC=http://example.com
 ```
 
-After the variable has been defined in your `.env` file, you may access it via the `import.meta.env` object.
+You may access injected environment variables via the `import.meta.env` object:
 
 ```js
 import.meta.env.VITE_SENTRY_DSN_PUBLIC
@@ -283,16 +283,16 @@ import.meta.env.VITE_SENTRY_DSN_PUBLIC
 <a name="ssr"></a>
 ## Server-Side Rendering (SSR)
 
-The Laravel plugin makes it painless to set up Server-Side Rending with Vite. All you need to do is create your SSR entry point at `resources/js/ssr.js`. No additional configuration is required.
+The Laravel plugin makes it painless to set up Server-Side Rending with Vite. Create your SSR entry point at `resources/js/ssr.js`, and no additional configuration is required.
 
-Then to build and start the SSR server, you may run the following commands...
+Then to build and start the SSR server, you may run the following commands:
 
 ```sh
 npm run ssr:build
 npm run ssr:serve
 ```
 
-However, if you would like to specify a different entry point to the default location, you may augment your `vite.config.js` to include both the SSR and non-SSR entrypoints.
+However, if you want to specify a different entry point, you may augment your `vite.config.js` to include the SSR and non-SSR entry points.
 
 ```js
 import { defineConfig } from 'vite'
@@ -307,4 +307,3 @@ export default defineConfig({
     ],
 })
 ```
-
