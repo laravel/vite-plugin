@@ -165,7 +165,7 @@ You will also need to update these references in your JavaScript code to use the
 +    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
 ```
 
-### Import your CSS from your JavaScript entrypoint(s)
+### Import your CSS from your JavaScript entry point(s)
 
 Vite expects your CSS files to be imported via JavaScript, such as your `resources/js/app.js` entry point:
 
@@ -173,17 +173,19 @@ Vite expects your CSS files to be imported via JavaScript, such as your `resourc
 import '../css/app.css'
 ```
 
-### Replace `mix()` with `@vite()`
+### Replace `mix()` with `@vite`
 
-When using Vite, you will need to use the `@vite()` Blade directive instead of the `mix()` helper.
+When using Vite, you will need to use the `@vite` Blade directive instead of the `mix()` helper.
 
 This will automatically detect whether you are running in serve or build mode and include all of the required `<script>` and `<link rel="stylesheet">` for you:
 
 ```diff
 - <link rel="stylesheet" href="{{ mix('css/app.css') }}">
 - <script src="{{ mix('css/app.js') }}" defer></script>
-+ @vite('resources/js/app.js')
++ @vite
 ```
+
+If your entry point is not `resources/js/app.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to use the `@vite` with different entry points.
 
 If you are manually including the HMR bundle, you can remove this as well:
 
@@ -199,7 +201,7 @@ If you are using React and hot-module replacement, you will need to include an a
 
 ```html
 @viteReactRefresh
-@vite('resources/js/app.js')
+@vite
 ```
 
 This loads a React "refresh runtime" in development mode only, which is required for hot module replacement to work correctly.
