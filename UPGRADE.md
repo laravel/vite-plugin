@@ -29,45 +29,30 @@ Create a `vite.config.js` file in the root of your project:
 ```js
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
+// import react from '@vitejs/plugin-react'
 // import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
     plugins: [
-        // Single entry point
-        laravel('resources/js/app.js'),
-
-        // Multiple entry points
-        // laravel([
-        //     'resources/js/app.js',
-        //     'resources/js/other.js',
-        // ]),
-
-        // With SSR
-        // laravel({
-        //     input: 'resources/js/app.js',
-        //     ssr: 'resources/js/ssr.js',
-        // }),
-
-        // If you are using the Vue plugin, you will need the following options:
+        laravel(),
+        // react(),
         // vue({
         //     template: {
         //         transformAssetUrls: {
-        //             base: '',
+        //             base: null,
         //             includeAbsolute: false,
         //         },
         //     },
         // }),
     ],
-    resolve: {
-        alias: {
-            '@': '/resources/js',
-
-            // If you are using Ziggy (such as with Inertia) and SSR you will need this alias:
-            // ziggy: 'vendor/tightenco/ziggy/dist/index.es.js',
-        },
-    },
 })
 ```
+
+If your entry point is not `resources/js/app.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to configure the Laravel plugin for your project.
+
+### Working with JSX
+
+Any files containing JSX are required to have the `.jsx` or `.tsx` extension.
 
 ### Update NPM Scripts
 
