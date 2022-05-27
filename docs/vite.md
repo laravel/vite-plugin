@@ -135,7 +135,7 @@ The Laravel plugin provides two common aliases to help you hit the ground runnin
 ```js
 {
     '@' => 'resources/js',
-    'ziggy' => 'vendor/tightenco/ziggy/dist/index.es.js'
+    'ziggy' => 'vendor/tightenco/ziggy/dist/index.es.js',
 }
 ```
 
