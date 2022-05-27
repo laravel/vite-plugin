@@ -142,7 +142,7 @@ The Laravel plugin comes with two common aliases to help you hit the ground runn
 }
 ```
 
-You may overwrite the `"@"` alias by adding your own too the `vite.config.js`...
+You may overwrite the `"@"` alias by adding your own to the `vite.config.js`...
 
 ```js
 import { defineConfig } from 'vite'
