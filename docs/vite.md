@@ -218,14 +218,14 @@ When referencing relative asset URLs, you should keep in mind that the paths are
 Consider the following project structure...
 
 ```
-public
+public/
   taylor.png
-resources
-  js
-    Pages
+resources/
+  js/
+    Pages/
       Welcome.vue
-  images
-    abigal.png
+  images/
+    abigail.png
 ```
 
 The following demonstrates how relative and absolute URLs will be treated by Vite...
@@ -235,7 +235,7 @@ The following demonstrates how relative and absolute URLs will be treated by Vit
 <img src="/taylor.png">
 
 <!-- The asset will be re-written, versioned, and bundled by Vite -->
-<img src="../../images/abigal.jpg" />
+<img src="../../images/abigail.png">
 ```
 
 <a name="working-with-stylesheets"></a>
