@@ -204,26 +204,7 @@ module.exports = {
 }
 ```
 
-#### PostCSS Import
-
 If you are using other PostCSS plugins, such as `postcss-import`, you will need to include them in your configuration.
-
-If you were only using `postcss-import` to import Tailwind, then you may import Tailwind as follows:
-
-```diff
-- @import 'tailwindcss/base';
-- @import 'tailwindcss/components';
-- @import 'tailwindcss/utilities';
-+ @tailwind base;
-+ @tailwind components;
-+ @tailwind utilities;
-```
-
-And then remove the plugin:
-
-```shell
-npm remove postcss-import
-```
 
 ### Optional: Git ignore the build directory
 
