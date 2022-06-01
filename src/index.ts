@@ -112,7 +112,7 @@ export default function laravel(config?: string|string[]|Partial<PluginConfig>):
             }
         },
         configureServer(server) {
-            const hotFile = path.join('public', 'hot')
+            const hotFile = path.join(pluginConfig.publicDirectory, 'hot')
 
             server.httpServer?.once('listening', () => {
                 const address = server.httpServer?.address()
