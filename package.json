@@ -25,6 +25,7 @@
         "build-plugin": "rm -rf dist && tsc",
         "build-inertia-helpers": "rm -rf inertia-helpers && tsc --project tsconfig.inertia-helpers.json",
         "lint": "eslint --ext .ts ./src ./tests",
+        "ssr:serve": "vite build --ssr && node storage/ssr/ssr.js",
         "test": "vitest run"
     },
     "devDependencies": {
@@ -36,6 +37,9 @@
         "typescript": "^4.6.4",
         "vite": "^2.9.6",
         "vitest": "^0.12.4"
+    },
+    "peerDependencies": {
+        "vite": "^2.9.9"
     },
     "engines": {
         "node": ">=14"
