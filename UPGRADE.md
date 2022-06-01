@@ -319,7 +319,7 @@ You will need to update the environment variables that are explicitly exposed in
 + MIX_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
 ```
 
-You will also need to update these references in your JavaScript code to use the new variable name and Vite syntax:
+You will also need to update these references in your JavaScript code to use the new variable name and Node syntax:
 
 ```diff
 -    key: import.meta.env.VITE_PUSHER_APP_KEY,
@@ -328,12 +328,12 @@ You will also need to update these references in your JavaScript code to use the
 +    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
 ```
 
-### Import your CSS from your JavaScript entry point(s)
+### Remove CSS imports from your JavaScript entry point(s)
 
-If you are importing your CSS via JavaScript, you will need to remove this:
+If you are importing your CSS via JavaScript, you will need to remove them:
 
 ```js
--import '../css/app.css'
+- import '../css/app.css'
 ```
 
 ### Replace `@vite` with `mix()`
