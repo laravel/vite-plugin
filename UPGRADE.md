@@ -132,7 +132,7 @@ This will automatically detect whether you are running in serve or build mode an
 
 ```diff
 - <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-- <script src="{{ mix('css/app.js') }}" defer></script>
+- <script src="{{ mix('js/app.js') }}" defer></script>
 + @vite
 ```
 
