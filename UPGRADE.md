@@ -50,10 +50,6 @@ export default defineConfig({
 
 If your entry point is not `resources/js/app.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to configure the Laravel plugin for your project.
 
-### Working with JSX
-
-Any files containing JSX are required to have the `.jsx` or `.tsx` extension.
-
 ### Update NPM Scripts
 
 Update your NPM scripts in `package.json`:
@@ -140,7 +136,7 @@ This will automatically detect whether you are running in serve or build mode an
 + @vite
 ```
 
-If your entry point is not `resources/js/app.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to use the `@vite` with different entry points.
+If your entry point is not `resources/js/app.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to use the `@vite` directive with different entry points.
 
 If you are manually including the HMR bundle, you can remove this as well:
 
@@ -163,7 +159,7 @@ This loads a React "refresh runtime" in development mode only, which is required
 
 ### JavaScript files containing JSX must use a `.jsx` extension
 
-You will need to rename any `.js` files containing JSX to instead have a `.jsx` extension.
+You will need to rename any `.js` files containing JSX to instead have a `.jsx` extension. If you need to rename your entry point then you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to configure the Laravel plugin for your project.
 
 See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vite's creator for more information.
 
@@ -218,22 +214,15 @@ Vite will place all of your build assets into a `build` subdirectory inside your
 
 ### Optional: Update SSR configuration
 
-In your `vite.config.js` you can specify your SSR entry point by passing an configuration object to the `laravel` plugin:
-
-```js
-laravel({
-    input: 'resources/js/app.js',
-    ssr: 'resources/js/ssr.js',
-})
-```
-
-In most cases you won't need a dedicated SSR configuration file. You may also remove your dedicated Laravel Mix SSR configuration:
+You may remove your dedicated Laravel Mix SSR configuration:
 
 ```shell
 rm webpack.ssr.mix.js
 ```
 
-You may now add additional scripts to your `package.json`:
+In most cases you won't need a dedicated SSR configuration file with Vite. If your SSR entry point is not `resources/js/ssr.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to configure the Laravel plugin for your project.
+
+You may wish to add the following additional scripts to your `package.json`:
 
 ```diff
   "scripts": {
