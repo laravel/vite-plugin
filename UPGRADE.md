@@ -183,6 +183,8 @@ And you may remove your Mix configuration file:
 rm webpack.mix.js
 ```
 
+If you are using StyleCI and have ignored the `webpack.mix.js` file in your configuration, you may also like to remove the ignore rule.
+
 ### Optional: Configure Tailwind
 
 If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need a `postcss.config.js` file.
