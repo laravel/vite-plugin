@@ -108,7 +108,7 @@ export default function laravel(config?: string|string[]|Partial<PluginConfig>):
         },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
-                return code.replace('__laravel_vite_placeholder__', viteDevServerUrl)
+                return code.replace(/__laravel_vite_placeholder__/g, viteDevServerUrl)
             }
         },
         configureServer(server) {
