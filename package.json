@@ -17,8 +17,8 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
-        "./dist",
-        "./inertia-helpers"
+        "/dist",
+        "/inertia-helpers"
     ],
     "scripts": {
         "build": "npm run build-plugin && npm run build-inertia-helpers",
