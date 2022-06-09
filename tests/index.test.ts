@@ -94,12 +94,15 @@ describe('laravel-vite-plugin', () => {
         expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
     })
 
-    it('prefixes the base with ASSET_URL', () => {
+    it('prefixes the base with ASSET_URL in production mode', () => {
         process.env.ASSET_URL = 'http://example.com'
         const plugin = laravel('resources/js/app.js')
 
-        const config = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(config.base).toBe('http://example.com/build/')
+        const devConfig = plugin.config({}, { command: 'serve', mode: 'development' })
+        expect(devConfig.base).toBe('')
+
+        const prodConfig = plugin.config({}, { command: 'build', mode: 'production' })
+        expect(prodConfig.base).toBe('http://example.com/build/')
 
         delete process.env.ASSET_URL
     })
