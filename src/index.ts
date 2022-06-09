@@ -2,7 +2,7 @@ import fs from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig } from 'vite'
 
 interface PluginConfig {
     /**
@@ -54,6 +54,7 @@ export default function laravel(config?: string|string[]|Partial<PluginConfig>):
     const pluginConfig = resolvePluginConfig(config)
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
+    const cssManifest: Manifest = {}
 
     const ziggy = 'vendor/tightenco/ziggy/dist/index.es.js';
     const defaultAliases: Record<string, string> = {
@@ -144,6 +145,38 @@ export default function laravel(config?: string|string[]|Partial<PluginConfig>):
             process.on('SIGHUP', clean)
             process.on('SIGINT', clean)
             process.on('SIGTERM', clean)
+        },
+
+        // The following two hooks are a workaround to help solve a "flash of unstyled content" with Blade.
+        // They add any CSS entry points into the manifest because Vite does not currently do this.
+        renderChunk(_, chunk) {
+            const cssLangs = `\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)`
+            const cssLangRE = new RegExp(cssLangs)
+
+            if (! chunk.isEntry || chunk.facadeModuleId === null || ! cssLangRE.test(chunk.facadeModuleId)) {
+                return null
+            }
+
+            const relativeChunkPath = path.relative(resolvedConfig.root, chunk.facadeModuleId)
+
+            cssManifest[relativeChunkPath] = {
+                /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+                /* @ts-ignore */
+                file: Array.from(chunk.viteMetadata.importedCss)[0],
+                src: relativeChunkPath,
+                isEntry: true,
+            }
+
+            return null
+        },
+        writeBundle() {
+            const manifestPath = path.resolve(resolvedConfig.root, resolvedConfig.build.outDir, 'manifest.json')
+            const manifest = JSON.parse(fs.readFileSync(manifestPath).toString())
+            const newManifest = {
+                ...manifest,
+                ...cssManifest,
+            }
+            fs.writeFileSync(manifestPath, JSON.stringify(newManifest, null, 2))
         }
     }
 }
