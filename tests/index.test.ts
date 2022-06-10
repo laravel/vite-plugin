@@ -15,7 +15,7 @@ describe('laravel-vite-plugin', () => {
         expect(buildConfig.base).toBe('/build/')
         expect(buildConfig.build.manifest).toBe(true)
         expect(buildConfig.build.outDir).toBe('public/build')
-        expect(buildConfig.build.rollupOptions.input).toBe('resources/js/app.js')
+        expect(buildConfig.build.rollupOptions.input).toEqual(['resources/css/app.css', 'resources/js/app.js'])
 
         const serveConfig = plugin.config({}, { command: 'serve', mode: 'development' })
         expect(serveConfig.base).toBe('')

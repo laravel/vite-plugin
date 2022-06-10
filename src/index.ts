@@ -6,9 +6,9 @@ import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig } from
 
 interface PluginConfig {
     /**
-     * The path or path of the entry points to compile.
+     * The path or paths of the entry points to compile.
      *
-     * @default 'resources/js/app.js'
+     * @default ['resources/css/app.css', 'resources/js/app.js']
      */
     input: string|string[]|undefined
 
@@ -223,7 +223,7 @@ function resolvePluginConfig(config?: string|string[]|Partial<PluginConfig>): Pl
     }
 
     return {
-        input: config.input ?? 'resources/js/app.js',
+        input: config.input ?? ['resources/css/app.css', 'resources/js/app.js'],
         publicDirectory: config.publicDirectory ?? 'public',
         buildDirectory: config.buildDirectory ?? 'build',
         ssr: config.ssr ?? 'resources/js/ssr.js',
