@@ -26,10 +26,8 @@ interface PluginConfig {
 
     /**
      * The path of the SSR entry point.
-     *
-     * @default 'resources/js/ssr.js'
      */
-    ssr?: string|string[]|undefined
+    ssr?: string|string[]
 
     /**
      * The directory where the SSR bundle should be written.
@@ -232,7 +230,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         input: config.input,
         publicDirectory: config.publicDirectory ?? 'public',
         buildDirectory: config.buildDirectory ?? 'build',
-        ssr: config.ssr ?? 'resources/js/ssr.js',
+        ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'storage/ssr',
     }
 }
@@ -249,7 +247,7 @@ function resolveBase(config: Required<PluginConfig>, assetUrl: string): string {
  */
 function resolveInput(config: Required<PluginConfig>, ssr: boolean): string|string[]|undefined {
     if (ssr) {
-        return config.ssr ?? config.input
+        return config.ssr
     }
 
     return config.input

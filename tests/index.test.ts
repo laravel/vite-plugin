@@ -83,6 +83,14 @@ describe('laravel-vite-plugin', () => {
         expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
     })
 
+    it('uses the default entry point when ssr entry point is not provided', () => {
+        // This is support users who may want a dedicated Vite config for SSR.
+        const plugin = laravel('resources/js/ssr.js')
+
+        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
+        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
+    })
+
     it('prefixes the base with ASSET_URL in production mode', () => {
         process.env.ASSET_URL = 'http://example.com'
         const plugin = laravel('resources/js/app.js')
