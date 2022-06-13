@@ -170,7 +170,13 @@ export default function laravel(config?: string|string[]|Partial<PluginConfig>):
             return null
         },
         writeBundle() {
-            const manifestPath = path.resolve(resolvedConfig.root, resolvedConfig.build.outDir, 'manifest.json')
+            const manifestConfig = resolveManifestConfig(resolvedConfig)
+
+            if (manifestConfig === false) {
+                return;
+            }
+
+            const manifestPath = path.resolve(resolvedConfig.root, resolvedConfig.build.outDir, manifestConfig)
             const manifest = JSON.parse(fs.readFileSync(manifestPath).toString())
             const newManifest = {
                 ...manifest,
@@ -258,4 +264,21 @@ function resolveOutDir(config: PluginConfig, ssr: boolean): string|undefined {
     }
 
     return path.join(config.publicDirectory, config.buildDirectory)
+}
+
+function resolveManifestConfig(config: ResolvedConfig): string|false
+{
+    const manifestConfig = config.build.ssr
+        ? config.build.ssrManifest
+        : config.build.manifest;
+
+    if (manifestConfig === false) {
+        return false
+    }
+
+    if (manifestConfig === true) {
+        return config.build.ssr ? 'ssr-manifest.json' : 'manifest.json'
+    }
+
+    return manifestConfig
 }
