@@ -11,12 +11,12 @@ describe('laravel-vite-plugin', () => {
         /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
         /* @ts-ignore */
         expect(() => laravel())
-            .toThrowError('Missing configuration');
+            .toThrowError('laravel-vite-plugin: missing configuration.');
 
         /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
         /* @ts-ignore */
         expect(() => laravel({}))
-            .toThrowError('Missing configuration for key: input');
+            .toThrowError('laravel-vite-plugin: missing configuration for "input".');
     })
 
     it('accepts a single input', () => {

@@ -195,7 +195,7 @@ function laravelVersion(): string {
  */
 function resolvePluginConfig(config: string|string[]|PluginConfig): Required<PluginConfig> {
     if (typeof config === 'undefined') {
-        throw new Error('Missing configuration')
+        throw new Error('laravel-vite-plugin: missing configuration.')
     }
 
     if (typeof config === 'string' || Array.isArray(config)) {
@@ -203,14 +203,14 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
     }
 
     if (typeof config.input === 'undefined') {
-        throw new Error('Missing configuration for key: input')
+        throw new Error('laravel-vite-plugin: missing configuration for "input".')
     }
 
     if (typeof config.publicDirectory === 'string') {
         config.publicDirectory = config.publicDirectory.trim().replace(/^\/+/, '')
 
         if (config.publicDirectory === '') {
-            throw new Error('publicDirectory must be a subdirectory. E.g. \'public\'.')
+            throw new Error('laravel-vite-plugin: publicDirectory must be a subdirectory. E.g. \'public\'.')
         }
     }
 
@@ -218,7 +218,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         config.buildDirectory = config.buildDirectory.trim().replace(/^\/+/, '').replace(/\/+$/, '')
 
         if (config.buildDirectory === '') {
-            throw new Error('buildDirectory must be a subdirectory. E.g. \'build\'.')
+            throw new Error('laravel-vite-plugin: buildDirectory must be a subdirectory. E.g. \'build\'.')
         }
     }
 
