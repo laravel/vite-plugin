@@ -7,27 +7,16 @@ describe('laravel-vite-plugin', () => {
         vi.clearAllMocks()
     })
 
-    it('provides sensible default values', () => {
-        const plugin = laravel()
-        expect(plugin.name).toBe('laravel')
+    it('handles missing configuration', () => {
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /* @ts-ignore */
+        expect(() => laravel())
+            .toThrowError('Missing configuration');
 
-        const buildConfig = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(buildConfig.base).toBe('/build/')
-        expect(buildConfig.build.manifest).toBe(true)
-        expect(buildConfig.build.outDir).toBe('public/build')
-        expect(buildConfig.build.rollupOptions.input).toEqual(['resources/css/app.css', 'resources/js/app.js'])
-
-        const serveConfig = plugin.config({}, { command: 'serve', mode: 'development' })
-        expect(serveConfig.base).toBe('')
-        expect(buildConfig.server.host).toBeUndefined()
-        expect(buildConfig.server.port).toBeUndefined()
-        expect(buildConfig.server.strictPort).toBeUndefined()
-
-        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.base).toBe('/build/')
-        expect(ssrConfig.build.manifest).toBe(false)
-        expect(ssrConfig.build.outDir).toBe('storage/ssr')
-        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /* @ts-ignore */
+        expect(() => laravel({}))
+            .toThrowError('Missing configuration for key: input');
     })
 
     it('accepts a single input', () => {
@@ -108,17 +97,18 @@ describe('laravel-vite-plugin', () => {
     })
 
     it('prevents setting an empty publicDirectory', () => {
-        expect(() => laravel({ publicDirectory: '' }))
+        expect(() => laravel({ input: 'resources/js/app.js', publicDirectory: '' }))
             .toThrowError('publicDirectory must be a subdirectory');
     })
 
     it('prevents setting an empty buildDirectory', () => {
-        expect(() => laravel({ buildDirectory: '' }))
+        expect(() => laravel({ input: 'resources/js/app.js', buildDirectory: '' }))
             .toThrowError('buildDirectory must be a subdirectory');
     })
 
     it('handles surrounding slashes on directories', () => {
         const plugin = laravel({
+            input: 'resources/js/app.js',
             publicDirectory: '/public/test/',
             buildDirectory: '/build/test/',
             ssrOutputDirectory: '/ssr-output/test/',
@@ -197,7 +187,7 @@ describe('laravel-vite-plugin', () => {
 
     it('configures the Vite server when inside a Sail container', () => {
         process.env.LARAVEL_SAIL = '1'
-        const plugin = laravel()
+        const plugin = laravel('resources/js/app.js')
 
         const config = plugin.config({}, { command: 'serve', mode: 'development' })
         expect(config.server.host).toBe('0.0.0.0')
@@ -210,7 +200,7 @@ describe('laravel-vite-plugin', () => {
     it('allows the Vite port to be configured when inside a Sail container', () => {
         process.env.LARAVEL_SAIL = '1'
         process.env.VITE_PORT = '1234'
-        const plugin = laravel()
+        const plugin = laravel('resources/js/app.js')
 
         const config = plugin.config({}, { command: 'serve', mode: 'development' })
         expect(config.server.host).toBe('0.0.0.0')
