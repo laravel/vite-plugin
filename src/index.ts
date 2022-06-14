@@ -7,38 +7,34 @@ import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig } from
 interface PluginConfig {
     /**
      * The path or paths of the entry points to compile.
-     *
-     * @default ['resources/css/app.css', 'resources/js/app.js']
      */
-    input: string|string[]|undefined
+    input: string|string[]
 
     /**
      * Laravel's public directory.
      *
      * @default 'public'
      */
-    publicDirectory: string
+    publicDirectory?: string
 
     /**
      * The public subdirectory where compiled assets should be written.
      *
      * @default 'build'
      */
-    buildDirectory: string
+    buildDirectory?: string
 
     /**
      * The path of the SSR entry point.
-     *
-     * @default 'resources/js/ssr.js'
      */
-    ssr: string|string[]|undefined
+    ssr?: string|string[]
 
     /**
      * The directory where the SSR bundle should be written.
      *
      * @default 'storage/ssr'
      */
-    ssrOutputDirectory: string
+    ssrOutputDirectory?: string
 }
 
 interface LaravelPlugin extends Plugin {
@@ -50,7 +46,7 @@ interface LaravelPlugin extends Plugin {
  *
  * @param config - A config object or relative path(s) of the scripts to be compiled.
  */
-export default function laravel(config?: string|string[]|Partial<PluginConfig>): LaravelPlugin {
+export default function laravel(config: string|string[]|PluginConfig): LaravelPlugin {
     const pluginConfig = resolvePluginConfig(config)
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
@@ -203,16 +199,24 @@ function laravelVersion(): string {
 /**
  * Convert the users configuration into a standard structure with defaults.
  */
-function resolvePluginConfig(config?: string|string[]|Partial<PluginConfig>): PluginConfig {
-    if (typeof config === 'undefined' || typeof config === 'string' || Array.isArray(config)) {
+function resolvePluginConfig(config: string|string[]|PluginConfig): Required<PluginConfig> {
+    if (typeof config === 'undefined') {
+        throw new Error('laravel-vite-plugin: missing configuration.')
+    }
+
+    if (typeof config === 'string' || Array.isArray(config)) {
         config = { input: config, ssr: config }
+    }
+
+    if (typeof config.input === 'undefined') {
+        throw new Error('laravel-vite-plugin: missing configuration for "input".')
     }
 
     if (typeof config.publicDirectory === 'string') {
         config.publicDirectory = config.publicDirectory.trim().replace(/^\/+/, '')
 
         if (config.publicDirectory === '') {
-            throw new Error('publicDirectory must be a subdirectory. E.g. \'public\'.')
+            throw new Error('laravel-vite-plugin: publicDirectory must be a subdirectory. E.g. \'public\'.')
         }
     }
 
@@ -220,7 +224,7 @@ function resolvePluginConfig(config?: string|string[]|Partial<PluginConfig>): Pl
         config.buildDirectory = config.buildDirectory.trim().replace(/^\/+/, '').replace(/\/+$/, '')
 
         if (config.buildDirectory === '') {
-            throw new Error('buildDirectory must be a subdirectory. E.g. \'build\'.')
+            throw new Error('laravel-vite-plugin: buildDirectory must be a subdirectory. E.g. \'build\'.')
         }
     }
 
@@ -229,10 +233,10 @@ function resolvePluginConfig(config?: string|string[]|Partial<PluginConfig>): Pl
     }
 
     return {
-        input: config.input ?? ['resources/css/app.css', 'resources/js/app.js'],
+        input: config.input,
         publicDirectory: config.publicDirectory ?? 'public',
         buildDirectory: config.buildDirectory ?? 'build',
-        ssr: config.ssr ?? 'resources/js/ssr.js',
+        ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'storage/ssr',
     }
 }
@@ -240,16 +244,16 @@ function resolvePluginConfig(config?: string|string[]|Partial<PluginConfig>): Pl
 /**
  * Resolve the Vite base option from the configuration.
  */
-function resolveBase(config: PluginConfig, assetUrl: string): string {
+function resolveBase(config: Required<PluginConfig>, assetUrl: string): string {
     return assetUrl + (! assetUrl.endsWith('/') ? '/' : '') + config.buildDirectory + '/'
 }
 
 /**
  * Resolve the Vite input path from the configuration.
  */
-function resolveInput(config: PluginConfig, ssr: boolean): string|string[]|undefined {
+function resolveInput(config: Required<PluginConfig>, ssr: boolean): string|string[]|undefined {
     if (ssr) {
-        return config.ssr ?? config.input
+        return config.ssr
     }
 
     return config.input
@@ -258,7 +262,7 @@ function resolveInput(config: PluginConfig, ssr: boolean): string|string[]|undef
 /**
  * Resolve the Vite outDir path from the configuration.
  */
-function resolveOutDir(config: PluginConfig, ssr: boolean): string|undefined {
+function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|undefined {
     if (ssr) {
         return config.ssrOutputDirectory
     }
