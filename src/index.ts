@@ -134,13 +134,21 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                 if (fs.existsSync(hotFile)) {
                     fs.rmSync(hotFile)
                 }
-                process.exit()
             }
 
             process.on('exit', clean)
-            process.on('SIGHUP', clean)
-            process.on('SIGINT', clean)
-            process.on('SIGTERM', clean)
+            process.on('SIGHUP', () => {
+                clean()
+                process.exit()
+            })
+            process.on('SIGINT', () => {
+                clean()
+                process.exit()
+            })
+            process.on('SIGTERM', () => {
+                clean()
+                process.exit()
+            })
         },
 
         // The following two hooks are a workaround to help solve a "flash of unstyled content" with Blade.
