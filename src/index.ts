@@ -41,6 +41,8 @@ interface LaravelPlugin extends Plugin {
     config: (config: UserConfig, env: ConfigEnv) => UserConfig
 }
 
+let exitHandlersBound = false
+
 /**
  * Laravel plugin for Vite.
  *
@@ -130,6 +132,10 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                 }
             })
 
+            if (exitHandlersBound) {
+                return
+            }
+
             const clean = () => {
                 if (fs.existsSync(hotFile)) {
                     fs.rmSync(hotFile)
@@ -137,18 +143,11 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
             }
 
             process.on('exit', clean)
-            process.on('SIGHUP', () => {
-                clean()
-                process.exit()
-            })
-            process.on('SIGINT', () => {
-                clean()
-                process.exit()
-            })
-            process.on('SIGTERM', () => {
-                clean()
-                process.exit()
-            })
+            process.on('SIGINT', process.exit)
+            process.on('SIGTERM', process.exit)
+            process.on('SIGHUP', process.exit)
+
+            exitHandlersBound = true
         },
 
         // The following two hooks are a workaround to help solve a "flash of unstyled content" with Blade.
