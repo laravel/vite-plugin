@@ -2,7 +2,7 @@ import fs from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig, SSROptions } from 'vite'
 
 interface PluginConfig {
     /**
@@ -99,7 +99,10 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                             ...defaultAliases,
                             ...userConfig.resolve?.alias,
                         }
-                }
+                },
+                ssr: {
+                    noExternal: noExternalInertiaHelpers(userConfig),
+                },
             }
         },
         configResolved(config) {
@@ -292,4 +295,29 @@ function resolveManifestConfig(config: ResolvedConfig): string|false
     }
 
     return manifestConfig
+}
+
+/**
+ * Add the Interia helpers to the list of SSR dependencies that aren't externalized.
+ *
+ * @see https://vitejs.dev/guide/ssr.html#ssr-externals
+ */
+function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp> {
+    /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+    /* @ts-ignore */
+    const userNoExternal = (config.ssr as SSROptions|undefined)?.noExternal
+    const pluginNoExternal = ['laravel-vite-plugin']
+
+    if (userNoExternal === true) {
+        return true
+    }
+
+    if (typeof userNoExternal === 'undefined') {
+        return pluginNoExternal
+    }
+
+    return [
+        ...(Array.isArray(userNoExternal) ? userNoExternal : [userNoExternal]),
+        ...pluginNoExternal,
+    ]
 }

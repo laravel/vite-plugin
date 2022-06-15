@@ -218,4 +218,28 @@ describe('laravel-vite-plugin', () => {
         delete process.env.LARAVEL_SAIL
         delete process.env.VITE_PORT
     })
+
+    it('prevents the Inertia helpers from being externalized', () => {
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
+        const plugin = laravel('resources/js/app.js')
+
+        const noSsrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(noSsrConfig.ssr.noExternal).toEqual(['laravel-vite-plugin'])
+
+        /* @ts-ignore */
+        const nothingExternalConfig = plugin.config({ ssr: { noExternal: true }, build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(nothingExternalConfig.ssr.noExternal).toBe(true)
+
+        /* @ts-ignore */
+        const arrayNoExternalConfig = plugin.config({ ssr: { noExternal: ['foo'] }, build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(arrayNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin'])
+
+        /* @ts-ignore */
+        const stringNoExternalConfig = plugin.config({ ssr: { noExternal: 'foo' }, build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(stringNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin'])
+    })
 })
