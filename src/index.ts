@@ -280,6 +280,9 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
     return path.join(config.publicDirectory, config.buildDirectory)
 }
 
+/**
+ * Resolve the Vite manifest config from the configuration.
+ */
 function resolveManifestConfig(config: ResolvedConfig): string|false
 {
     const manifestConfig = config.build.ssr
