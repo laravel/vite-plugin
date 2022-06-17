@@ -163,6 +163,13 @@ See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vi
 
 > **Note:** If you are using Tailwind, remember to update the paths in your `tailwind.config.js` file.
 
+### Vue imports must include the `.vue` extension
+
+```diff
+- import Button from './Button'
++ import Button from './Button.vue'
+```
+
 ### Remove Laravel Mix
 
 The Laravel Mix package can now be uninstalled:
@@ -240,9 +247,7 @@ You may wish to add the following additional scripts to your `package.json`:
   "scripts": {
       "dev": "vite",
 -     "build": "vite build"
-+     "build": "vite build",
-+     "ssr:build": "vite build --ssr",
-+     "ssr:serve": "node storage/ssr/ssr.js"
++     "build": "vite build && vite build --ssr"
   }
 ```
 
@@ -250,6 +255,12 @@ If you prefer to build your assets on deploy, instead of committing them to your
 
 ```gitignore
 /storage/ssr
+```
+
+You may start the SSR server using `node`:
+
+```sh
+node storage/ssr/ssr.js
 ```
 
 ## Migrating from Vite to Laravel Mix
@@ -294,8 +305,6 @@ Update your NPM scripts in `package.json`:
   "scripts": {
 -     "dev": "vite",
 -     "build": "vite build"
--     "ssr:build": "vite build --ssr",
--     "ssr:serve": "node storage/ssr/ssr.js"
 +     "dev": "npm run development",
 +     "development": "mix",
 +     "watch": "mix watch",
