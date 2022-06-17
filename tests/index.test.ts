@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import laravel from '../src'
-import fs from 'fs'
 
 describe('laravel-vite-plugin', () => {
     afterEach(() => {
