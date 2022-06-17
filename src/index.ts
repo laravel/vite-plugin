@@ -2,7 +2,7 @@ import fs from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig, SSROptions } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig, SSROptions, normalizePath } from 'vite'
 
 interface PluginConfig {
     /**
@@ -163,7 +163,7 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                 return null
             }
 
-            const relativeChunkPath = path.relative(resolvedConfig.root, chunk.facadeModuleId)
+            const relativeChunkPath = normalizePath(path.relative(resolvedConfig.root, chunk.facadeModuleId))
 
             cssManifest[relativeChunkPath] = {
                 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
