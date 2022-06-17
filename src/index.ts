@@ -54,9 +54,7 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
     let resolvedConfig: ResolvedConfig
     const cssManifest: Manifest = {}
 
-    const ziggy = 'vendor/tightenco/ziggy/dist/index.es.js';
     const defaultAliases: Record<string, string> = {
-        ...(fs.existsSync(ziggy) ? { ziggy } : undefined),
         '@': '/resources/js',
     };
 
