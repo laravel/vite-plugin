@@ -1,33 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import laravel from '../src'
-import fs from 'fs'
 
 describe('laravel-vite-plugin', () => {
     afterEach(() => {
         vi.clearAllMocks()
     })
 
-    it('provides sensible default values', () => {
-        const plugin = laravel()
-        expect(plugin.name).toBe('laravel')
+    it('handles missing configuration', () => {
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /* @ts-ignore */
+        expect(() => laravel())
+            .toThrowError('laravel-vite-plugin: missing configuration.');
 
-        const buildConfig = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(buildConfig.base).toBe('/build/')
-        expect(buildConfig.build.manifest).toBe(true)
-        expect(buildConfig.build.outDir).toBe('public/build')
-        expect(buildConfig.build.rollupOptions.input).toBe('resources/js/app.js')
-
-        const serveConfig = plugin.config({}, { command: 'serve', mode: 'development' })
-        expect(serveConfig.base).toBe('')
-        expect(buildConfig.server.host).toBeUndefined()
-        expect(buildConfig.server.port).toBeUndefined()
-        expect(buildConfig.server.strictPort).toBeUndefined()
-
-        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.base).toBe('/build/')
-        expect(ssrConfig.build.manifest).toBe(false)
-        expect(ssrConfig.build.outDir).toBe('storage/ssr')
-        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /* @ts-ignore */
+        expect(() => laravel({}))
+            .toThrowError('laravel-vite-plugin: missing configuration for "input".');
     })
 
     it('accepts a single input', () => {
@@ -94,28 +82,40 @@ describe('laravel-vite-plugin', () => {
         expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
     })
 
-    it('prefixes the base with ASSET_URL', () => {
+    it('uses the default entry point when ssr entry point is not provided', () => {
+        // This is support users who may want a dedicated Vite config for SSR.
+        const plugin = laravel('resources/js/ssr.js')
+
+        const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
+        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
+    })
+
+    it('prefixes the base with ASSET_URL in production mode', () => {
         process.env.ASSET_URL = 'http://example.com'
         const plugin = laravel('resources/js/app.js')
 
-        const config = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(config.base).toBe('http://example.com/build/')
+        const devConfig = plugin.config({}, { command: 'serve', mode: 'development' })
+        expect(devConfig.base).toBe('')
+
+        const prodConfig = plugin.config({}, { command: 'build', mode: 'production' })
+        expect(prodConfig.base).toBe('http://example.com/build/')
 
         delete process.env.ASSET_URL
     })
 
     it('prevents setting an empty publicDirectory', () => {
-        expect(() => laravel({ publicDirectory: '' }))
+        expect(() => laravel({ input: 'resources/js/app.js', publicDirectory: '' }))
             .toThrowError('publicDirectory must be a subdirectory');
     })
 
     it('prevents setting an empty buildDirectory', () => {
-        expect(() => laravel({ buildDirectory: '' }))
+        expect(() => laravel({ input: 'resources/js/app.js', buildDirectory: '' }))
             .toThrowError('buildDirectory must be a subdirectory');
     })
 
     it('handles surrounding slashes on directories', () => {
         const plugin = laravel({
+            input: 'resources/js/app.js',
             publicDirectory: '/public/test/',
             buildDirectory: '/build/test/',
             ssrOutputDirectory: '/ssr-output/test/',
@@ -168,33 +168,9 @@ describe('laravel-vite-plugin', () => {
         ])
     })
 
-    it('provides an ziggy alias when installed', () => {
-        vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true)
-
-        const plugin = laravel('resources/js/app.js')
-
-        const config = plugin.config({}, { command: 'build', mode: 'development' })
-
-        expect(config.resolve.alias['ziggy']).toBe('vendor/tightenco/ziggy/dist/index.es.js')
-    })
-
-    it('provides an ziggy alias when installed and using an alias array', () => {
-        vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true)
-
-        const plugin = laravel('resources/js/app.js')
-
-        const config = plugin.config({
-            resolve: {
-                alias: [],
-            }
-        }, { command: 'build', mode: 'development' })
-
-        expect(config.resolve.alias).toContainEqual({ find: 'ziggy', replacement: 'vendor/tightenco/ziggy/dist/index.es.js' })
-    })
-
     it('configures the Vite server when inside a Sail container', () => {
         process.env.LARAVEL_SAIL = '1'
-        const plugin = laravel()
+        const plugin = laravel('resources/js/app.js')
 
         const config = plugin.config({}, { command: 'serve', mode: 'development' })
         expect(config.server.host).toBe('0.0.0.0')
@@ -207,7 +183,7 @@ describe('laravel-vite-plugin', () => {
     it('allows the Vite port to be configured when inside a Sail container', () => {
         process.env.LARAVEL_SAIL = '1'
         process.env.VITE_PORT = '1234'
-        const plugin = laravel()
+        const plugin = laravel('resources/js/app.js')
 
         const config = plugin.config({}, { command: 'serve', mode: 'development' })
         expect(config.server.host).toBe('0.0.0.0')
@@ -216,5 +192,29 @@ describe('laravel-vite-plugin', () => {
 
         delete process.env.LARAVEL_SAIL
         delete process.env.VITE_PORT
+    })
+
+    it('prevents the Inertia helpers from being externalized', () => {
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
+        const plugin = laravel('resources/js/app.js')
+
+        const noSsrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(noSsrConfig.ssr.noExternal).toEqual(['laravel-vite-plugin'])
+
+        /* @ts-ignore */
+        const nothingExternalConfig = plugin.config({ ssr: { noExternal: true }, build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(nothingExternalConfig.ssr.noExternal).toBe(true)
+
+        /* @ts-ignore */
+        const arrayNoExternalConfig = plugin.config({ ssr: { noExternal: ['foo'] }, build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(arrayNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin'])
+
+        /* @ts-ignore */
+        const stringNoExternalConfig = plugin.config({ ssr: { noExternal: 'foo' }, build: { ssr: true } }, { command: 'build', mode: 'production' })
+        /* @ts-ignore */
+        expect(stringNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin'])
     })
 })

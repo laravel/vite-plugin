@@ -34,7 +34,10 @@ import laravel from 'laravel-vite-plugin'
 
 export default defineConfig({
     plugins: [
-        laravel(),
+        laravel([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ]),
         // react(),
         // vue({
         //     template: {
@@ -48,7 +51,7 @@ export default defineConfig({
 })
 ```
 
-If your entry point is not `resources/js/app.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to configure the Laravel plugin for your project.
+If you are building an SPA, you will get a better developer experience by removing the CSS entry point above and [importing your CSS from Javascript](#importing-your-css-from-your-javascript-entry-points).
 
 ### Update NPM Scripts
 
@@ -116,13 +119,16 @@ You will also need to update these references in your JavaScript code to use the
 +    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
 ```
 
-### Import your CSS from your JavaScript entry point(s)
+### Importing your CSS from your JavaScript entry point(s)
 
-Vite expects your CSS files to be imported via JavaScript, such as your `resources/js/app.js` entry point:
+If you are building an SPA, you will get a better experience by importing your CSS from your JavaScript entry point(s), such as your `resources/js/app.js` entry point:
 
-```js
-import '../css/app.css'
+```diff
+  import './bootstrap';
++ import '../css/app.css';
 ```
+
+In development mode, Vite will automatically inject your CSS into the page. In production, a dedicated stylesheet will be generated that the `@vite` directive will load from the manifest.
 
 ### Replace `mix()` with `@vite`
 
@@ -133,10 +139,10 @@ This will automatically detect whether you are running in serve or build mode an
 ```diff
 - <link rel="stylesheet" href="{{ mix('css/app.css') }}">
 - <script src="{{ mix('js/app.js') }}" defer></script>
-+ @vite
++ @vite(['resources/css/app.css', 'resources/js/app.js'])
 ```
 
-If your entry point is not `resources/js/app.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to use the `@vite` directive with different entry points.
+The entry points should match those used in your `vite.config.js`.
 
 #### React
 
@@ -144,7 +150,7 @@ If you are using React and hot-module replacement, you will need to include an a
 
 ```html
 @viteReactRefresh
-@vite
+@vite('resources/js/app.jsx')
 ```
 
 This loads a React "refresh runtime" in development mode only, which is required for hot module replacement to work correctly.
@@ -156,6 +162,13 @@ You will need to rename any `.js` files containing JSX to instead have a `.jsx` 
 See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vite's creator for more information.
 
 > **Note:** If you are using Tailwind, remember to update the paths in your `tailwind.config.js` file.
+
+### Vue imports must include the `.vue` extension
+
+```diff
+- import Button from './Button'
++ import Button from './Button.vue'
+```
 
 ### Remove Laravel Mix
 
@@ -212,7 +225,21 @@ You may remove your dedicated Laravel Mix SSR configuration:
 rm webpack.ssr.mix.js
 ```
 
-In most cases you won't need a dedicated SSR configuration file with Vite. If your SSR entry point is not `resources/js/ssr.js`, you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to configure the Laravel plugin for your project.
+In most cases you won't need a dedicated SSR configuration file with Vite. You can specify your SSR entry point by passing a configuration option to the Laravel plugin.
+
+```js
+import { defineConfig } from 'vite'
+import laravel from 'laravel-vite-plugin'
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: 'resources/js/app.js',
+            ssr: 'resources/js/ssr.js',
+        }),
+    ],
+})
+```
 
 You may wish to add the following additional scripts to your `package.json`:
 
@@ -220,9 +247,7 @@ You may wish to add the following additional scripts to your `package.json`:
   "scripts": {
       "dev": "vite",
 -     "build": "vite build"
-+     "build": "vite build",
-+     "ssr:build": "vite build --ssr",
-+     "ssr:serve": "node storage/ssr/ssr.js"
++     "build": "vite build && vite build --ssr"
   }
 ```
 
@@ -230,6 +255,12 @@ If you prefer to build your assets on deploy, instead of committing them to your
 
 ```gitignore
 /storage/ssr
+```
+
+You may start the SSR server using `node`:
+
+```sh
+node storage/ssr/ssr.js
 ```
 
 ## Migrating from Vite to Laravel Mix
@@ -274,8 +305,6 @@ Update your NPM scripts in `package.json`:
   "scripts": {
 -     "dev": "vite",
 -     "build": "vite build"
--     "ssr:build": "vite build --ssr",
--     "ssr:serve": "node storage/ssr/ssr.js"
 +     "dev": "npm run development",
 +     "development": "mix",
 +     "watch": "mix watch",
@@ -342,7 +371,7 @@ You will need to replace the `@vite` Blade directive with `<script>` and `<link 
 
 ```diff
 - @viteReactRefresh
-- @vite
+- @vite('resources/js/app.js')
 + <link rel="stylesheet" href="{{ mix('css/app.css') }}">
 + <script src="{{ mix('js/app.js') }}" defer></script>
 ```
