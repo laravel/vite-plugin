@@ -4,5 +4,5 @@ export async function resolvePageComponent<T>(path: string, pages: Record<string
         throw new Error(`Page not found: ${path}`)
     }
 
-    return typeof page === 'function' ? await page() : page
+    return typeof page === 'function' ? await (page as () => Promise<T>)() : page
 }
