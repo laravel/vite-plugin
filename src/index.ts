@@ -124,10 +124,11 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                     viteDevServerUrl = `${protocol}://${host}:${address.port}`
                     fs.writeFileSync(hotFile, viteDevServerUrl)
 
-                    const appUrl = loadEnv('', process.cwd(), 'APP_URL').APP_URL
+                    const envDir = resolvedConfig.envDir || process.cwd()
+                    const appUrl = loadEnv('', envDir, 'APP_URL').APP_URL
 
                     setTimeout(() => {
-                        server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
+                        server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion(envDir)} `))
                         server.config.logger.info(`\n  > APP_URL: ` + colors.cyan(appUrl))
                     })
                 }
@@ -194,9 +195,9 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
 /**
  * The version of Laravel being run.
  */
-function laravelVersion(): string {
+function laravelVersion(envDir?: string): string {
     try {
-        const composer = JSON.parse(fs.readFileSync('composer.lock').toString())
+        const composer = JSON.parse(fs.readFileSync(`${envDir}composer.lock`).toString())
 
         return composer.packages?.find((composerPackage: {name: string}) => composerPackage.name === 'laravel/framework')?.version ?? ''
     } catch {
