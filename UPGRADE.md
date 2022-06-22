@@ -2,11 +2,11 @@
 
 ## Migrating from Laravel Mix to Vite
 
-> **Note:** This upgrade guide does not cover all possible Mix usages, such as Sass compilation. Please consult the [Vite documentation](https://vitejs.dev/guide/) for information on configuring Vite for these scenarios.
+> **Note:** This upgrade guide does not cover all possible Mix use cases, such as Sass compilation. Please consult the [Vite documentation](https://vitejs.dev/guide/) for information on configuring Vite for these scenarios.
 
 ### Install Vite and the Laravel Plugin
 
-First you will need to install [Vite](https://vitejs.dev/) and the [Laravel Vite Plugin](https://www.npmjs.com/package/laravel-vite-plugin) using your npm package manager of choice:
+First, you will need to install [Vite](https://vitejs.dev/) and the [Laravel Vite Plugin](https://www.npmjs.com/package/laravel-vite-plugin) using your npm package manager of choice:
 
 ```shell
 npm install --save-dev vite laravel-vite-plugin
@@ -53,7 +53,7 @@ export default defineConfig({
 
 If you are building an SPA, you will get a better developer experience by removing the CSS entry point above and [importing your CSS from Javascript](#importing-your-css-from-your-javascript-entry-points).
 
-### Update NPM Scripts
+### Update NPM scripts
 
 Update your NPM scripts in `package.json`:
 
@@ -71,9 +71,9 @@ Update your NPM scripts in `package.json`:
   }
 ```
 
-### Make your imports compatible with Vite
+### Vite compatible imports
 
-Vite only supports ES modules, so if you are upgrading an existing application you will need to replace any `require()` statements with `import`. You may refer to [this PR](https://github.com/laravel/laravel/pull/5895/files) for an example.
+Vite only supports ES modules, so if you are upgrading an existing application you will need to replace any `require()` statements with `import`. You may refer to [this pull request](https://github.com/laravel/laravel/pull/5895/files) for an example.
 
 #### Inertia
 
@@ -188,9 +188,7 @@ If you are using StyleCI and have ignored the `webpack.mix.js` file in your conf
 
 ### Optional: Configure Tailwind
 
-If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need a `postcss.config.js` file.
-
-Tailwind can generate this for you automatically:
+If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need a `postcss.config.js` file. Tailwind can generate this for you automatically:
 
 ```shell
 npx tailwindcss init -p
@@ -225,7 +223,7 @@ You may remove your dedicated Laravel Mix SSR configuration:
 rm webpack.ssr.mix.js
 ```
 
-In most cases you won't need a dedicated SSR configuration file with Vite. You can specify your SSR entry point by passing a configuration option to the Laravel plugin.
+In most cases you won't need a dedicated SSR configuration file when using Vite. You can specify your SSR entry point by passing a configuration option to the Laravel plugin:
 
 ```js
 import { defineConfig } from 'vite'
@@ -297,7 +295,7 @@ mix.js('resources/js/app.js', 'public/js')
     ]);
 ```
 
-### Update NPM Scripts
+### Update NPM scripts
 
 Update your NPM scripts in `package.json`:
 
@@ -317,9 +315,7 @@ Update your NPM scripts in `package.json`:
 
 #### Inertia
 
-Vite requires a helper function to import page components which is not required with Laravel Mix.
-
-You can remove this as follows:
+Vite requires a helper function to import page components which is not required with Laravel Mix. You can remove this as follows:
 
 ```diff
 - import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
