@@ -15,10 +15,10 @@ npm install --save-dev vite laravel-vite-plugin
 You may also need to install additional Vite plugins for your project, such as the Vue or React plugins:
 
 ```shell
-# Vue
 npm install --save-dev @vitejs/plugin-vue
+```
 
-# React
+```shell
 npm install --save-dev @vitejs/plugin-react
 ```
 
