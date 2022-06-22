@@ -277,6 +277,12 @@ You should now be able to build your assets using the following command. This wi
 npm run dev
 ```
 
+Alternatively, if you need to build files without watching or if you need to build them for production, you may use the following command:
+
+```shell
+npm run build
+```
+
 For further info on how to use Vite, please check out [the documentation](https://laravel.com/docs/vite).
 
 ## Migrating from Vite to Laravel Mix
