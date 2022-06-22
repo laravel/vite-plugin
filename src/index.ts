@@ -120,7 +120,7 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
                     const protocol = server.config.server.https ? 'https' : 'http'
-                    const configHost = typeof resolvedConfig.server.host === 'string' ? resolvedConfig.server.host : false
+                    const configHost = typeof server.config.server.host === 'string' ? server.config.server.host : false
                     const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
                     const host = configHost || serverAddress
                     viteDevServerUrl = `${protocol}://${host}:${address.port}`
