@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import laravel from '../src'
+import { resolvePageComponent } from '../src/inertia-helpers';
 
 describe('laravel-vite-plugin', () => {
     afterEach(() => {
@@ -216,5 +217,18 @@ describe('laravel-vite-plugin', () => {
         const stringNoExternalConfig = plugin.config({ ssr: { noExternal: 'foo' }, build: { ssr: true } }, { command: 'build', mode: 'production' })
         /* @ts-ignore */
         expect(stringNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin'])
+    })
+})
+
+describe('inertia-helpers', () => {
+    const path = './__data__/dummy.ts'
+    it('pass glob value to resolvePageComponent', async () => {
+        const file = await resolvePageComponent<{ default: string }>(path, import.meta.glob('./__data__/*.ts'))
+        expect(file.default).toBe('Dummy File')
+    })
+
+    it('pass globEager value to resolvePageComponent', async () => {
+        const file = await resolvePageComponent<{ default: string }>(path, import.meta.globEager('./__data__/*.ts'))
+        expect(file.default).toBe('Dummy File')
     })
 })
