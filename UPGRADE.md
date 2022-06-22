@@ -277,6 +277,8 @@ You should now be able to build your assets using the following command. This wi
 npm run dev
 ```
 
+For further info on how to use Vite, please check out [the documentation](https://laravel.com/docs/vite).
+
 ## Migrating from Vite to Laravel Mix
 
 ### Install Laravel Mix
