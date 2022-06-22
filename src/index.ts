@@ -124,7 +124,8 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                     viteDevServerUrl = `${protocol}://${host}:${address.port}`
                     fs.writeFileSync(hotFile, viteDevServerUrl)
 
-                    const appUrl = loadEnv('', process.cwd(), 'APP_URL').APP_URL
+                    const envDir = resolvedConfig.envDir || process.cwd()
+                    const appUrl = loadEnv('', envDir, 'APP_URL').APP_URL
 
                     setTimeout(() => {
                         server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
