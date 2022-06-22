@@ -184,6 +184,12 @@ And you may remove your Mix configuration file:
 rm webpack.mix.js
 ```
 
+To wrap up, you may remove your Mix build manifest as well as the rule from the `.gitignore` config file:
+
+```shell
+rm public/mix-manifest.json
+```
+
 If you are using StyleCI and have ignored the `webpack.mix.js` file in your configuration, you may also like to remove the ignore rule.
 
 ### Optional: Configure Tailwind
@@ -261,6 +267,14 @@ You may start the SSR server using `node`:
 
 ```sh
 node storage/ssr/ssr.js
+```
+
+### Wrapping Up
+
+You should now be able to build your assets using the following command. This will also invoke the Vite server and Vite will watch for file changes:
+
+```shell
+npm run dev
 ```
 
 ## Migrating from Vite to Laravel Mix
