@@ -184,12 +184,6 @@ And you may remove your Mix configuration file:
 rm webpack.mix.js
 ```
 
-To wrap up, you may remove your Mix build manifest as well as the rule from the `.gitignore` config file:
-
-```shell
-rm public/mix-manifest.json
-```
-
 If you are using StyleCI and have ignored the `webpack.mix.js` file in your configuration, you may also like to remove the ignore rule.
 
 ### Optional: Configure Tailwind
