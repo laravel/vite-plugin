@@ -15,10 +15,10 @@ npm install --save-dev vite laravel-vite-plugin
 You may also need to install additional Vite plugins for your project, such as the Vue or React plugins:
 
 ```shell
-# Vue
 npm install --save-dev @vitejs/plugin-vue
+```
 
-# React
+```shell
 npm install --save-dev @vitejs/plugin-react
 ```
 
@@ -260,6 +260,22 @@ You may start the SSR server using `node`:
 ```sh
 node storage/ssr/ssr.js
 ```
+
+### Wrapping Up
+
+You should now be able to build your assets using the following command. This will also invoke the Vite server and Vite will watch for file changes:
+
+```shell
+npm run dev
+```
+
+Alternatively, if you need to build files without watching or if you need to build them for production, you may use the following command:
+
+```shell
+npm run build
+```
+
+For further info on how to use Vite, please check out [the documentation](https://laravel.com/docs/vite).
 
 ## Migrating from Vite to Laravel Mix
 
