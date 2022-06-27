@@ -195,6 +195,24 @@ describe('laravel-vite-plugin', () => {
         delete process.env.VITE_PORT
     })
 
+    it('allows the server configuration to be overridden inside a Sail container', () => {
+        process.env.LARAVEL_SAIL = '1'
+        const plugin = laravel('resources/js/app.js')
+
+        const config = plugin.config({
+            server: {
+                host: 'example.com',
+                port: 1234,
+                strictPort: false,
+            }
+        }, { command: 'serve', mode: 'development' })
+        expect(config.server.host).toBe('example.com')
+        expect(config.server.port).toBe(1234)
+        expect(config.server.strictPort).toBe(false)
+
+        delete process.env.LARAVEL_SAIL
+    })
+
     it('prevents the Inertia helpers from being externalized', () => {
         /* eslint-disable @typescript-eslint/ban-ts-comment */
         const plugin = laravel('resources/js/app.js')

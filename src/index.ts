@@ -79,9 +79,9 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
                 server: {
                     origin: '__laravel_vite_placeholder__',
                     ...(process.env.LARAVEL_SAIL ? {
-                        host: '0.0.0.0',
-                        port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173,
-                        strictPort: true,
+                        host: userConfig.server?.host ?? '0.0.0.0',
+                        port: userConfig.server?.port ?? (env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173),
+                        strictPort: userConfig.server?.strictPort ?? true,
                     } : undefined)
                 },
                 resolve: {
