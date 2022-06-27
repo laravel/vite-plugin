@@ -184,17 +184,17 @@ And you may remove your Mix configuration file:
 rm webpack.mix.js
 ```
 
-If you are using StyleCI and have ignored the `webpack.mix.js` file in your configuration, you may also like to remove the ignore rule.
+If you are using StyleCI and have ignored the `webpack.mix.js` file in your configuration, you may also wish to remove the ignore rule.
 
 ### Optional: Configure Tailwind
 
-If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need a `postcss.config.js` file. Tailwind can generate this for you automatically:
+If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need to create a `postcss.config.js` file. Tailwind can generate this for you automatically:
 
 ```shell
 npx tailwindcss init -p
 ```
 
-Or you can create it manually:
+Or, you can create it manually:
 
 ```js
 module.exports = {
@@ -209,7 +209,7 @@ If you are using other PostCSS plugins, such as `postcss-import`, you will need 
 
 ### Optional: Git ignore the build directory
 
-Vite will place all of your build assets into a `build` subdirectory inside your public directory. If you prefer to build your assets on deploy, instead of committing them to your repository, then you may wish to add this directory to your `.gitignore` file:
+Vite will place all of your build assets into a `build` subdirectory inside your public directory. If you prefer to build your assets on deploy instead of committing them to your repository, you may wish to add this directory to your `.gitignore` file:
 
 ```gitignore
 /public/build
@@ -223,7 +223,7 @@ You may remove your dedicated Laravel Mix SSR configuration:
 rm webpack.ssr.mix.js
 ```
 
-In most cases you won't need a dedicated SSR configuration file when using Vite. You can specify your SSR entry point by passing a configuration option to the Laravel plugin:
+In most cases, you won't need a dedicated SSR configuration file when using Vite. You can specify your SSR entry point by passing a configuration option to the Laravel plugin:
 
 ```js
 import { defineConfig } from 'vite'
@@ -249,7 +249,7 @@ You may wish to add the following additional scripts to your `package.json`:
   }
 ```
 
-If you prefer to build your assets on deploy, instead of committing them to your repository, then you may wish to add the SSR output directory to your `.gitignore` file:
+If you prefer to build your assets on deploy instead of committing them to your repository, you may wish to add the SSR output directory to your `.gitignore` file:
 
 ```gitignore
 /storage/ssr
@@ -261,27 +261,27 @@ You may start the SSR server using `node`:
 node storage/ssr/ssr.js
 ```
 
-### Wrapping Up
+### Wrapping up
 
-You should now be able to build your assets using the following command. This will also invoke the Vite server and Vite will watch for file changes:
+You should now be able to build your assets using `dev` command. This will also invoke the Vite server and Vite will watch for file changes:
 
 ```shell
 npm run dev
 ```
 
-Alternatively, if you need to build files without watching or if you need to build them for production, you may use the following command:
+Alternatively, if you need to build files without watching or if you need to build them for production, you may use the `build` command:
 
 ```shell
 npm run build
 ```
 
-For further info on how to use Vite, please check out [the documentation](https://laravel.com/docs/vite).
+For further information on how to use Vite, please check out [the Laravel Vite documentation](https://laravel.com/docs/vite).
 
 ## Migrating from Vite to Laravel Mix
 
 ### Install Laravel Mix
 
-First you will need to install Laravel Mix using your npm package manager of choice:
+First, you will need to install Laravel Mix using your npm package manager of choice:
 
 ```shell
 npm install --save-dev laravel-mix
@@ -371,7 +371,7 @@ You will also need to update these references in your JavaScript code to use the
 
 ### Remove CSS imports from your JavaScript entry point(s)
 
-If you are importing your CSS via JavaScript, you will need to remove them:
+If you are importing your CSS via JavaScript, you will need to remove these statements:
 
 ```js
 - import '../css/app.css'
@@ -396,7 +396,7 @@ Vite and the Laravel Plugin can now be uninstalled:
 npm remove vite laravel-vite-plugin
 ```
 
-And you may remove your Vite configuration file:
+Next, you may remove your Vite configuration file:
 
 ```shell
 rm vite.config.js
