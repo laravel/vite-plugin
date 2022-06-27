@@ -63,7 +63,7 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
         enforce: 'post',
         config: (userConfig, { command, mode }) => {
             const ssr = !! userConfig.build?.ssr
-            const env = loadEnv(mode, process.cwd(), '')
+            const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
 
             return {
