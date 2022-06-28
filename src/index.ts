@@ -169,7 +169,7 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
             cssManifest[relativeChunkPath] = {
                 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
                 /* @ts-ignore */
-                file: Array.from(chunk.viteMetadata.importedCss)[0],
+                file: Array.from(chunk.viteMetadata.importedCss)[0] ?? chunk.fileName,
                 src: relativeChunkPath,
                 isEntry: true,
             }
