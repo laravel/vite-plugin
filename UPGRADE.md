@@ -217,6 +217,28 @@ If you are using the `$this->withoutMix();` helper in your tests, you should rep
 + $this->withoutVite();
 ```
 
+### Vapor
+
+If you are deploying your application to Laravel Vapor, there are a few things you will want to handle before deploying.
+
+Ensure you have updated to at least version `1.40.0` of the Vapor CLI package:
+
+```sh
+composer require laravel/vapor-cli:^1.40.0
+```
+
+Next, if you are using the Vapor asset helper in your application, you only need to utilize the asset helper when you are referencing assets you don't want bundled, such as those that already live in your public directory.
+
+If you want to use the asset helper with your Vite project, you will also need to specify the base URL for assets in your application's entry point, for example in your `resources/js/app.js,` like so:
+
+```diff
+- window.Vapor = require('laravel-vapor');
++ import Vapor from 'laravel-vapor';
+
++ window.Vapor = Vapor;
++ window.Vapor.withBaseAssetUrl(import.meta.env.VITE_VAPOR_ASSET_URL)
+```
+
 ### Optional: Configure Tailwind
 
 If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need to create a `postcss.config.js` file. Tailwind can generate this for you automatically:
