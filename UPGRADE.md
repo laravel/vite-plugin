@@ -53,6 +53,29 @@ export default defineConfig({
 
 If you are building an SPA, you will get a better developer experience by removing the CSS entry point above and [importing your CSS from Javascript](#importing-your-css-from-your-javascript-entry-points).
 
+#### Update Aliases
+
+If you are migrating aliases from your Mix config to Vite, you should ensure that they start with a `/`.
+
+```js
+export default defineConfig({
+    plugins: [
+        laravel([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ]),
+    ],
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+            'css': '/resources/css'
+        }
+    }
+});
+```
+
+For convenience, the Laravel Plugin automatically injects an `"@"` alias that points to the `/resources/js` directory, so if this is the only alias you specify, you can omit it from your `vite.config.js`.
+
 ### Update NPM scripts
 
 Update your NPM scripts in `package.json`:
