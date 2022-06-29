@@ -73,7 +73,7 @@ export default defineConfig({
 });
 ```
 
-For your convenience, the Laravel Plugin automatically adds an `@` alias for your `/resources/js` directory. If you do not need to customize your aliases, you may omit this section from your `vite.config.js` file.
+For your convenience, the Laravel Vite plugin automatically adds an `@` alias for your `/resources/js` directory. If you do not need to customize your aliases, you may omit this section from your `vite.config.js` file.
 
 ### Update NPM scripts
 
