@@ -13,7 +13,7 @@ This plugin configures Vite for use with a Laravel backend server.
 
 ## Official Documentation
 
-Coming soon.
+Documentation for the Laravel Vite plugin can be found on the [Laravel website](https://laravel.com/docs/vite).
 
 ## Contributing
 

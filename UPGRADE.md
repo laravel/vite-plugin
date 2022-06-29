@@ -27,10 +27,10 @@ npm install --save-dev @vitejs/plugin-react
 Create a `vite.config.js` file in the root of your project:
 
 ```js
-import { defineConfig } from 'vite'
-import laravel from 'laravel-vite-plugin'
-// import react from '@vitejs/plugin-react'
-// import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+// import react from '@vitejs/plugin-react';
+// import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
@@ -48,10 +48,32 @@ export default defineConfig({
         //     },
         // }),
     ],
-})
+});
 ```
 
 If you are building an SPA, you will get a better developer experience by removing the CSS entry point above and [importing your CSS from Javascript](#importing-your-css-from-your-javascript-entry-points).
+
+#### Update Aliases
+
+If you are migrating aliases from your `webpack.mix.js` file to your `vite.config.js` file, you should ensure that the paths start with `/`. For example, `resources/js` would become `/resources/js`:
+
+```js
+export default defineConfig({
+    plugins: [
+        laravel([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ]),
+    ],
+    resolve: {
+        alias: {
+            '@': '/resources/js'
+        }
+    }
+});
+```
+
+For your convenience, the Laravel Vite plugin automatically adds an `@` alias for your `/resources/js` directory. If you do not need to customize your aliases, you may omit this section from your `vite.config.js` file.
 
 ### Update NPM scripts
 
@@ -82,7 +104,7 @@ Inertia makes use of a `require()` call that is more complex to replicate with V
 The following function can be used instead:
 
 ```diff
-+ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
++ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
   createInertiaApp({
       title: (title) => `${title} - ${appName}`,
@@ -166,8 +188,8 @@ See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vi
 ### Vue imports must include the `.vue` extension
 
 ```diff
-- import Button from './Button'
-+ import Button from './Button.vue'
+- import Button from './Button';
++ import Button from './Button.vue';
 ```
 
 ### Remove Laravel Mix
@@ -185,6 +207,15 @@ rm webpack.mix.js
 ```
 
 If you are using StyleCI and have ignored the `webpack.mix.js` file in your configuration, you may also wish to remove the ignore rule.
+
+### Update Test Helpers
+
+If you are using the `$this->withoutMix();` helper in your tests, you should replace this with `$this->withoutVite()`:
+
+```diff
+- $this->withoutMix();
++ $this->withoutVite();
+```
 
 ### Optional: Configure Tailwind
 
@@ -226,8 +257,8 @@ rm webpack.ssr.mix.js
 In most cases, you won't need a dedicated SSR configuration file when using Vite. You can specify your SSR entry point by passing a configuration option to the Laravel plugin:
 
 ```js
-import { defineConfig } from 'vite'
-import laravel from 'laravel-vite-plugin'
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
     plugins: [
@@ -236,7 +267,7 @@ export default defineConfig({
             ssr: 'resources/js/ssr.js',
         }),
     ],
-})
+});
 ```
 
 You may wish to add the following additional scripts to your `package.json`:
@@ -334,7 +365,7 @@ Update your NPM scripts in `package.json`:
 Vite requires a helper function to import page components which is not required with Laravel Mix. You can remove this as follows:
 
 ```diff
-- import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
+- import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
   createInertiaApp({
       title: (title) => `${title} - ${appName}`,
@@ -374,7 +405,7 @@ You will also need to update these references in your JavaScript code to use the
 If you are importing your CSS via JavaScript, you will need to remove these statements:
 
 ```js
-- import '../css/app.css'
+- import '../css/app.css';
 ```
 
 ### Replace `@vite` with `mix()`
