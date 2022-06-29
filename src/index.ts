@@ -184,6 +184,12 @@ export default function laravel(config: string|string[]|PluginConfig): LaravelPl
             }
 
             const manifestPath = path.resolve(resolvedConfig.root, resolvedConfig.build.outDir, manifestConfig)
+
+            if (! fs.existsSync(manifestPath)) {
+                // The manifest does not exist yet when first writing the legacy asset bundle.
+                return;
+            }
+
             const manifest = JSON.parse(fs.readFileSync(manifestPath).toString())
             const newManifest = {
                 ...manifest,
