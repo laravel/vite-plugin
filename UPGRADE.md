@@ -55,7 +55,7 @@ If you are building an SPA, you will get a better developer experience by removi
 
 #### Update Aliases
 
-If you are migrating aliases from your Mix config to Vite, you should ensure that they start with a `/`.
+If you are migrating aliases from your Mix config to Vite, you should ensure that the paths start with a `/`, e.g. `resources/js` would become `/resources/js`:
 
 ```js
 export default defineConfig({
