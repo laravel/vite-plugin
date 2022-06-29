@@ -186,6 +186,15 @@ rm webpack.mix.js
 
 If you are using StyleCI and have ignored the `webpack.mix.js` file in your configuration, you may also wish to remove the ignore rule.
 
+### Update Test Helpers
+
+If you are using the `$this->withoutMix();` helper in your tests, you should replace this with `$this->withoutVite()`:
+
+```diff
+- $this->withoutMix();
++ $this->withoutVite();
+```
+
 ### Optional: Configure Tailwind
 
 If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need to create a `postcss.config.js` file. Tailwind can generate this for you automatically:
