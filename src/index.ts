@@ -40,6 +40,7 @@ interface PluginConfig {
     /**
      * Configuration for performing full page refresh on blade (or other) file changes.
      *
+     * {@link https://github.com/ElMassimo/vite-plugin-full-reload}
      * @default false
      */
     refresh?: boolean|string|string[]|FullReloadConfig|FullReloadConfig[]
