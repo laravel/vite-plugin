@@ -2,7 +2,8 @@ import fs from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig, SSROptions, normalizePath } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig, SSROptions, normalizePath, PluginOption } from 'vite'
+import fullReload from 'vite-plugin-full-reload'
 
 interface PluginConfig {
     /**
@@ -35,6 +36,47 @@ interface PluginConfig {
      * @default 'storage/ssr'
      */
     ssrOutputDirectory?: string
+
+    /**
+     * Configuration for performing full page refresh on blade (or other) file changes.
+     *
+     * {@link https://github.com/ElMassimo/vite-plugin-full-reload}
+     * @default false
+     */
+    refresh?: boolean|string|string[]|FullReloadConfig|FullReloadConfig[]
+}
+
+interface FullReloadConfig {
+    paths: string[],
+    config?: {
+        /**
+         * Whether full reload should happen regardless of the file path.
+         *
+         * @default true
+         */
+        always?: boolean
+
+        /**
+         * How many milliseconds to wait before reloading the page after a file change.
+         *
+         * @default 0
+         */
+        delay?: number
+
+        /**
+         * Whether to log when a file change triggers a full reload.
+         *
+         * @default true
+         */
+        log?: boolean
+
+        /**
+         * Files will be resolved against this path.
+         *
+         * @default process.cwd()
+         */
+        root?: string
+    }
 }
 
 interface LaravelPlugin extends Plugin {
@@ -48,8 +90,16 @@ let exitHandlersBound = false
  *
  * @param config - A config object or relative path(s) of the scripts to be compiled.
  */
-export default function laravel(config: string|string[]|PluginConfig): LaravelPlugin {
+export default function laravel(config: string|string[]|PluginConfig): [LaravelPlugin, ...Plugin[]]  {
     const pluginConfig = resolvePluginConfig(config)
+
+    return [
+        resolveLaravelPlugin(pluginConfig),
+        ...resolveFullReloadConfig(pluginConfig) as Plugin[],
+    ];
+}
+
+function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlugin {
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
     const cssManifest: Manifest = {}
@@ -250,12 +300,17 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         config.ssrOutputDirectory = config.ssrOutputDirectory.trim().replace(/^\/+/, '').replace(/\/+$/, '')
     }
 
+    if (config.refresh === true) {
+        config.refresh = [{ paths: ['resources/views/**', 'routes/**'] }]
+    }
+
     return {
         input: config.input,
         publicDirectory: config.publicDirectory ?? 'public',
         buildDirectory: config.buildDirectory ?? 'build',
         ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'storage/ssr',
+        refresh: config.refresh ?? false,
     }
 }
 
@@ -306,6 +361,34 @@ function resolveManifestConfig(config: ResolvedConfig): string|false
     }
 
     return manifestConfig
+}
+
+function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): PluginOption[]{
+    if (typeof config === 'boolean') {
+        return [];
+    }
+
+    if (typeof config === 'string') {
+        config = [{ paths: [config]}]
+    }
+
+    if (! Array.isArray(config)) {
+        config = [config]
+    }
+
+    if (config.some(c => typeof c === 'string')) {
+        config = [{ paths: config }] as FullReloadConfig[]
+    }
+
+    return (config as FullReloadConfig[]).flatMap(c => {
+        const plugin = fullReload(c.paths, c.config)
+
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /** @ts-ignore */
+        plugin.__laravel_plugin_config = c
+
+        return plugin
+    })
 }
 
 /**
