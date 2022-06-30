@@ -42,7 +42,7 @@ interface PluginConfig {
      *
      * @default false
      */
-    fullReload?: boolean|string|string[]|FullReloadConfig|FullReloadConfig[]
+    refresh?: boolean|string|string[]|FullReloadConfig|FullReloadConfig[]
 }
 
 interface FullReloadConfig {
@@ -294,8 +294,8 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         config.ssrOutputDirectory = config.ssrOutputDirectory.trim().replace(/^\/+/, '').replace(/\/+$/, '')
     }
 
-    if (config.fullReload === true) {
-        config.fullReload = [{ paths: ['resources/views/**', 'routes/**'] }]
+    if (config.refresh === true) {
+        config.refresh = [{ paths: ['resources/views/**', 'routes/**'] }]
     }
 
     return {
@@ -304,7 +304,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         buildDirectory: config.buildDirectory ?? 'build',
         ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'storage/ssr',
-        fullReload: config.fullReload ?? false,
+        refresh: config.refresh ?? false,
     }
 }
 
@@ -357,7 +357,7 @@ function resolveManifestConfig(config: ResolvedConfig): string|false
     return manifestConfig
 }
 
-function resolveFullReloadConfig({ fullReload: config }: Required<PluginConfig>): PluginOption[]{
+function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): PluginOption[]{
     if (typeof config === 'boolean') {
         return [];
     }

@@ -243,7 +243,7 @@ describe('laravel-vite-plugin', () => {
         expect(plugins.length).toBe(1)
     })
 
-    it('does not configure full reload when fullReload is not present', () => {
+    it('does not configure full reload when refresh is not present', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
         })
@@ -251,27 +251,27 @@ describe('laravel-vite-plugin', () => {
         expect(plugins.length).toBe(1)
     })
 
-    it('does not configure full reload when fullReload is set to undefined', () => {
+    it('does not configure full reload when refresh is set to undefined', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
-            fullReload: undefined,
+            refresh: undefined,
         })
         expect(plugins.length).toBe(1)
     })
 
-    it('does not configure full reload when fullReload is false', () => {
+    it('does not configure full reload when refresh is false', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
-            fullReload: false,
+            refresh: false,
         })
 
         expect(plugins.length).toBe(1)
     })
 
-    it('configures full reload with routes and views when fullReload is true', () => {
+    it('configures full reload with routes and views when refresh is true', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
-            fullReload: true,
+            refresh: true,
         })
 
         expect(plugins.length).toBe(2)
@@ -281,10 +281,10 @@ describe('laravel-vite-plugin', () => {
         })
     })
 
-    it('configures full reload whenFullReload is a single path', () => {
+    it('configures full reload when refresh is a single path', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
-            fullReload: 'path/to/watch/**',
+            refresh: 'path/to/watch/**',
         })
 
         expect(plugins.length).toBe(2)
@@ -294,10 +294,10 @@ describe('laravel-vite-plugin', () => {
         })
     })
 
-    it('configures full reload when fullReload is an array of paths', () => {
+    it('configures full reload when refresh is an array of paths', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
-            fullReload: ['path/to/watch/**', 'another/to/watch/**'],
+            refresh: ['path/to/watch/**', 'another/to/watch/**'],
         })
 
         expect(plugins.length).toBe(2)
@@ -307,10 +307,10 @@ describe('laravel-vite-plugin', () => {
         })
     })
 
-    it('configures full reload when fullReload is a complete configuration to proxy', () => {
+    it('configures full reload when refresh is a complete configuration to proxy', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
-            fullReload: {
+            refresh: {
                 paths: ['path/to/watch/**', 'another/to/watch/**'],
                 config: { delay: 987 }
             },
@@ -324,10 +324,10 @@ describe('laravel-vite-plugin', () => {
         })
     })
 
-    it('configures full reload when fullReload is an array of complete configurations to proxy', () => {
+    it('configures full reload when refresh is an array of complete configurations to proxy', () => {
         const plugins = laravel({
             input: 'resources/js/app.js',
-            fullReload: [
+            refresh: [
                 {
                     paths: ['path/to/watch/**'],
                     config: { delay: 987 }
