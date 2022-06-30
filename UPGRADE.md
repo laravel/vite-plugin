@@ -179,7 +179,7 @@ This loads a React "refresh runtime" in development mode only, which is required
 
 ### JavaScript files containing JSX must use a `.jsx` extension
 
-You will need to rename any `.js` files containing JSX to instead have a `.jsx` extension. If you need to rename your entry point then you should read the [entry point docs](https://github.com/laravel/vite-plugin/blob/docs/docs/vite.md#entry-points) to learn how to configure the Laravel plugin for your project.
+You will need to rename any `.js` files containing JSX to instead have a `.jsx` extension. If you need to rename your entry point then you should read the [entry point docs](https://laravel.com/docs/9.x/vite#configuring-vite) to learn how to configure the Laravel plugin for your project.
 
 See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vite's creator for more information.
 
