@@ -50,24 +50,28 @@ interface FullReloadConfig {
     config?: {
         /**
          * Whether full reload should happen regardless of the file path.
+         *
          * @default true
          */
         always?: boolean
 
         /**
          * How many milliseconds to wait before reloading the page after a file change.
+         *
          * @default 0
          */
         delay?: number
 
         /**
          * Whether to log when a file change triggers a full reload.
+         *
          * @default true
          */
         log?: boolean
 
         /**
          * Files will be resolved against this path.
+         *
          * @default process.cwd()
          */
         root?: string
@@ -138,10 +142,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                                 replacement: defaultAliases[alias]
                             }))
                         ]
-                            : {
-                                ...defaultAliases,
-                                ...userConfig.resolve?.alias,
-                            }
+                        : {
+                            ...defaultAliases,
+                            ...userConfig.resolve?.alias,
+                        }
                 },
                 ssr: {
                     noExternal: noExternalInertiaHelpers(userConfig),
@@ -169,7 +173,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
                     const host = configHost ?? serverAddress
                     viteDevServerUrl = `${protocol}://${host}:${address.port}`
-                        fs.writeFileSync(hotFile, viteDevServerUrl)
+                    fs.writeFileSync(hotFile, viteDevServerUrl)
 
                     const envDir = resolvedConfig.envDir || process.cwd()
                     const appUrl = loadEnv('', envDir, 'APP_URL').APP_URL
