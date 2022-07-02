@@ -105,6 +105,9 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
     ];
 }
 
+/**
+ * Resolve the Laravel Plugin configuration.
+ */
 function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlugin {
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
