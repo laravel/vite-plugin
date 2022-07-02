@@ -169,11 +169,16 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
-                    const protocol = server.config.server.https ? 'https' : 'http'
+                    const configHmrProtocol = typeof server.config.server.hmr === 'object' ? server.config.server.hmr.protocol : null
+                    const clientHmrProtocol = configHmrProtocol ? (configHmrProtocol === 'wss' ? 'https' : 'http') : null
+                    const configProtocol = server.config.server.https ? 'https' : 'http'
+                    const protocol = clientHmrProtocol ?? configProtocol
+
                     const configHmrHost = typeof server.config.server.hmr === 'object' ? server.config.server.hmr.host : null
                     const configHost = typeof server.config.server.host === 'string' ? server.config.server.host : null
                     const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
                     const host = configHmrHost ?? configHost ?? serverAddress
+
                     viteDevServerUrl = `${protocol}://${host}:${address.port}`
                     fs.writeFileSync(hotFile, viteDevServerUrl)
 
