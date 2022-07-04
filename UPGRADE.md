@@ -107,13 +107,7 @@ Vite only supports ES modules, so if you are upgrading an existing application y
 
 #### Inertia
 
-Ensure you have updated to at least version `0.6.3` of the `inertia-laravel` package:
-
-```sh
-composer require inertiajs/inertia-laravel:^0.6.3
-```
-
-Additionally, Inertia makes use of a `require()` call that is more complex to replicate with Vite.
+Inertia makes use of a `require()` call that is more complex to replicate with Vite.
 
 The following function can be used instead:
 
@@ -131,6 +125,12 @@ The following function can be used instead:
               .mount(el);
       },
   });
+```
+
+Additionally, you should ensure you have updated to at least version `0.6.3` of the `inertia-laravel` package:
+
+```sh
+composer require inertiajs/inertia-laravel:^0.6.3
 ```
 
 ### Update environment variables
