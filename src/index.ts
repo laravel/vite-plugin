@@ -204,25 +204,23 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
             exitHandlersBound = true
 
-            return () => {
-                server.middlewares.use((req, res, next) => {
-                    if (req.url === '/index.html') {
-                        server.config.logger.warn(
-                            "\n" + colors.bgYellow(
-                                colors.black(`The Vite server should not be accessed directly. Your Laravel application's configured APP_URL is: ${appUrl}`)
-                            )
+            return () => server.middlewares.use((req, res, next) => {
+                if (req.url === '/index.html') {
+                    server.config.logger.warn(
+                        "\n" + colors.bgYellow(
+                            colors.black(`The Vite server should not be accessed directly. Your Laravel application's configured APP_URL is: ${appUrl}`)
                         )
+                    )
 
-                        res.statusCode = 404
+                    res.statusCode = 404
 
-                        res.end(
-                            fs.readFileSync(path.join(__dirname, 'dev-server-index.html')).toString().replace(/{{ APP_URL }}/g, appUrl)
-                        )
-                    }
+                    res.end(
+                        fs.readFileSync(path.join(__dirname, 'dev-server-index.html')).toString().replace(/{{ APP_URL }}/g, appUrl)
+                    )
+                }
 
-                    next()
-                });
-            }
+                next()
+            })
         },
 
         // The following two hooks are a workaround to help solve a "flash of unstyled content" with Blade.
