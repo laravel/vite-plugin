@@ -328,13 +328,6 @@ You may start the SSR server using `node`:
 node storage/ssr/ssr.js
 ```
 
-### Troubleshooting
-
-If you have followed all of the above steps, but are still having issues you should try the following steps:
-
-- Run `php artisan view:clear` to clear any compiled view assets.
-- If your development web server is running on HTTPS, check out the ["Working With A Secure Development Server"](https://laravel.com/docs/9.x/vite#working-with-a-secure-development-server) section of the documentation.
-
 ### Wrapping up
 
 You should now be able to build your assets using `dev` command. This will also invoke the Vite server and Vite will watch for file changes:
@@ -350,6 +343,13 @@ npm run build
 ```
 
 For further information on how to use Vite, please check out [the Laravel Vite documentation](https://laravel.com/docs/vite).
+
+### Troubleshooting
+
+If you have followed all of the above steps, but are still having issues you should try the following steps:
+
+- Run `php artisan view:clear` to clear any compiled view assets.
+- If your development web server is running on HTTPS, check out the ["Working With A Secure Development Server"](https://laravel.com/docs/9.x/vite#working-with-a-secure-development-server) section of the documentation.
 
 ## Migrating from Vite to Laravel Mix
 
