@@ -332,7 +332,7 @@ node storage/ssr/ssr.js
 
 If you have followed all of the above steps, but are still having issues you should try the following steps:
 
-- Try running `php artisan view:clear` to clear any compiled view assets.
+- Run `php artisan view:clear` to clear any compiled view assets.
 - If your development web server is running on HTTPS, check out the ["Working With A Secure Development Server"](https://laravel.com/docs/9.x/vite#working-with-a-secure-development-server) section of the documentation.
 
 ### Wrapping up
