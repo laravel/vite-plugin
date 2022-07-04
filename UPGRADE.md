@@ -6,7 +6,7 @@
 
 ### Update Laravel Framework
 
-To make use of the new Vite integration, you will need to update to at least version `9.19.0` of the `laravel/framework` package:
+To make use of the new Vite integration, you will need to update to at least version `9.19.0` of the `laravel/framework`:
 
 ```sh
 composer require laravel/framework:^9.19.0
