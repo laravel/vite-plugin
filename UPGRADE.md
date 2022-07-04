@@ -4,6 +4,14 @@
 
 > **Note** This upgrade guide does not cover all possible Mix use cases, such as Sass compilation. Please consult the [Vite documentation](https://vitejs.dev/guide/) for information on configuring Vite for these scenarios.
 
+### Update Laravel Framework
+
+To make use of the new Vite integration, you will need to update to at least version `9.19.0` of the `laravel/framework`:
+
+```sh
+composer require laravel/framework:^9.19.0
+```
+
 ### Install Vite and the Laravel Plugin
 
 First, you will need to install [Vite](https://vitejs.dev/) and the [Laravel Vite Plugin](https://www.npmjs.com/package/laravel-vite-plugin) using your npm package manager of choice:
@@ -117,6 +125,12 @@ The following function can be used instead:
               .mount(el);
       },
   });
+```
+
+Additionally, you should ensure you have updated to at least version `0.6.3` of the `inertia-laravel` package:
+
+```sh
+composer require inertiajs/inertia-laravel:^0.6.3
 ```
 
 ### Update environment variables
@@ -329,6 +343,13 @@ npm run build
 ```
 
 For further information on how to use Vite, please check out [the Laravel Vite documentation](https://laravel.com/docs/vite).
+
+### Troubleshooting
+
+If you have followed the upgrade guide, but are still having issues you should try the following steps:
+
+- Run `php artisan view:clear` to clear any compiled view assets.
+- If your development web server is running on HTTPS, check out the ["Working With A Secure Development Server"](https://laravel.com/docs/9.x/vite#working-with-a-secure-development-server) section of the documentation.
 
 ## Migrating from Vite to Laravel Mix
 
