@@ -212,6 +212,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                                 colors.black(`The Vite server should not be accessed directly. Please visit ${appUrl} instead.`)
                             )
                         )
+
+                        res.statusCode = 404
+
                         res.end(
                             fs.readFileSync(path.join(__dirname, 'dev-server-index.html')).toString().replace(/{{ APP_URL }}/g, appUrl)
                         )
