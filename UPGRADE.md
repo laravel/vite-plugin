@@ -346,7 +346,7 @@ For further information on how to use Vite, please check out [the Laravel Vite d
 
 ### Troubleshooting
 
-If you have followed all of the above steps, but are still having issues you should try the following steps:
+If you have followed the upgrade guide, but are still having issues you should try the following steps:
 
 - Run `php artisan view:clear` to clear any compiled view assets.
 - If your development web server is running on HTTPS, check out the ["Working With A Secure Development Server"](https://laravel.com/docs/9.x/vite#working-with-a-secure-development-server) section of the documentation.
