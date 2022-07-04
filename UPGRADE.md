@@ -4,6 +4,14 @@
 
 > **Note:** This upgrade guide does not cover all possible Mix use cases, such as Sass compilation. Please consult the [Vite documentation](https://vitejs.dev/guide/) for information on configuring Vite for these scenarios.
 
+### Update Laravel Framework
+
+To make use of the new Vite integration, you will need to update to at least version `9.19.0` of the `laravel/framework` package:
+
+```sh
+composer require laravel/framework:^9.19.0
+```
+
 ### Install Vite and the Laravel Plugin
 
 First, you will need to install [Vite](https://vitejs.dev/) and the [Laravel Vite Plugin](https://www.npmjs.com/package/laravel-vite-plugin) using your npm package manager of choice:
