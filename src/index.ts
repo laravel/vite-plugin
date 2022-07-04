@@ -209,7 +209,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     if (req.url === '/index.html') {
                         server.config.logger.warn(
                             "\n" + colors.bgYellow(
-                                colors.black(`The Vite server should not be accessed directly. Please visit ${appUrl} instead.`)
+                                colors.black(`The Vite server should not be accessed directly. Your Laravel application's configured APP_URL is: ${appUrl}`)
                             )
                         )
 
