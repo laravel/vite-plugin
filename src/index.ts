@@ -83,6 +83,8 @@ interface LaravelPlugin extends Plugin {
     config: (config: UserConfig, env: ConfigEnv) => UserConfig
 }
 
+type DevServerUrl = `${'http'|'https'}://${string}:${number}`
+
 let exitHandlersBound = false
 
 /**
@@ -100,7 +102,7 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
 }
 
 function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlugin {
-    let viteDevServerUrl: string
+    let viteDevServerUrl: DevServerUrl
     let resolvedConfig: ResolvedConfig
     const cssManifest: Manifest = {}
 
@@ -169,17 +171,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
-                    const configHmrProtocol = typeof server.config.server.hmr === 'object' ? server.config.server.hmr.protocol : null
-                    const clientHmrProtocol = configHmrProtocol ? (configHmrProtocol === 'wss' ? 'https' : 'http') : null
-                    const configProtocol = server.config.server.https ? 'https' : 'http'
-                    const protocol = clientHmrProtocol ?? configProtocol
-
-                    const configHmrHost = typeof server.config.server.hmr === 'object' ? server.config.server.hmr.host : null
-                    const configHost = typeof server.config.server.host === 'string' ? server.config.server.host : null
-                    const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
-                    const host = configHmrHost ?? configHost ?? serverAddress
-
-                    viteDevServerUrl = `${protocol}://${host}:${address.port}`
+                    viteDevServerUrl = resolveDevServerUrl(address, server.config)
                     fs.writeFileSync(hotFile, viteDevServerUrl)
 
                     const envDir = resolvedConfig.envDir || process.cwd()
@@ -394,6 +386,23 @@ function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): P
 
         return plugin
     })
+}
+
+/**
+ * Resolve the dev server URL from the server address and configuration.
+ */
+function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevServerUrl {
+    const configHmrProtocol = typeof config.server.hmr === 'object' ? config.server.hmr.protocol : null
+    const clientProtocol = configHmrProtocol ? (configHmrProtocol === 'wss' ? 'https' : 'http') : null
+    const serverProtocol = config.server.https ? 'https' : 'http'
+    const protocol = clientProtocol ?? serverProtocol
+
+    const configHmrHost = typeof config.server.hmr === 'object' ? config.server.hmr.host : null
+    const configHost = typeof config.server.host === 'string' ? config.server.host : null
+    const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
+    const host = configHmrHost ?? configHost ?? serverAddress
+
+    return `${protocol}://${host}:${address.port}`
 }
 
 /**
