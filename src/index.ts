@@ -3,7 +3,7 @@ import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
 import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig, SSROptions, normalizePath, PluginOption } from 'vite'
-import fullReload from 'vite-plugin-full-reload'
+import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
     /**
@@ -43,40 +43,12 @@ interface PluginConfig {
      * {@link https://github.com/ElMassimo/vite-plugin-full-reload}
      * @default false
      */
-    refresh?: boolean|string|string[]|FullReloadConfig|FullReloadConfig[]
+    refresh?: boolean|string|string[]|RefreshConfig|RefreshConfig[]
 }
 
-interface FullReloadConfig {
+interface RefreshConfig {
     paths: string[],
-    config?: {
-        /**
-         * Whether full reload should happen regardless of the file path.
-         *
-         * @default true
-         */
-        always?: boolean
-
-        /**
-         * How many milliseconds to wait before reloading the page after a file change.
-         *
-         * @default 0
-         */
-        delay?: number
-
-        /**
-         * Whether to log when a file change triggers a full reload.
-         *
-         * @default true
-         */
-        log?: boolean
-
-        /**
-         * Files will be resolved against this path.
-         *
-         * @default process.cwd()
-         */
-        root?: string
-    }
+    config?: FullReloadConfig,
 }
 
 interface LaravelPlugin extends Plugin {
@@ -383,10 +355,10 @@ function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): P
     }
 
     if (config.some(c => typeof c === 'string')) {
-        config = [{ paths: config }] as FullReloadConfig[]
+        config = [{ paths: config }] as RefreshConfig[]
     }
 
-    return (config as FullReloadConfig[]).flatMap(c => {
+    return (config as RefreshConfig[]).flatMap(c => {
         const plugin = fullReload(c.paths, c.config)
 
         /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
