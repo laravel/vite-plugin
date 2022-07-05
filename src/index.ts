@@ -85,6 +85,12 @@ interface LaravelPlugin extends Plugin {
 
 let exitHandlersBound = false
 
+export const refreshPaths = [
+    'app/View/Components/**',
+    'resources/views/**',
+    'routes/**',
+]
+
 /**
  * Laravel plugin for Vite.
  *
@@ -99,6 +105,9 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
     ];
 }
 
+/**
+ * Resolve the Laravel Plugin configuration.
+ */
 function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlugin {
     let viteDevServerUrl: string
     let resolvedConfig: ResolvedConfig
@@ -301,7 +310,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
     }
 
     if (config.refresh === true) {
-        config.refresh = [{ paths: ['resources/views/**', 'routes/**'] }]
+        config.refresh = [{ paths: refreshPaths }]
     }
 
     return {
