@@ -147,6 +147,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
         configureServer(server) {
             const hotFile = path.join(pluginConfig.publicDirectory, 'hot')
 
+            const envDir = resolvedConfig.envDir || process.cwd()
+            const appUrl = loadEnv('', envDir, 'APP_URL').APP_URL
+
             server.httpServer?.once('listening', () => {
                 const address = server.httpServer?.address()
 
@@ -154,9 +157,6 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 if (isAddressInfo(address)) {
                     viteDevServerUrl = resolveDevServerUrl(address, server.config)
                     fs.writeFileSync(hotFile, viteDevServerUrl)
-
-                    const envDir = resolvedConfig.envDir || process.cwd()
-                    const appUrl = loadEnv('', envDir, 'APP_URL').APP_URL
 
                     setTimeout(() => {
                         server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
@@ -181,6 +181,24 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             process.on('SIGHUP', process.exit)
 
             exitHandlersBound = true
+
+            return () => server.middlewares.use((req, res, next) => {
+                if (req.url === '/index.html') {
+                    server.config.logger.warn(
+                        "\n" + colors.bgYellow(
+                            colors.black(`The Vite server should not be accessed directly. Your Laravel application's configured APP_URL is: ${appUrl}`)
+                        )
+                    )
+
+                    res.statusCode = 404
+
+                    res.end(
+                        fs.readFileSync(path.join(__dirname, 'dev-server-index.html')).toString().replace(/{{ APP_URL }}/g, appUrl)
+                    )
+                }
+
+                next()
+            })
         },
 
         // The following two hooks are a workaround to help solve a "flash of unstyled content" with Blade.
