@@ -401,7 +401,8 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevS
     const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
     const host = configHmrHost ?? configHost ?? serverAddress
     
-    const port = typeof config.server.hmr === 'object' ? config.server.hmr.port : address.port
+    const configHmrClientPort = typeof config.server.hmr === 'object' ? config.server.hmr.clientPort : null
+    const port = configHmrPort ?? address.port
 
     return `${protocol}://${host}:${port}`
 }
