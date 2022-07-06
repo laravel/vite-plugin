@@ -400,8 +400,10 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevS
     const configHost = typeof config.server.host === 'string' ? config.server.host : null
     const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
     const host = configHmrHost ?? configHost ?? serverAddress
+    
+    const port = typeof config.server.hmr === 'object' ? (config.server.hmr.port ?? address.port)
 
-    return `${protocol}://${host}:${address.port}`
+    return `${protocol}://${host}:${port}`
 }
 
 /**
