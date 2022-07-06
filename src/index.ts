@@ -402,7 +402,7 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevS
     const host = configHmrHost ?? configHost ?? serverAddress
     
     const configHmrClientPort = typeof config.server.hmr === 'object' ? config.server.hmr.clientPort : null
-    const port = configHmrPort ?? address.port
+    const port = configHmrClientPort ?? address.port
 
     return `${protocol}://${host}:${port}`
 }
