@@ -405,7 +405,7 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevS
 }
 
 /**
- * Add the Interia helpers to the list of SSR dependencies that aren't externalized.
+ * Add the Inertia helpers to the list of SSR dependencies that aren't externalized.
  *
  * @see https://vitejs.dev/guide/ssr.html#ssr-externals
  */
