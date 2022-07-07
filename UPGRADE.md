@@ -319,13 +319,13 @@ You may wish to add the following additional scripts to your `package.json`:
 If you prefer to build your assets on deploy instead of committing them to your repository, you may wish to add the SSR output directory to your `.gitignore` file:
 
 ```gitignore
-/storage/ssr
+/bootstrap/ssr
 ```
 
 You may start the SSR server using `node`:
 
 ```sh
-node storage/ssr/ssr.js
+node bootstrap/ssr/ssr.js
 ```
 
 ### Wrapping up
@@ -479,6 +479,6 @@ rm vite.config.js
 You may also wish to remove any `.gitignore` paths you are no longer using:
 
 ```gitignore
+- /bootstrap/ssr
 - /public/build
-- /storage/ssr
 ```
