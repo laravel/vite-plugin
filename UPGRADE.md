@@ -328,6 +328,24 @@ You may start the SSR server using `node`:
 node storage/ssr/ssr.js
 ```
 
+### Optional: Update default HMR port when using Laravel Sail
+
+If you are using Laravel Sail, you must update the `HMR_PORT` in your `.env` file.
+
+```diff
+- HMR_PORT=8080
++ HMR_PORT=5173
+```
+
+Alternatively, you can set the default value in your `docker-compose.yml` file.
+
+
+```diff
+- -'${HMR_PORT:-8080}:8080'
++ -'${HMR_PORT:-5173}:5173'
+```
+
+
 ### Wrapping up
 
 You should now be able to build your assets using `dev` command. This will also invoke the Vite server and Vite will watch for file changes:
