@@ -333,7 +333,9 @@ node storage/ssr/ssr.js
 If you are using Laravel Sail, you need to add a binding in your `docker-compose.yml` file for your `VITE_PORT`.
 
 ```diff
-+ -'${VITE_PORT:-5173}:5173'
+ports:
+    - '${APP_PORT:-80}:80'
++   - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
 ```
 
 ### Wrapping up
