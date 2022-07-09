@@ -328,20 +328,12 @@ You may start the SSR server using `node`:
 node storage/ssr/ssr.js
 ```
 
-### Optional: Update default HMR port when using Laravel Sail
+### Optional: Expose Vite port when using Laravel Sail
 
-If you are using Laravel Sail, you need to update the default `HMR_PORT` value and the port it maps to in your `docker-compose.yml` file.
-
-```diff
-- -'${HMR_PORT:-8080}:8080'
-+ -'${HMR_PORT:-5173}:5173'
-```
-
-If you are setting the HMR_PORT in your `.env` file you will also need to update it to match.
+If you are using Laravel Sail, you need to add a binding in your `docker-compose.yml` file for your `VITE_PORT`.
 
 ```diff
-- HMR_PORT=8080
-+ HMR_PORT=5173
++ -'${VITE_PORT:-5173}:5173'
 ```
 
 ### Wrapping up
