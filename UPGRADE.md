@@ -328,6 +328,16 @@ You may start the SSR server using `node`:
 node storage/ssr/ssr.js
 ```
 
+### Optional: Expose Vite port when using Laravel Sail
+
+If you would like to run the `npm run dev` command in a Laravel Sail container, you will need to publish a port in your `docker-compose.yml` file:
+
+```diff
+ports:
+    - '${APP_PORT:-80}:80'
++   - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+```
+
 ### Wrapping up
 
 You should now be able to build your assets using `dev` command. This will also invoke the Vite server and Vite will watch for file changes:
