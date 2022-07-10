@@ -330,7 +330,7 @@ node storage/ssr/ssr.js
 
 ### Optional: Expose Vite port when using Laravel Sail
 
-If you are using Laravel Sail, you need to add a binding in your `docker-compose.yml` file for your `VITE_PORT`.
+If you would like to run the `npm run dev` command in a Laravel Sail container, you will need to publish a port in your `docker-compose.yml` file:
 
 ```diff
 ports:
