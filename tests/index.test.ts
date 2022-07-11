@@ -79,7 +79,7 @@ describe('laravel-vite-plugin', () => {
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build.manifest).toBe(false)
-        expect(ssrConfig.build.outDir).toBe('storage/ssr')
+        expect(ssrConfig.build.outDir).toBe('bootstrap/ssr')
         expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
     })
 

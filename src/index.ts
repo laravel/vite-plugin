@@ -33,7 +33,7 @@ interface PluginConfig {
     /**
      * The directory where the SSR bundle should be written.
      *
-     * @default 'storage/ssr'
+     * @default 'bootstrap/ssr'
      */
     ssrOutputDirectory?: string
 
@@ -305,7 +305,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         publicDirectory: config.publicDirectory ?? 'public',
         buildDirectory: config.buildDirectory ?? 'build',
         ssr: config.ssr ?? config.input,
-        ssrOutputDirectory: config.ssrOutputDirectory ?? 'storage/ssr',
+        ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
         refresh: config.refresh ?? false,
     }
 }

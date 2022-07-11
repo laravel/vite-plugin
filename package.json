@@ -25,7 +25,6 @@
         "build-plugin": "rm -rf dist && tsc && cp src/dev-server-index.html dist/",
         "build-inertia-helpers": "rm -rf inertia-helpers && tsc --project tsconfig.inertia-helpers.json",
         "lint": "eslint --ext .ts ./src ./tests",
-        "ssr:serve": "vite build --ssr && node storage/ssr/ssr.js",
         "test": "vitest run"
     },
     "devDependencies": {
