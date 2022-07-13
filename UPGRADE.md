@@ -17,17 +17,17 @@ composer require laravel/framework:^9.19.0
 First, you will need to install [Vite](https://vitejs.dev/) and the [Laravel Vite Plugin](https://www.npmjs.com/package/laravel-vite-plugin) using your npm package manager of choice:
 
 ```shell
-npm install --save-dev vite laravel-vite-plugin
+npm install --save-dev vite@^2.9.14 laravel-vite-plugin@^0.3.0
 ```
 
 You may also need to install additional Vite plugins for your project, such as the Vue or React plugins:
 
 ```shell
-npm install --save-dev @vitejs/plugin-vue
+npm install --save-dev @vitejs/plugin-vue@^2.3.3
 ```
 
 ```shell
-npm install --save-dev @vitejs/plugin-react
+npm install --save-dev @vitejs/plugin-react@^1.3.2
 ```
 
 ### Configure Vite
