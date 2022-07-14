@@ -159,9 +159,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     fs.writeFileSync(hotFile, viteDevServerUrl)
 
                     setTimeout(() => {
-                        server.config.logger.info(colors.red(`\n  Laravel ${laravelVersion()} `))
-                        server.config.logger.info(`\n  > APP_URL: ` + colors.cyan(appUrl))
-                    })
+                        server.config.logger.info(colors.red(`\n  ${colors.bold('Laravel')} ${laravelVersion()} `))
+                        server.config.logger.info(`  ${colors.green('➜')}  ${colors.bold('APP_URL')}: ${colors.cyan(appUrl.replace(/:(\d+)/, (_, port) => `:${colors.bold(port)}`))}`)
+                    }, 100)
                 }
             })
 
