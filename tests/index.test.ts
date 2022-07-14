@@ -219,7 +219,7 @@ describe('laravel-vite-plugin', () => {
 
         const noSsrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
         /* @ts-ignore */
-        expect(noSsrConfig.ssr.noExternal).toEqual(['laravel-vite-plugin'])
+        expect(noSsrConfig.ssr.noExternal).toEqual(['laravel-vite-plugin/inertia-helpers'])
 
         /* @ts-ignore */
         const nothingExternalConfig = plugin.config({ ssr: { noExternal: true }, build: { ssr: true } }, { command: 'build', mode: 'production' })
@@ -229,12 +229,12 @@ describe('laravel-vite-plugin', () => {
         /* @ts-ignore */
         const arrayNoExternalConfig = plugin.config({ ssr: { noExternal: ['foo'] }, build: { ssr: true } }, { command: 'build', mode: 'production' })
         /* @ts-ignore */
-        expect(arrayNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin'])
+        expect(arrayNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin/inertia-helpers'])
 
         /* @ts-ignore */
         const stringNoExternalConfig = plugin.config({ ssr: { noExternal: 'foo' }, build: { ssr: true } }, { command: 'build', mode: 'production' })
         /* @ts-ignore */
-        expect(stringNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin'])
+        expect(stringNoExternalConfig.ssr.noExternal).toEqual(['foo', 'laravel-vite-plugin/inertia-helpers'])
     })
 
     it('does not configure full reload when configuration it not an object', () => {
