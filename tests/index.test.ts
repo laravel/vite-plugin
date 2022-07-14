@@ -360,8 +360,8 @@ describe('inertia-helpers', () => {
         expect(file.default).toBe('Dummy File')
     })
 
-    it('pass globEager value to resolvePageComponent', async () => {
-        const file = await resolvePageComponent<{ default: string }>(path, import.meta.globEager('./__data__/*.ts'))
+    it('pass eagerly globed value to resolvePageComponent', async () => {
+        const file = await resolvePageComponent<{ default: string }>(path, import.meta.glob('./__data__/*.ts', { eager: true }))
         expect(file.default).toBe('Dummy File')
     })
 })
