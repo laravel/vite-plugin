@@ -348,7 +348,10 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
     /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
     /* @ts-ignore */
     const userNoExternal = (config.ssr as SSROptions|undefined)?.noExternal
-    const pluginNoExternal = ['laravel-vite-plugin/inertia-helpers']
+    const pluginNoExternal = [
+        'laravel-vite-plugin/inertia-helpers',
+        '@inertiajs/server'
+    ]
 
     if (userNoExternal === true) {
         return true
