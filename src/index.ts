@@ -2,7 +2,7 @@ import fs from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, Manifest, ResolvedConfig, SSROptions, normalizePath, PluginOption } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
@@ -85,7 +85,6 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
 function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlugin {
     let viteDevServerUrl: DevServerUrl
     let resolvedConfig: ResolvedConfig
-    const cssManifest: Manifest = {}
 
     const defaultAliases: Record<string, string> = {
         '@': '/resources/js',
@@ -199,50 +198,6 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                 next()
             })
-        },
-
-        // The following two hooks are a workaround to help solve a "flash of unstyled content" with Blade.
-        // They add any CSS entry points into the manifest because Vite does not currently do this.
-        renderChunk(_, chunk) {
-            const cssLangs = `\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)`
-            const cssLangRE = new RegExp(cssLangs)
-
-            if (! chunk.isEntry || chunk.facadeModuleId === null || ! cssLangRE.test(chunk.facadeModuleId)) {
-                return null
-            }
-
-            const relativeChunkPath = normalizePath(path.relative(resolvedConfig.root, chunk.facadeModuleId))
-
-            cssManifest[relativeChunkPath] = {
-                /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-                /* @ts-ignore */
-                file: Array.from(chunk.viteMetadata.importedCss)[0] ?? chunk.fileName,
-                src: relativeChunkPath,
-                isEntry: true,
-            }
-
-            return null
-        },
-        writeBundle() {
-            const manifestConfig = resolveManifestConfig(resolvedConfig)
-
-            if (manifestConfig === false) {
-                return;
-            }
-
-            const manifestPath = path.resolve(resolvedConfig.root, resolvedConfig.build.outDir, manifestConfig)
-
-            if (! fs.existsSync(manifestPath)) {
-                // The manifest does not exist yet when first writing the legacy asset bundle.
-                return;
-            }
-
-            const manifest = JSON.parse(fs.readFileSync(manifestPath).toString())
-            const newManifest = {
-                ...manifest,
-                ...cssManifest,
-            }
-            fs.writeFileSync(manifestPath, JSON.stringify(newManifest, null, 2))
         }
     }
 }
@@ -337,26 +292,6 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
     }
 
     return path.join(config.publicDirectory, config.buildDirectory)
-}
-
-/**
- * Resolve the Vite manifest config from the configuration.
- */
-function resolveManifestConfig(config: ResolvedConfig): string|false
-{
-    const manifestConfig = config.build.ssr
-        ? config.build.ssrManifest
-        : config.build.manifest;
-
-    if (manifestConfig === false) {
-        return false
-    }
-
-    if (manifestConfig === true) {
-        return config.build.ssr ? 'ssr-manifest.json' : 'manifest.json'
-    }
-
-    return manifestConfig
 }
 
 function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): PluginOption[]{
