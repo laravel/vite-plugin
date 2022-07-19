@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/package-template/compare/v0.4.0...main)
+## [Unreleased](https://github.com/laravel/package-template/compare/v0.5.0...main)
+
+## [v0.5.0](https://github.com/laravel/package-template/compare/v0.4.0...v0.5.0) - 2022-07-19
+
+### Added
+
+- Vite 3 support by @timacdonald in https://github.com/laravel/vite-plugin/pull/77
 
 ## [v0.4.0](https://github.com/laravel/package-template/compare/v0.1.0...v0.4.0) - 2022-07-13
 
