@@ -97,7 +97,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
         config: (userConfig, { command, mode }) => {
             const ssr = !! userConfig.build?.ssr
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
-            const assetUrl = env.ASSET_URL ?? ''
+            const assetUrl = env.VITE_ASSET_URL ?? env.ASSET_URL ?? ''
 
             return {
                 base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
