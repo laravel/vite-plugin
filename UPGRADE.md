@@ -325,7 +325,7 @@ If you prefer to build your assets on deploy instead of committing them to your 
 You may start the SSR server using `node`:
 
 ```sh
-node bootstrap/ssr/ssr.js
+node bootstrap/ssr/ssr.mjs
 ```
 
 ### Optional: Expose Vite port when using Laravel Sail
