@@ -158,7 +158,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     fs.writeFileSync(hotFile, viteDevServerUrl)
 
                     setTimeout(() => {
-                        server.config.logger.info(colors.red(`\n  ${colors.bold('Laravel')} ${laravelVersion()} `))
+                        server.config.logger.info(`\n  ${colors.red(`${colors.bold('LARAVEL')} ${laravelVersion()}`)}  ${colors.dim('plugin')} ${colors.bold(`v${pluginVersion()}`)}`)
+                        server.config.logger.info('')
                         server.config.logger.info(`  ${colors.green('➜')}  ${colors.bold('APP_URL')}: ${colors.cyan(appUrl.replace(/:(\d+)/, (_, port) => `:${colors.bold(port)}`))}`)
                     }, 100)
                 }
@@ -210,6 +211,17 @@ function laravelVersion(): string {
         const composer = JSON.parse(fs.readFileSync('composer.lock').toString())
 
         return composer.packages?.find((composerPackage: {name: string}) => composerPackage.name === 'laravel/framework')?.version ?? ''
+    } catch {
+        return ''
+    }
+}
+
+/**
+ * The version of the Laravel Vite plugin being run.
+ */
+function pluginVersion(): string {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json')).toString())?.version
     } catch {
         return ''
     }
