@@ -184,12 +184,6 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
             return () => server.middlewares.use((req, res, next) => {
                 if (req.url === '/index.html') {
-                    server.config.logger.warn(
-                        "\n" + colors.bgYellow(
-                            colors.black(`The Vite server should not be accessed directly. Your Laravel application's configured APP_URL is: ${appUrl}`)
-                        )
-                    )
-
                     res.statusCode = 404
 
                     res.end(
