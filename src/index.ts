@@ -345,10 +345,19 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevS
 
     const configHmrHost = typeof config.server.hmr === 'object' ? config.server.hmr.host : null
     const configHost = typeof config.server.host === 'string' ? config.server.host : null
-    const serverAddress = address.family === 'IPv6' ? `[${address.address}]` : address.address
+    const serverAddress = isIpv6(address) ? `[${address.address}]` : address.address
     const host = configHmrHost ?? configHost ?? serverAddress
 
     return `${protocol}://${host}:${address.port}`
+}
+
+function isIpv6(address: AddressInfo): boolean {
+    return address.family === 'IPv6'
+        // In node >=18.0 <18.4 this was an integer value. This was changed in a minor version.
+        // See: https://github.com/laravel/vite-plugin/issues/103
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore-next-line
+        || address.family === 6;
 }
 
 /**
