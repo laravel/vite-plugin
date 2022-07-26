@@ -1,8 +1,8 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/package-template/compare/v0.5.0...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.0...main)
 
-## [v0.5.0](https://github.com/laravel/package-template/compare/v0.4.0...v0.5.0) - 2022-07-19
+## [v0.5.0](https://github.com/laravel/vite-plugin/compare/v0.4.0...v0.5.0) - 2022-07-19
 
 ### Added
 
