@@ -15,6 +15,6 @@
 - Help users that visit the Vite dev server directly by @jessarcher in https://github.com/laravel/vite-plugin/pull/57
 - Change default SSR build directory by @jessarcher in https://github.com/laravel/vite-plugin/pull/70
 
-## v0.1.0 (202x-xx-xx)
+## v0.1.0 (2022-05-28)
 
 Initial pre-release.
