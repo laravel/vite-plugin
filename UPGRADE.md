@@ -2,7 +2,8 @@
 
 ## Migrating from Laravel Mix to Vite
 
-> **Note** This upgrade guide does not cover all possible Mix use cases, such as Sass compilation. Please consult the [Vite documentation](https://vitejs.dev/guide/) for information on configuring Vite for these scenarios.
+> **Note**  
+> This upgrade guide does not cover all possible Mix use cases, such as Sass compilation. Please consult the [Vite documentation](https://vitejs.dev/guide/) for information on configuring Vite for these scenarios.
 
 ### Update Laravel Framework
 
@@ -144,7 +145,8 @@ You will need to update the environment variables that are explicitly exposed in
 + VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
 ```
 
-> **Note** You may optionally maintain the `MIX_` prefix by [configuring Vite](https://vitejs.dev/config/#envprefix) to use it.
+> **Note**  
+> You may optionally maintain the `MIX_` prefix by [configuring Vite](https://vitejs.dev/config/#envprefix) to use it.
 
 You will also need to update these references in your JavaScript code to use the new variable name and Vite syntax:
 
@@ -197,7 +199,8 @@ You will need to rename any `.js` files containing JSX to instead have a `.jsx` 
 
 See [this tweet](https://twitter.com/youyuxi/status/1362050255009816577) from Vite's creator for more information.
 
-> **Note** If you are using Tailwind, remember to update the paths in your `tailwind.config.js` file.
+> **Note**  
+> If you are using Tailwind, remember to update the paths in your `tailwind.config.js` file.
 
 ### Vue imports must include the `.vue` extension
 
