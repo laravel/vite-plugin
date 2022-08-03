@@ -99,6 +99,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const assetUrl = env.ASSET_URL ?? ''
 
             return {
+                mode: mode,
                 base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
                 publicDir: false,
                 build: {
@@ -147,7 +148,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const hotFile = path.join(pluginConfig.publicDirectory, 'hot')
 
             const envDir = resolvedConfig.envDir || process.cwd()
-            const appUrl = loadEnv('', envDir, 'APP_URL').APP_URL
+            const appUrl = loadEnv(resolvedConfig.mode, envDir, 'APP_URL').APP_URL
 
             server.httpServer?.once('listening', () => {
                 const address = server.httpServer?.address()
@@ -341,7 +342,7 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevS
     const configHost = typeof config.server.host === 'string' ? config.server.host : null
     const serverAddress = isIpv6(address) ? `[${address.address}]` : address.address
     const host = configHmrHost ?? configHost ?? serverAddress
-    
+
     const configHmrClientPort = typeof config.server.hmr === 'object' ? config.server.hmr.clientPort : null
     const port = configHmrClientPort ?? address.port
 
