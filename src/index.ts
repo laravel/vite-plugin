@@ -99,7 +99,6 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const assetUrl = env.ASSET_URL ?? ''
 
             return {
-                mode: mode,
                 base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
                 publicDir: false,
                 build: {
