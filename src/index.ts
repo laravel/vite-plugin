@@ -147,7 +147,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const hotFile = path.join(pluginConfig.publicDirectory, 'hot')
 
             const envDir = resolvedConfig.envDir || process.cwd()
-            const appUrl = loadEnv(resolvedConfig.mode, envDir, 'APP_URL').APP_URL
+            const appUrl = loadEnv(resolvedConfig.mode, envDir, 'APP_URL').APP_URL ?? 'undefined'
 
             server.httpServer?.once('listening', () => {
                 const address = server.httpServer?.address()
