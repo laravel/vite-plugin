@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.1...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.2...main)
+
+## [v0.5.2](https://github.com/laravel/vite-plugin/compare/v0.5.1...v0.5.2) - 2022-07-22
+
+No major changes.
 
 ## [v0.5.1](https://github.com/laravel/vite-plugin/compare/v0.5.0...v0.5.1) - 2022-07-22
 
