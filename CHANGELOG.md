@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.0...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.1...main)
+
+## [v0.5.1](https://github.com/laravel/vite-plugin/compare/v0.5.0...v0.5.1) - 2022-07-22
+
+### Fixed
+
+- Do not externalise inertia helpers by @timacdonald in https://github.com/laravel/vite-plugin/pull/95
+- Prevent console warning when Vite pings HMR by @jessarcher in https://github.com/laravel/vite-plugin/pull/98
+- Use HMR port when specified by @guilheb in https://github.com/laravel/vite-plugin/pull/63
 
 ## [v0.5.0](https://github.com/laravel/vite-plugin/compare/v0.4.0...v0.5.0) - 2022-07-19
 
