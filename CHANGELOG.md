@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.2...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.3...main)
+
+## [v0.5.3](https://github.com/laravel/vite-plugin/compare/v0.5.2...v0.5.3) - 2022-08-04
+
+### Fixed
+
+- Support both string and integer based IP versions by @timacdonald in https://github.com/laravel/vite-plugin/pull/108
 
 ## [v0.5.2](https://github.com/laravel/vite-plugin/compare/v0.5.1...v0.5.2) - 2022-07-22
 
