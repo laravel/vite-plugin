@@ -27,6 +27,8 @@ interface PluginConfig {
 
     /**
      * The path to the "hot" file.
+     *
+     * @default `${publicDirectory}/hot`
      */
     hotFile?: string
 
