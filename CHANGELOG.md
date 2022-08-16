@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.3...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.4...main)
+
+## [v0.5.4](https://github.com/laravel/vite-plugin/compare/v0.5.3...v0.5.4) - 2022-08-16
+
+### Changed
+
+- Allow chosing different env files by @LucdoOf in https://github.com/laravel/vite-plugin/pull/113
 
 ## [v0.5.3](https://github.com/laravel/vite-plugin/compare/v0.5.2...v0.5.3) - 2022-08-04
 
