@@ -246,7 +246,14 @@ composer require laravel/vapor-cli:^1.40.0
 
 Next, if you are using the Vapor asset helper in your application, you only need to utilize the asset helper when you are referencing assets you don't want bundled, such as those that already live in your public directory.
 
-If you want to use the asset helper with your Vite project, you will also need to specify the base URL for assets in your application's entry point, for example in your `resources/js/app.js,` like so:
+If you want to use the asset helper with your Vite project, you will also need to ensure you have updated to the latest version:
+
+
+```sh
+npm install laravel-vapor@^0.6.0
+```
+
+Then you will need to specify the base URL for assets in your application's entry point, for example in your `resources/js/app.js,` like so:
 
 ```diff
 - window.Vapor = require('laravel-vapor');
