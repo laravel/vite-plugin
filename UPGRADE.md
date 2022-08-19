@@ -250,7 +250,7 @@ If you want to use the asset helper with your Vite project, you will also need t
 
 
 ```sh
-npm install laravel-vapor@^0.6.0
+npm install laravel-vapor@latest
 ```
 
 Then you will need to specify the base URL for assets in your application's entry point, for example in your `resources/js/app.js,` like so:
