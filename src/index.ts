@@ -203,7 +203,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
  * Validate the command can run in the given environment.
  */
 function validateCommandOnEnvironment(command: 'build'|'serve', env: Record<string, string>): void {
-    if (command === 'build') {
+    if (command === 'build' || env.LARAVEL_BYPASS_ENV_CHECK === '1') {
         return;
     }
 
