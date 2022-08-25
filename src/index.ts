@@ -26,6 +26,13 @@ interface PluginConfig {
     buildDirectory?: string
 
     /**
+     * The path to the "hot" file.
+     *
+     * @default `${publicDirectory}/hot`
+     */
+    hotFile?: string
+
+    /**
      * The path of the SSR entry point.
      */
     ssr?: string|string[]
@@ -144,8 +151,6 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             }
         },
         configureServer(server) {
-            const hotFile = path.join(pluginConfig.publicDirectory, 'hot')
-
             const envDir = resolvedConfig.envDir || process.cwd()
             const appUrl = loadEnv(resolvedConfig.mode, envDir, 'APP_URL').APP_URL ?? 'undefined'
 
@@ -155,7 +160,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
                     viteDevServerUrl = resolveDevServerUrl(address, server.config)
-                    fs.writeFileSync(hotFile, viteDevServerUrl)
+                    fs.writeFileSync(pluginConfig.hotFile, viteDevServerUrl)
 
                     setTimeout(() => {
                         server.config.logger.info(`\n  ${colors.red(`${colors.bold('LARAVEL')} ${laravelVersion()}`)}  ${colors.dim('plugin')} ${colors.bold(`v${pluginVersion()}`)}`)
@@ -170,8 +175,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             }
 
             const clean = () => {
-                if (fs.existsSync(hotFile)) {
-                    fs.rmSync(hotFile)
+                if (fs.existsSync(pluginConfig.hotFile)) {
+                    fs.rmSync(pluginConfig.hotFile)
                 }
             }
 
@@ -268,6 +273,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
         refresh: config.refresh ?? false,
+        hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot')
     }
 }
 
