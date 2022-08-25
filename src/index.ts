@@ -211,7 +211,7 @@ function validateCommandOnEnvironment(command: 'build'|'serve', env: Record<stri
         throw Error('You should not run the Vite HMR server (`npm run dev`) on Vapor. Instead you should run `npm run build`.');
     }
 
-    if (typeof env.FORGE_PHP !== 'undefined') {
+    if (typeof env.LARAVEL_FORGE !== 'undefined') {
         throw Error('You should not run the Vite HMR server (`npm run dev`) in your Forge deployment script. Instead you should run `npm run build`.');
     }
 
