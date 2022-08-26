@@ -98,7 +98,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
 
-            validateCommandOnEnvironment(command, env)
+            ensureCommandShouldRunInEnvironment(command, env)
 
             return {
                 base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
@@ -202,21 +202,21 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 /**
  * Validate the command can run in the given environment.
  */
-function validateCommandOnEnvironment(command: 'build'|'serve', env: Record<string, string>): void {
+function ensureCommandShouldRunInEnvironment(command: 'build'|'serve', env: Record<string, string>): void {
     if (command === 'build' || env.LARAVEL_BYPASS_ENV_CHECK === '1') {
         return;
     }
 
     if (typeof env.VAPOR_SSM_PATH !== 'undefined') {
-        throw Error('You should not run the Vite HMR server (`npm run dev`) on Vapor. Instead you should run `npm run build`.');
+        throw Error('You should not run the Vite HMR server on Vapor. You should build your assets for production instead.');
     }
 
     if (typeof env.LARAVEL_FORGE !== 'undefined') {
-        throw Error('You should not run the Vite HMR server (`npm run dev`) in your Forge deployment script. Instead you should run `npm run build`.');
+        throw Error('You should not run the Vite HMR server in your Forge deployment script. You should build your assets for production instead.');
     }
 
     if (typeof env.CI !== 'undefined') {
-        throw Error('You should not run the Vite HMR server (`npm run dev`) in CI. Instead you should run `npm run build`.');
+        throw Error('You should not run the Vite HMR server in CI environments. You should build your assets for production instead.');
     }
 }
 
