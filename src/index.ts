@@ -112,7 +112,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const ssr = !! userConfig.build?.ssr
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
-            const valetServerConfig = resolveValetServerConfig(pluginConfig.valetTls)
+            const valetServerConfig = command === 'serve'
+                ? resolveValetServerConfig(pluginConfig.valetTls)
+                : undefined
 
             return {
                 base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
