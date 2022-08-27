@@ -425,10 +425,10 @@ function resolveValetServerConfig(host: string|boolean): {
 
     host = host === true ? resolveValetHost() : host
 
-    const key = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.key`)
-    const cert = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.crt`)
+    const keyPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.key`)
+    const certPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.crt`)
 
-    if (! fs.existsSync(key) || ! fs.existsSync(cert)) {
+    if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
         throw Error('Unable to find Valet certificate files. Ensure you have run `valet secure`.')
     }
 
@@ -436,8 +436,8 @@ function resolveValetServerConfig(host: string|boolean): {
         hmr: { host },
         host,
         https: {
-            key: fs.readFileSync(key),
-            cert: fs.readFileSync(cert),
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath),
         },
     }
 }
