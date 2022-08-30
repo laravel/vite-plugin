@@ -429,7 +429,7 @@ function resolveValetServerConfig(host: string|boolean): {
     const certPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        throw Error('Unable to find Valet certificate files. Ensure you have run `valet secure`.')
+        throw Error(`Unable to find Valet certificate files for your host [${host}]. Ensure you have run "valet secure".`)
     }
 
     return {
