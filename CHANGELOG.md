@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.5.4...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.6.0...main)
+
+## [v0.6.0](https://github.com/laravel/vite-plugin/compare/v0.5.4...v0.6.0) - 2022-08-25
+
+### Added
+
+- Support customising hot file / build path by @timacdonald in https://github.com/laravel/vite-plugin/pull/118
 
 ## [v0.5.4](https://github.com/laravel/vite-plugin/compare/v0.5.3...v0.5.4) - 2022-08-16
 
