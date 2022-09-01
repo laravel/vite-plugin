@@ -277,7 +277,7 @@ describe('laravel-vite-plugin', () => {
         expect(plugins.length).toBe(2)
         /** @ts-ignore */
         expect(plugins[1].__laravel_plugin_config).toEqual({
-            paths: ['app/View/Components/**', 'resources/views/**', 'routes/**'],
+            paths: ['app/View/Components/**', 'resources/views/**', 'resources/lang/**', 'lang/**', 'routes/**'],
         })
     })
 
