@@ -118,7 +118,7 @@ The following function can be used instead:
   createInertiaApp({
       title: (title) => `${title} - ${appName}`,
 -     resolve: (name) => require(`./Pages/${name}.vue`),
-+     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
++     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue', { eager: true })),
       setup({ el, app, props, plugin }) {
           return createApp({ render: () => h(app, props) })
               .use(plugin)
@@ -432,7 +432,7 @@ Vite requires a helper function to import page components which is not required 
 
   createInertiaApp({
       title: (title) => `${title} - ${appName}`,
--     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+-     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue', { eager: true })),
 +     resolve: (name) => require(`./Pages/${name}.vue`),
       setup({ el, app, props, plugin }) {
           return createApp({ render: () => h(app, props) })
