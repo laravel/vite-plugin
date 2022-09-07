@@ -207,7 +207,7 @@ function ensureCommandShouldRunInEnvironment(command: 'build'|'serve', env: Reco
         return;
     }
 
-    if (typeof env.VAPOR_SSM_PATH !== 'undefined') {
+    if (typeof env.LARAVEL_VAPOR !== 'undefined') {
         throw Error('You should not run the Vite HMR server on Vapor. You should build your assets for production instead.');
     }
 
