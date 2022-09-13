@@ -215,6 +215,10 @@ function ensureCommandShouldRunInEnvironment(command: 'build'|'serve', env: Reco
         throw Error('You should not run the Vite HMR server in your Forge deployment script. You should build your assets for production instead.');
     }
 
+    if (typeof env.LARAVEL_ENVOYER !== 'undefined') {
+        throw Error('You should not run the Vite HMR server in your Envoyer hook. You should build your assets for production instead.');
+    }
+
     if (typeof env.CI !== 'undefined') {
         throw Error('You should not run the Vite HMR server in CI environments. You should build your assets for production instead.');
     }
