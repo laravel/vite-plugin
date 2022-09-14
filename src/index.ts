@@ -1,8 +1,9 @@
 import fs from 'fs'
+import os from 'os'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, ServerOptions } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
@@ -121,7 +122,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         host: userConfig.server?.host ?? '0.0.0.0',
                         port: userConfig.server?.port ?? (env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173),
                         strictPort: userConfig.server?.strictPort ?? true,
-                    } : undefined)
+                    } : undefined),
+                    ...resolveServerConfiguration(userConfig, env)
                 },
                 resolve: {
                     alias: Array.isArray(userConfig.resolve?.alias)
@@ -386,4 +388,35 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
         ...(Array.isArray(userNoExternal) ? userNoExternal : [userNoExternal]),
         ...pluginNoExternal,
     ]
+}
+
+function resolveServerConfiguration(userConfig: UserConfig, env: Record<string, string>): Partial<ServerOptions> {
+    let protocol: string, hostname: string
+
+    try {
+      ({ protocol, hostname } = new URL(env.APP_URL))
+    } catch (error) {
+      return {}
+    }
+
+    const usesHttps = protocol === 'https:'
+    const keyPath = path.resolve(os.homedir(), `.config/valet/Certificates/${hostname}.key`)
+    const certificatePath = path.resolve(os.homedir(), `.config/valet/Certificates/${hostname}.crt`)
+
+    if (!usesHttps || !fs.existsSync(keyPath) || !fs.existsSync(certificatePath)) {
+        return {}
+    }
+
+    return {
+        host: userConfig.server?.host ?? hostname,
+        hmr: typeof userConfig.server?.hmr !== 'boolean' ? {
+            host: hostname,
+            ...userConfig.server?.hmr ?? {}
+        } : userConfig.server?.hmr,
+        https: typeof userConfig.server?.https !== 'boolean' ? {
+            key: keyPath,
+            cert: certificatePath,
+            ...userConfig.server?.https ?? {}
+        } : userConfig.server?.https
+    }
 }
