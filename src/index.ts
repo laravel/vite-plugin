@@ -105,6 +105,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
 
+            ensureCommandShouldRunInEnvironment(command, env)
+
             return {
                 base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
                 publicDir: false,
@@ -199,6 +201,31 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 next()
             })
         }
+    }
+}
+
+/**
+ * Validate the command can run in the given environment.
+ */
+function ensureCommandShouldRunInEnvironment(command: 'build'|'serve', env: Record<string, string>): void {
+    if (command === 'build' || env.LARAVEL_BYPASS_ENV_CHECK === '1') {
+        return;
+    }
+
+    if (typeof env.LARAVEL_VAPOR !== 'undefined') {
+        throw Error('You should not run the Vite HMR server on Vapor. You should build your assets for production instead.');
+    }
+
+    if (typeof env.LARAVEL_FORGE !== 'undefined') {
+        throw Error('You should not run the Vite HMR server in your Forge deployment script. You should build your assets for production instead.');
+    }
+
+    if (typeof env.LARAVEL_ENVOYER !== 'undefined') {
+        throw Error('You should not run the Vite HMR server in your Envoyer hook. You should build your assets for production instead.');
+    }
+
+    if (typeof env.CI !== 'undefined') {
+        throw Error('You should not run the Vite HMR server in CI environments. You should build your assets for production instead.');
     }
 }
 
