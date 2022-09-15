@@ -116,6 +116,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     rollupOptions: {
                         input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
                     },
+                    assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
                 server: {
                     origin: '__laravel_vite_placeholder__',
