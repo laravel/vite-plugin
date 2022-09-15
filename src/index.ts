@@ -197,22 +197,20 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 }
             })
 
-            if (exitHandlersBound) {
-                return
-            }
-
-            const clean = () => {
-                if (fs.existsSync(pluginConfig.hotFile)) {
-                    fs.rmSync(pluginConfig.hotFile)
+            if (! exitHandlersBound) {
+                const clean = () => {
+                    if (fs.existsSync(pluginConfig.hotFile)) {
+                        fs.rmSync(pluginConfig.hotFile)
+                    }
                 }
+
+                process.on('exit', clean)
+                process.on('SIGINT', process.exit)
+                process.on('SIGTERM', process.exit)
+                process.on('SIGHUP', process.exit)
+
+                exitHandlersBound = true
             }
-
-            process.on('exit', clean)
-            process.on('SIGINT', process.exit)
-            process.on('SIGTERM', process.exit)
-            process.on('SIGHUP', process.exit)
-
-            exitHandlersBound = true
 
             return () => server.middlewares.use((req, res, next) => {
                 if (req.url === '/index.html') {
