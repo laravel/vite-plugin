@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { AddressInfo } from 'net'
+import os from 'os'
 import path from 'path'
 import colors from 'picocolors'
 import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption } from 'vite'
@@ -51,6 +52,13 @@ interface PluginConfig {
      * @default false
      */
     refresh?: boolean|string|string[]|RefreshConfig|RefreshConfig[]
+
+    /**
+     * Utilise the valet TLS certificates.
+     *
+     * @default false
+     */
+    valetTls?: string|boolean,
 }
 
 interface RefreshConfig {
@@ -106,6 +114,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const ssr = !! userConfig.build?.ssr
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
+            const valetServerConfig = command === 'serve'
+                ? resolveValetServerConfig(pluginConfig.valetTls)
+                : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
 
@@ -126,7 +137,18 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         host: userConfig.server?.host ?? '0.0.0.0',
                         port: userConfig.server?.port ?? (env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173),
                         strictPort: userConfig.server?.strictPort ?? true,
-                    } : undefined)
+                    } : undefined),
+                    ...(valetServerConfig ? {
+                        host: userConfig.server?.host ?? valetServerConfig.host,
+                        hmr: userConfig.server?.hmr === false ? false : {
+                            ...valetServerConfig.hmr,
+                            ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
+                        },
+                        https: userConfig.server?.https === false ? false : {
+                            ...valetServerConfig.https,
+                            ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
+                        },
+                    } : undefined),
                 },
                 resolve: {
                     alias: Array.isArray(userConfig.resolve?.alias)
@@ -303,7 +325,8 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
         refresh: config.refresh ?? false,
-        hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot')
+        hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
+        valetTls: config.valetTls ?? false,
     }
 }
 
@@ -416,4 +439,50 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
         ...(Array.isArray(userNoExternal) ? userNoExternal : [userNoExternal]),
         ...pluginNoExternal,
     ]
+}
+
+/**
+ * Resolve the valet server config for the given host.
+ */
+function resolveValetServerConfig(host: string|boolean): {
+    hmr?: { host: string }
+    host?: string,
+    https?: { cert: Buffer, key: Buffer }
+}|undefined {
+    if (host === false) {
+        return
+    }
+
+    host = host === true ? resolveValetHost() : host
+
+    const keyPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.key`)
+    const certPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.crt`)
+
+    if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+        throw Error(`Unable to find Valet certificate files for your host [${host}]. Ensure you have run "valet secure".`)
+    }
+
+    return {
+        hmr: { host },
+        host,
+        https: {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath),
+        },
+    }
+}
+
+/**
+ * Resolve the valet valet host for the current directory.
+ */
+function resolveValetHost(): string {
+    const configPath = os.homedir() + `/.config/valet/config.json`
+
+    if (! fs.existsSync(configPath)) {
+        throw Error('Unable to find the Valet configuration file. You will need to manually specify the host in the `valetTls` configuration option.')
+    }
+
+    const config: { tld: string } = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+
+    return path.basename(process.cwd()) + '.' + config.tld
 }
