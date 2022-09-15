@@ -69,6 +69,8 @@ let exitHandlersBound = false
 export const refreshPaths = [
     'app/View/Components/**',
     'resources/views/**',
+    'resources/lang/**',
+    'lang/**',
     'routes/**',
 ]
 
