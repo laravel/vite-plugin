@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.6.0...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.6.1...main)
+
+## [v0.6.1](https://github.com/laravel/vite-plugin/compare/v0.6.0...v0.6.1) - 2022-09-21
+
+### Changed
+
+- Fail running HMR in known environments by @timacdonald in https://github.com/laravel/vite-plugin/pull/128
+- Do not inline small assets, by default by @timacdonald in https://github.com/laravel/vite-plugin/pull/131
+- Add `lang` directories to default refresh paths by @fabio-ivona in https://github.com/laravel/vite-plugin/pull/135
+- Add config option to utilise Valet TLS certificates by @timacdonald in https://github.com/laravel/vite-plugin/pull/129
+
+### Fixed
+
+- Ensure custom 404 page shows after server restarts by @timacdonald in https://github.com/laravel/vite-plugin/pull/141
 
 ## [v0.6.0](https://github.com/laravel/vite-plugin/compare/v0.5.4...v0.6.0) - 2022-08-25
 
