@@ -117,6 +117,11 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const valetServerConfig = command === 'serve'
                 ? resolveValetServerConfig(pluginConfig.valetTls)
                 : undefined
+            const https = userConfig.server?.https === false ? false : {
+                ...valetServerConfig?.https,
+                ...resolveHttpsConfig(env),
+                ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
+            }
 
             ensureCommandShouldRunInEnvironment(command, env)
 
@@ -132,6 +137,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
                 server: {
+                    https,
                     origin: '__laravel_vite_placeholder__',
                     ...(process.env.LARAVEL_SAIL ? {
                         host: userConfig.server?.host ?? '0.0.0.0',
@@ -143,10 +149,6 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         hmr: userConfig.server?.hmr === false ? false : {
                             ...valetServerConfig.hmr,
                             ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
-                        },
-                        https: userConfig.server?.https === false ? false : {
-                            ...valetServerConfig.https,
-                            ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
                         },
                     } : undefined),
                 },
@@ -437,6 +439,27 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
         ...(Array.isArray(userNoExternal) ? userNoExternal : [userNoExternal]),
         ...pluginNoExternal,
     ]
+}
+
+/**
+ * Resolve the `https` server config from the environment.
+ */
+function resolveHttpsConfig(env: Record<string, string>) {
+  const keyPath = env.VITE_DEV_SERVER_KEY
+  const certPath = env.VITE_DEV_SERVER_CERT
+
+  if (! keyPath || ! certPath) {
+    return
+  }
+
+  if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+      return
+  }
+
+  return {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath),
+  }
 }
 
 /**
