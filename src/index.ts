@@ -117,11 +117,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const valetServerConfig = command === 'serve'
                 ? resolveValetServerConfig(pluginConfig.valetTls)
                 : undefined
-            const https = userConfig.server?.https === false ? false : {
-                ...valetServerConfig?.https,
-                ...resolveHttpsConfig(env),
-                ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
-            }
+						const serverConfig = valetServerConfig ?? resolveServerConfig(env)
 
             ensureCommandShouldRunInEnvironment(command, env)
 
@@ -137,18 +133,21 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
                 server: {
-                    https,
                     origin: '__laravel_vite_placeholder__',
                     ...(process.env.LARAVEL_SAIL ? {
                         host: userConfig.server?.host ?? '0.0.0.0',
                         port: userConfig.server?.port ?? (env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173),
                         strictPort: userConfig.server?.strictPort ?? true,
                     } : undefined),
-                    ...(valetServerConfig ? {
-                        host: userConfig.server?.host ?? valetServerConfig.host,
+                    ...(serverConfig ? {
+                        host: userConfig.server?.host ?? serverConfig.host,
                         hmr: userConfig.server?.hmr === false ? false : {
-                            ...valetServerConfig.hmr,
+                            ...serverConfig.hmr,
                             ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
+                        },
+                        https: userConfig.server?.https === false ? false : {
+                            ...serverConfig.https,
+                            ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
                         },
                     } : undefined),
                 },
@@ -442,25 +441,39 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
 }
 
 /**
- * Resolve the `https` server config from the environment.
+ * Resolve the server config from the environment.
  */
-function resolveHttpsConfig(env: Record<string, string>) {
+function resolveServerConfig(env: Record<string, string>) {
+	const host = resolveHostFromEnv(env)
   const keyPath = env.VITE_DEV_SERVER_KEY
   const certPath = env.VITE_DEV_SERVER_CERT
 
-  if (! keyPath || ! certPath) {
-    return
-  }
-
-  if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+  if (!host || ! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
       return
   }
 
-  return {
-    key: fs.readFileSync(keyPath),
-    cert: fs.readFileSync(certPath),
-  }
+	return {
+		hmr: { host },
+		host,
+		https: {
+				key: fs.readFileSync(keyPath),
+				cert: fs.readFileSync(certPath),
+		},
 }
+}
+
+/**
+ * Resolve the host name from the environment.
+ */
+function resolveHostFromEnv(env: Record<string, string>): string|undefined
+{
+	try {
+		return new URL(env.APP_URL).host
+	} catch {
+		return
+	}
+}
+
 
 /**
  * Resolve the valet server config for the given host.
