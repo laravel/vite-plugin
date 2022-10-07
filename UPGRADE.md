@@ -21,7 +21,7 @@ First, you will need to install [Vite](https://vitejs.dev/) and the [Laravel Vit
 npm install --save-dev vite laravel-vite-plugin
 ```
 
-You may also need to install additional Vite plugins for your project, such as the Vue or React plugins:
+You may also need to install additional Vite plugins for your project, such as the Vue (version 3) or React plugins:
 
 ```shell
 npm install --save-dev @vitejs/plugin-vue
