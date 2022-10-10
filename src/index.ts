@@ -114,10 +114,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const ssr = !! userConfig.build?.ssr
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
-            const valetServerConfig = command === 'serve'
-                ? resolveValetServerConfig(pluginConfig.valetTls)
+            const serverConfig = command === 'serve'
+                ? (resolveValetServerConfig(pluginConfig.valetTls) ?? resolveEnvironmentServerConfig(env))
                 : undefined
-						const serverConfig = valetServerConfig ?? resolveServerConfig(env)
 
             ensureCommandShouldRunInEnvironment(command, env)
 
@@ -443,21 +442,31 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
 /**
  * Resolve the server config from the environment.
  */
-function resolveEnvironmentServerConfig(env: Record<string, string>) {
-    const host = resolveHostFromEnv(env)
-    const keyPath = env.VITE_DEV_SERVER_KEY
-    const certPath = env.VITE_DEV_SERVER_CERT
-
-    if (! host || ! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+function resolveEnvironmentServerConfig(env: Record<string, string>): {
+    hmr?: { host: string }
+    host?: string,
+    https?: { cert: Buffer, key: Buffer }
+}|undefined {
+    if (! env.VITE_DEV_SERVER_KEY && ! env.VITE_DEV_SERVER_CERT) {
         return
+    }
+
+    if (! fs.existsSync(env.VITE_DEV_SERVER_KEY) || ! fs.existsSync(env.VITE_DEV_SERVER_CERT)) {
+        throw Error(`Unable to find the certificate files specified in your environment. Ensure you have correctly configured VITE_DEV_SERVER_KEY: [${env.VITE_DEV_SERVER_KEY}] and VITE_DEV_SERVER_KEY: [${env.VITE_DEV_SERVER_CERT}].`)
+    }
+
+    const host = resolveHostFromEnv(env)
+
+    if (! host) {
+        throw Error(`Unable to determine the host from the APP_URL: [${env.APP_URL}].`)
     }
 
     return {
         hmr: { host },
         host,
         https: {
-            key: fs.readFileSync(keyPath),
-            cert: fs.readFileSync(certPath),
+            key: fs.readFileSync(env.VITE_DEV_SERVER_KEY),
+            cert: fs.readFileSync(env.VITE_DEV_SERVER_CERT),
         },
     }
 }
