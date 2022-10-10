@@ -443,23 +443,23 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
 /**
  * Resolve the server config from the environment.
  */
-function resolveServerConfig(env: Record<string, string>) {
-	const host = resolveHostFromEnv(env)
-  const keyPath = env.VITE_DEV_SERVER_KEY
-  const certPath = env.VITE_DEV_SERVER_CERT
+function resolveEnvironmentServerConfig(env: Record<string, string>) {
+    const host = resolveHostFromEnv(env)
+    const keyPath = env.VITE_DEV_SERVER_KEY
+    const certPath = env.VITE_DEV_SERVER_CERT
 
-  if (!host || ! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-      return
-  }
+    if (! host || ! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+        return
+    }
 
-	return {
-		hmr: { host },
-		host,
-		https: {
-				key: fs.readFileSync(keyPath),
-				cert: fs.readFileSync(certPath),
-		},
-}
+    return {
+        hmr: { host },
+        host,
+        https: {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath),
+        },
+    }
 }
 
 /**
@@ -467,11 +467,11 @@ function resolveServerConfig(env: Record<string, string>) {
  */
 function resolveHostFromEnv(env: Record<string, string>): string|undefined
 {
-	try {
-		return new URL(env.APP_URL).host
-	} catch {
-		return
-	}
+    try {
+        return new URL(env.APP_URL).host
+    } catch {
+        return
+    }
 }
 
 
