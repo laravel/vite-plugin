@@ -452,13 +452,13 @@ function resolveEnvironmentServerConfig(env: Record<string, string>): {
     }
 
     if (! fs.existsSync(env.VITE_DEV_SERVER_KEY) || ! fs.existsSync(env.VITE_DEV_SERVER_CERT)) {
-        throw Error(`Unable to find the certificate files specified in your environment. Ensure you have correctly configured VITE_DEV_SERVER_KEY: [${env.VITE_DEV_SERVER_KEY}] and VITE_DEV_SERVER_KEY: [${env.VITE_DEV_SERVER_CERT}].`)
+        throw Error(`Unable to find the certificate files specified in your environment. Ensure you have correctly configured VITE_DEV_SERVER_KEY: [${env.VITE_DEV_SERVER_KEY}] and VITE_DEV_SERVER_CERT: [${env.VITE_DEV_SERVER_CERT}].`)
     }
 
     const host = resolveHostFromEnv(env)
 
     if (! host) {
-        throw Error(`Unable to determine the host from the APP_URL: [${env.APP_URL}].`)
+        throw Error(`Unable to determine the host from the environment's APP_URL: [${env.APP_URL}].`)
     }
 
     return {
