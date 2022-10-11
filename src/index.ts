@@ -114,8 +114,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const ssr = !! userConfig.build?.ssr
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
-            const valetServerConfig = command === 'serve'
-                ? resolveValetServerConfig(pluginConfig.valetTls)
+            const serverConfig = command === 'serve'
+                ? (resolveValetServerConfig(pluginConfig.valetTls) ?? resolveEnvironmentServerConfig(env))
                 : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
@@ -138,14 +138,14 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         port: userConfig.server?.port ?? (env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173),
                         strictPort: userConfig.server?.strictPort ?? true,
                     } : undefined),
-                    ...(valetServerConfig ? {
-                        host: userConfig.server?.host ?? valetServerConfig.host,
+                    ...(serverConfig ? {
+                        host: userConfig.server?.host ?? serverConfig.host,
                         hmr: userConfig.server?.hmr === false ? false : {
-                            ...valetServerConfig.hmr,
+                            ...serverConfig.hmr,
                             ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
                         },
                         https: userConfig.server?.https === false ? false : {
-                            ...valetServerConfig.https,
+                            ...serverConfig.https,
                             ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
                         },
                     } : undefined),
@@ -438,6 +438,51 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
         ...pluginNoExternal,
     ]
 }
+
+/**
+ * Resolve the server config from the environment.
+ */
+function resolveEnvironmentServerConfig(env: Record<string, string>): {
+    hmr?: { host: string }
+    host?: string,
+    https?: { cert: Buffer, key: Buffer }
+}|undefined {
+    if (! env.VITE_DEV_SERVER_KEY && ! env.VITE_DEV_SERVER_CERT) {
+        return
+    }
+
+    if (! fs.existsSync(env.VITE_DEV_SERVER_KEY) || ! fs.existsSync(env.VITE_DEV_SERVER_CERT)) {
+        throw Error(`Unable to find the certificate files specified in your environment. Ensure you have correctly configured VITE_DEV_SERVER_KEY: [${env.VITE_DEV_SERVER_KEY}] and VITE_DEV_SERVER_CERT: [${env.VITE_DEV_SERVER_CERT}].`)
+    }
+
+    const host = resolveHostFromEnv(env)
+
+    if (! host) {
+        throw Error(`Unable to determine the host from the environment's APP_URL: [${env.APP_URL}].`)
+    }
+
+    return {
+        hmr: { host },
+        host,
+        https: {
+            key: fs.readFileSync(env.VITE_DEV_SERVER_KEY),
+            cert: fs.readFileSync(env.VITE_DEV_SERVER_CERT),
+        },
+    }
+}
+
+/**
+ * Resolve the host name from the environment.
+ */
+function resolveHostFromEnv(env: Record<string, string>): string|undefined
+{
+    try {
+        return new URL(env.APP_URL).host
+    } catch {
+        return
+    }
+}
+
 
 /**
  * Resolve the valet server config for the given host.
