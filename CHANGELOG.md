@@ -1,6 +1,17 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.6.1...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.0...main)
+
+## [v0.7.0](https://github.com/laravel/vite-plugin/compare/v0.6.1...v0.7.0) - 2022-10-25
+
+### Changed
+
+- Respect user manifest config by @jessarcher in https://github.com/laravel/vite-plugin/pull/150
+- Support loading certificates from environment variables by @innocenzi in https://github.com/laravel/vite-plugin/pull/151
+
+### Fixed
+
+- Fix colors by @timacdonald in https://github.com/laravel/vite-plugin/pull/154
 
 ## [v0.6.1](https://github.com/laravel/vite-plugin/compare/v0.6.0...v0.6.1) - 2022-09-21
 
