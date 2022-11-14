@@ -476,7 +476,7 @@ function resolveValetServerConfig(env: Record<string, string>): {
     host?: string,
     https?: { cert: Buffer, key: Buffer }
 }|undefined {
-		const host = resolveHostFromEnv(env)
+    const host = resolveHostFromEnv(env)
     const keyPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.key`)
     const certPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.crt`)
 
