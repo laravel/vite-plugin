@@ -55,7 +55,7 @@ interface PluginConfig {
 
     /**
      * Utilise the valet TLS certificates.
-     *
+     * @deprecated
      * @default false
      */
     valetTls?: string|boolean,
@@ -115,7 +115,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
             const serverConfig = command === 'serve'
-                ? (resolveValetServerConfig(pluginConfig.valetTls) ?? resolveEnvironmentServerConfig(env))
+                ? (resolveEnvironmentServerConfig(env) ?? resolveValetServerConfig(env))
                 : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
@@ -447,12 +447,8 @@ function resolveEnvironmentServerConfig(env: Record<string, string>): {
     host?: string,
     https?: { cert: Buffer, key: Buffer }
 }|undefined {
-    if (! env.VITE_DEV_SERVER_KEY && ! env.VITE_DEV_SERVER_CERT) {
-        return
-    }
-
     if (! fs.existsSync(env.VITE_DEV_SERVER_KEY) || ! fs.existsSync(env.VITE_DEV_SERVER_CERT)) {
-        throw Error(`Unable to find the certificate files specified in your environment. Ensure you have correctly configured VITE_DEV_SERVER_KEY: [${env.VITE_DEV_SERVER_KEY}] and VITE_DEV_SERVER_CERT: [${env.VITE_DEV_SERVER_CERT}].`)
+        return
     }
 
     const host = resolveHostFromEnv(env)
@@ -471,38 +467,21 @@ function resolveEnvironmentServerConfig(env: Record<string, string>): {
     }
 }
 
-/**
- * Resolve the host name from the environment.
- */
-function resolveHostFromEnv(env: Record<string, string>): string|undefined
-{
-    try {
-        return new URL(env.APP_URL).host
-    } catch {
-        return
-    }
-}
-
 
 /**
  * Resolve the valet server config for the given host.
  */
-function resolveValetServerConfig(host: string|boolean): {
+function resolveValetServerConfig(env: Record<string, string>): {
     hmr?: { host: string }
     host?: string,
     https?: { cert: Buffer, key: Buffer }
 }|undefined {
-    if (host === false) {
-        return
-    }
-
-    host = host === true ? resolveValetHost() : host
-
+		const host = resolveHostFromEnv(env)
     const keyPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.key`)
     const certPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.crt`)
 
-    if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        throw Error(`Unable to find Valet certificate files for your host [${host}]. Ensure you have run "valet secure".`)
+    if (! host || ! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+        return
     }
 
     return {
@@ -516,16 +495,13 @@ function resolveValetServerConfig(host: string|boolean): {
 }
 
 /**
- * Resolve the valet valet host for the current directory.
+ * Resolve the host name from the environment.
  */
-function resolveValetHost(): string {
-    const configPath = os.homedir() + `/.config/valet/config.json`
-
-    if (! fs.existsSync(configPath)) {
-        throw Error('Unable to find the Valet configuration file. You will need to manually specify the host in the `valetTls` configuration option.')
+function resolveHostFromEnv(env: Record<string, string>): string|undefined
+{
+    try {
+        return new URL(env.APP_URL).host
+    } catch {
+        return
     }
-
-    const config: { tld: string } = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
-
-    return path.basename(process.cwd()) + '.' + config.tld
 }
