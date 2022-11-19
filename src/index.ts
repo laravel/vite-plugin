@@ -59,10 +59,10 @@ interface PluginConfig {
      * @default false
      */
     valetTls?: string|boolean,
-    
+
     /**
      * Override the host for the "hot" file.
-     * 
+     *
      * @default false
      */
     host?: string|boolean,
