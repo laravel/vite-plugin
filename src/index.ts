@@ -59,6 +59,13 @@ interface PluginConfig {
      * @default false
      */
     valetTls?: string|boolean,
+    
+    /**
+     * Override the host for the "hot" file.
+     * 
+     * @default false
+     */
+    host?: string|boolean,
 }
 
 interface RefreshConfig {
@@ -186,7 +193,12 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
-                    viteDevServerUrl = resolveDevServerUrl(address, server.config)
+                    if (pluginConfig.host !== false) {
+                        viteDevServerUrl = pluginConfig.host as DevServerUrl
+                    } else {
+                        viteDevServerUrl = resolveDevServerUrl(address, server.config);
+                    }
+
                     fs.writeFileSync(pluginConfig.hotFile, viteDevServerUrl)
 
                     setTimeout(() => {
@@ -325,6 +337,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         refresh: config.refresh ?? false,
         hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
         valetTls: config.valetTls ?? false,
+        host: config.host ?? false,
     }
 }
 
