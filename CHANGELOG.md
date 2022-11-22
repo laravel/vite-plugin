@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.0...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.1...main)
+
+## [v0.7.1](https://github.com/laravel/vite-plugin/compare/v0.7.0...v0.7.1) - 2022-11-21
+
+### Fixed
+
+- Fix node type issue by @timacdonald in https://github.com/laravel/vite-plugin/pull/166
 
 ## [v0.7.0](https://github.com/laravel/vite-plugin/compare/v0.6.1...v0.7.0) - 2022-10-25
 
