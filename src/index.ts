@@ -122,7 +122,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
             return {
                 base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
-                publicDir: false,
+                publicDir: command === 'build' ? false : pluginConfig.publicDirectory,
                 build: {
                     manifest: userConfig.build?.manifest ?? !ssr,
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),

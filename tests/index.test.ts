@@ -213,6 +213,20 @@ describe('laravel-vite-plugin', () => {
         delete process.env.LARAVEL_SAIL
     })
 
+    it('serves assets from the public directory during dev', () => {
+        const plugin = laravel('resources/js/app.js')[0]
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        expect(config.publicDir).toBe('public')
+    })
+
+    it('does not copy the public directory to the outDir on build', () => {
+        const plugin = laravel('resources/js/app.js')[0]
+
+        const config = plugin.config({}, { command: 'build', mode: 'production' })
+        expect(config.publicDir).toBe(false)
+    })
+
     it('prevents the Inertia helpers from being externalized', () => {
         /* eslint-disable @typescript-eslint/ban-ts-comment */
         const plugin = laravel('resources/js/app.js')[0]
