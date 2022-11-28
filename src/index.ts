@@ -121,8 +121,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             ensureCommandShouldRunInEnvironment(command, env)
 
             return {
-                base: command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
-                publicDir: false,
+                base: userConfig.base ?? command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
+                publicDir: userConfig.publicDir ?? false,
                 build: {
                     manifest: userConfig.build?.manifest ?? !ssr,
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),
@@ -132,7 +132,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
                 server: {
-                    origin: '__laravel_vite_placeholder__',
+                    origin: userConfig.server?.origin ?? '__laravel_vite_placeholder__',
                     ...(process.env.LARAVEL_SAIL ? {
                         host: userConfig.server?.host ?? '0.0.0.0',
                         port: userConfig.server?.port ?? (env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173),
