@@ -32,7 +32,6 @@
         "@typescript-eslint/eslint-plugin": "^5.21.0",
         "@typescript-eslint/parser": "^5.21.0",
         "eslint": "^8.14.0",
-        "picocolors": "^1.0.0",
         "typescript": "^4.6.4",
         "vite": "^3.0.0",
         "vitest": "^0.25.2"
@@ -44,6 +43,7 @@
         "node": ">=14"
     },
     "dependencies": {
+        "picocolors": "^1.0.0",
         "vite-plugin-full-reload": "^1.0.1"
     }
 }
