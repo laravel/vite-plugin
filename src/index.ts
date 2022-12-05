@@ -236,19 +236,19 @@ function ensureCommandShouldRunInEnvironment(command: 'build'|'serve', env: Reco
     }
 
     if (typeof env.LARAVEL_VAPOR !== 'undefined') {
-        throw Error('You should not run the Vite HMR server on Vapor. You should build your assets for production instead.');
+        throw Error('You should not run the Vite HMR server on Vapor. You should build your assets for production instead. To disable this ENV check you may set LARAVEL_BYPASS_ENV_CHECK=1');
     }
 
     if (typeof env.LARAVEL_FORGE !== 'undefined') {
-        throw Error('You should not run the Vite HMR server in your Forge deployment script. You should build your assets for production instead.');
+        throw Error('You should not run the Vite HMR server in your Forge deployment script. You should build your assets for production instead. To disable this ENV check you may set LARAVEL_BYPASS_ENV_CHECK=1');
     }
 
     if (typeof env.LARAVEL_ENVOYER !== 'undefined') {
-        throw Error('You should not run the Vite HMR server in your Envoyer hook. You should build your assets for production instead.');
+        throw Error('You should not run the Vite HMR server in your Envoyer hook. You should build your assets for production instead. To disable this ENV check you may set LARAVEL_BYPASS_ENV_CHECK=1')
     }
 
     if (typeof env.CI !== 'undefined') {
-        throw Error('You should not run the Vite HMR server in CI environments. You should build your assets for production instead.');
+        throw Error('You should not run the Vite HMR server in CI environments. You should build your assets for production instead. To disable this ENV check you may set LARAVEL_BYPASS_ENV_CHECK=1')
     }
 }
 
