@@ -34,11 +34,11 @@
         "eslint": "^8.14.0",
         "picocolors": "^1.0.0",
         "typescript": "^4.6.4",
-        "vite": "^3.0.0",
+        "vite": "^4.0.0",
         "vitest": "^0.25.2"
     },
     "peerDependencies": {
-        "vite": "^3.0.0"
+        "vite": "^3.0.0 || ^4.0.0"
     },
     "engines": {
         "node": ">=14"
