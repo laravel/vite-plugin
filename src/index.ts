@@ -57,9 +57,9 @@ interface PluginConfig {
     /**
      * Utilise the Herd or Valet TLS certificates.
      *
-     * @default false
+     * @default null
      */
-    detectTls?: string|boolean,
+    detectTls?: string|boolean|null,
 
     /**
      * Utilise the Herd or Valet TLS certificates.
@@ -67,7 +67,7 @@ interface PluginConfig {
      * @default false
      * @deprecated use "detectTls" instead
      */
-    valetTls?: string|boolean,
+    valetTls?: string|boolean|null,
 
     /**
      * Transform the code while serving.
@@ -211,6 +211,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         server.config.logger.info(`\n  ${colors.red(`${colors.bold('LARAVEL')} ${laravelVersion()}`)}  ${colors.dim('plugin')} ${colors.bold(`v${pluginVersion()}`)}`)
                         server.config.logger.info('')
                         server.config.logger.info(`  ${colors.green('➜')}  ${colors.bold('APP_URL')}: ${colors.cyan(appUrl.replace(/:(\d+)/, (_, port) => `:${colors.bold(port)}`))}`)
+
+                        if (typeof resolvedConfig.server.https === 'object' && typeof resolvedConfig.server.https.key === 'string' && resolvedConfig.server.https.key.startsWith(path.resolve(os.homedir(), '.config/valet/Certificates/'))) {
+                            server.config.logger.info(`  ${colors.green('➜')}  Using Valet certificate to secure Vite.`)
+                        }
                     }, 100)
                 }
             })
@@ -342,8 +346,8 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
         refresh: config.refresh ?? false,
         hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
-        valetTls: config.valetTls ?? false,
-        detectTls: config.detectTls ?? config.valetTls ?? false,
+        valetTls: config.valetTls ?? null,
+        detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
     }
 }
@@ -507,32 +511,51 @@ function resolveHostFromEnv(env: Record<string, string>): string|undefined
 /**
  * Resolve the Herd or Valet server config for the given host.
  */
-function resolveDevelopmentEnvironmentServerConfig(host: string|boolean): {
+function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
     hmr?: { host: string }
     host?: string,
-    https?: { cert: Buffer, key: Buffer }
+    https?: { cert: string, key: string }
 }|undefined {
     if (host === false) {
         return
     }
 
+    // determine the Herd or Valet configuration directory existence...
+
     const configPath = determineDevelopmentEnvironmentConfigPath();
 
-    host = host === true ? resolveDevelopmentEnvironmentHost(configPath) : host
+    // host has not been configured, which is "silent auto-detection", and
+    // there is no good config path so we will quietly move on...
 
-    const keyPath = path.resolve(configPath, 'Certificates', `${host}.key`)
-    const certPath = path.resolve(configPath, 'Certificates', `${host}.crt`)
+    if (typeof configPath === 'undefined' && host === null) {
+        return
+    }
+
+    // okay, so we now know that the user explicitly wants certificates to be
+    // resolved and we should throw errors if we run into issues!
+
+    // host HAS been configured, but we cannot find the configuration
+    // directory...
+
+    if (typeof configPath === 'undefined') {
+        throw Error(`Unable to find the Herd or Valet configuration directory.`)
+    }
+
+    const resolvedHost = host === true || host === null ? resolveDevelopmentEnvironmentHost(configPath) : host
+
+    const keyPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.key`)
+    const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        throw Error(`Unable to find certificate files for your host [${host}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI or run \`valet secure\`.`)
+        throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI or run \`valet secure\`.`)
     }
 
     return {
-        hmr: { host },
-        host,
+        hmr: { host: resolvedHost },
+        host: resolvedHost,
         https: {
-            key: fs.readFileSync(keyPath),
-            cert: fs.readFileSync(certPath),
+            key: keyPath,
+            cert: certPath,
         },
     }
 }
@@ -540,14 +563,18 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean): {
 /**
  * Resolve the path to the Herd or Valet configuration directory.
  */
-function determineDevelopmentEnvironmentConfigPath(): string {
+function determineDevelopmentEnvironmentConfigPath(): string|undefined {
     const herdConfigPath = path.resolve(os.homedir(), 'Library', 'Application Support', 'Herd', 'config', 'valet')
 
     if (fs.existsSync(herdConfigPath)) {
         return herdConfigPath
     }
 
-    return path.resolve(os.homedir(), '.config', 'valet');
+    const valetConfigPath = path.resolve(os.homedir(), '.config', 'valet')
+
+    if (fs.existsSync(valetConfigPath)) {
+        return valetConfigPath
+    }
 }
 
 /**
