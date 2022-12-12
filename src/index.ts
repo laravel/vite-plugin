@@ -130,6 +130,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
                     },
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
+                    modulePreload: userConfig.build?.modulePreload ?? false,
                 },
                 server: {
                     origin: userConfig.server?.origin ?? '__laravel_vite_placeholder__',
