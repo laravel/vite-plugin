@@ -44,6 +44,6 @@
     },
     "dependencies": {
         "picocolors": "^1.0.0",
-        "vite-plugin-full-reload": "^1.0.1"
+        "vite-plugin-full-reload": "^1.0.5"
     }
 }
