@@ -4,6 +4,8 @@
 
 ## [v0.7.2](https://github.com/laravel/vite-plugin/compare/v0.7.1...v0.7.2) - 2022-12-15
 
+### Added
+
 - Adds Vite 4 support in https://github.com/laravel/vite-plugin/pull/179
 
 ## [v0.7.1](https://github.com/laravel/vite-plugin/compare/v0.7.0...v0.7.1) - 2022-11-21
