@@ -64,6 +64,18 @@ describe('laravel-vite-plugin', () => {
         expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.ts')
     })
 
+    it('respects users base config option', () => {
+        const plugin = laravel({
+            input: 'resources/js/app.ts',
+        })[0]
+
+        const userConfig = { base: '/foo/' }
+
+        const config = plugin.config(userConfig, { command: 'build', mode: 'production' })
+
+        expect(config.base).toBe('/foo/')
+    })
+
     it('accepts a partial configuration', () => {
         const plugin = laravel({
             input: 'resources/js/app.js',
