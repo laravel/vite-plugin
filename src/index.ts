@@ -121,7 +121,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             ensureCommandShouldRunInEnvironment(command, env)
 
             return {
-                base: userConfig.base ?? command === 'build' ? resolveBase(pluginConfig, assetUrl) : '',
+                base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
                 publicDir: userConfig.publicDir ?? false,
                 build: {
                     manifest: userConfig.build?.manifest ?? !ssr,
