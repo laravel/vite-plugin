@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.2...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.3...main)
+
+## [v0.7.3](https://github.com/laravel/vite-plugin/compare/v0.7.2...v0.7.3) - 2022-12-20
+
+### Changed
+
+- Update package.json to use vite 4 compatible vite-plugin-full-reload by @iquad in https://github.com/laravel/vite-plugin/pull/186
+- Respects users base config option by @timacdonald in https://github.com/laravel/vite-plugin/pull/188
 
 ## [v0.7.2](https://github.com/laravel/vite-plugin/compare/v0.7.1...v0.7.2) - 2022-12-15
 
