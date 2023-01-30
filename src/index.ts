@@ -59,6 +59,11 @@ interface PluginConfig {
      * @default false
      */
     valetTls?: string|boolean,
+
+    /**
+     * Transform the code while serving.
+     */
+    transformOnServe?: (code: string, url: DevServerUrl) => string,
 }
 
 interface RefreshConfig {
@@ -174,7 +179,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
         },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
-                return code.replace(/__laravel_vite_placeholder__/g, viteDevServerUrl)
+                code = code.replace(/__laravel_vite_placeholder__/g, viteDevServerUrl)
+
+                return pluginConfig.transformOnServe(code, viteDevServerUrl)
             }
         },
         configureServer(server) {
@@ -325,6 +332,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         refresh: config.refresh ?? false,
         hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
         valetTls: config.valetTls ?? false,
+        transformOnServe: config.transformOnServe ?? ((code) => code),
     }
 }
 
