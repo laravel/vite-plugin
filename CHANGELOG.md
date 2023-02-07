@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.3...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.4...main)
+
+## [v0.7.4](https://github.com/laravel/vite-plugin/compare/v0.7.3...v0.7.4) - 2023-02-07
+
+### Added
+
+- Provide hook to access dev url while transforming by @timacdonald in https://github.com/laravel/vite-plugin/pull/195
 
 ## [v0.7.3](https://github.com/laravel/vite-plugin/compare/v0.7.2...v0.7.3) - 2022-12-20
 
