@@ -41,7 +41,7 @@ interface PluginConfig {
     /**
      * The directory where the SSR bundle should be written.
      *
-     * @default 'bootstrap/ssr'
+     * @default '.laravel/ssr'
      */
     ssrOutputDirectory?: string
 
@@ -328,7 +328,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         publicDirectory: config.publicDirectory ?? 'public',
         buildDirectory: config.buildDirectory ?? 'build',
         ssr: config.ssr ?? config.input,
-        ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
+        ssrOutputDirectory: config.ssrOutputDirectory ?? (fs.existsSync('.laravel/app.php') ? '.laravel/ssr' : 'bootstrap/ssr'),
         refresh: config.refresh ?? false,
         hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
         valetTls: config.valetTls ?? false,
