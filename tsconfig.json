@@ -1,21 +1,16 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist",
-        "target": "esnext",
-        "module": "esnext",
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
-        "noUnusedLocals": true,
-        "strict": true,
-        "declaration": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "types": [
-            "node",
-            "vite/client"
-        ]
-    },
-    "include": [
-        "./src/index.ts"
-    ]
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "strict": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["./src/index.ts"]
 }

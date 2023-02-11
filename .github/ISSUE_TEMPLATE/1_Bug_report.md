@@ -1,5 +1,5 @@
 ---
-name: "Bug report"
+name: 'Bug report'
 about: "Report something that's broken. Please ensure your version is still supported: https://laravel.com/docs/releases#support-policy"
 ---
 
@@ -15,6 +15,5 @@ about: "Report something that's broken. Please ensure your version is still supp
 - Running in Sail / Docker: No|Sail|Docker
 
 ### Description:
-
 
 ### Steps To Reproduce:

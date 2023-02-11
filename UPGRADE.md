@@ -36,28 +36,25 @@ npm install --save-dev @vitejs/plugin-react
 Create a `vite.config.js` file in the root of your project:
 
 ```js
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
+import { defineConfig } from 'vite'
+import laravel from 'laravel-vite-plugin'
 // import react from '@vitejs/plugin-react';
 // import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
-    plugins: [
-        laravel([
-            'resources/css/app.css',
-            'resources/js/app.js',
-        ]),
-        // react(),
-        // vue({
-        //     template: {
-        //         transformAssetUrls: {
-        //             base: null,
-        //             includeAbsolute: false,
-        //         },
-        //     },
-        // }),
-    ],
-});
+  plugins: [
+    laravel(['resources/css/app.css', 'resources/js/app.js']),
+    // react(),
+    // vue({
+    //     template: {
+    //         transformAssetUrls: {
+    //             base: null,
+    //             includeAbsolute: false,
+    //         },
+    //     },
+    // }),
+  ],
+})
 ```
 
 If you are building an SPA, you will get a better developer experience by removing the CSS entry point above and [importing your CSS from Javascript](#importing-your-css-from-your-javascript-entry-points).
@@ -68,18 +65,13 @@ If you are migrating aliases from your `webpack.mix.js` file to your `vite.confi
 
 ```js
 export default defineConfig({
-    plugins: [
-        laravel([
-            'resources/css/app.css',
-            'resources/js/app.js',
-        ]),
-    ],
-    resolve: {
-        alias: {
-            '@': '/resources/js'
-        }
-    }
-});
+  plugins: [laravel(['resources/css/app.css', 'resources/js/app.js'])],
+  resolve: {
+    alias: {
+      '@': '/resources/js',
+    },
+  },
+})
 ```
 
 For your convenience, the Laravel Vite plugin automatically adds an `@` alias for your `/resources/js` directory. If you do not need to customize your aliases, you may omit this section from your `vite.config.js` file.
@@ -184,11 +176,10 @@ The entry points should match those used in your `vite.config.js`.
 
 #### React
 
-If you are using React and hot-module replacement, you will need to include an additional directive *before* the `@vite` directive:
+If you are using React and hot-module replacement, you will need to include an additional directive _before_ the `@vite` directive:
 
 ```html
-@viteReactRefresh
-@vite('resources/js/app.jsx')
+@viteReactRefresh @vite('resources/js/app.jsx')
 ```
 
 This loads a React "refresh runtime" in development mode only, which is required for hot module replacement to work correctly.
@@ -248,7 +239,6 @@ Next, if you are using the Vapor asset helper in your application, you only need
 
 If you want to use the asset helper with your Vite project, you will also need to ensure you have updated to the latest version:
 
-
 ```sh
 npm install laravel-vapor@latest
 ```
@@ -303,17 +293,17 @@ rm webpack.ssr.mix.js
 In most cases, you won't need a dedicated SSR configuration file when using Vite. You can specify your SSR entry point by passing a configuration option to the Laravel plugin:
 
 ```js
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
+import { defineConfig } from 'vite'
+import laravel from 'laravel-vite-plugin'
 
 export default defineConfig({
-    plugins: [
-        laravel({
-            input: 'resources/js/app.js',
-            ssr: 'resources/js/ssr.js',
-        }),
-    ],
-});
+  plugins: [
+    laravel({
+      input: 'resources/js/app.js',
+      ssr: 'resources/js/ssr.js',
+    }),
+  ],
+})
 ```
 
 You may wish to add the following additional scripts to your `package.json`:
