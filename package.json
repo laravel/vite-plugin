@@ -2,6 +2,7 @@
     "name": "laravel-vite-plugin",
     "version": "0.7.4",
     "description": "Laravel plugin for Vite.",
+    "type": "module",
     "keywords": [
         "laravel",
         "vite",
@@ -14,27 +15,46 @@
     },
     "license": "MIT",
     "author": "Laravel",
-    "main": "dist/index.js",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "require": "./dist/index.cjs",
+            "import": "./dist/index.mjs"
+        },
+        "./inertia-helpers": {
+            "types": "./dist/inertia-helpers/index.d.ts",
+            "require": "./dist/inertia-helpers/index.cjs",
+            "import": "./dist/inertia-helpers/index.mjs"
+        },
+        "./*": "./*"
+    },
+    "main": "dist/index.cjs",
+    "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "files": [
         "/dist",
-        "/inertia-helpers"
+        "/inertia-helpers",
+        "*.d.ts"
     ],
     "scripts": {
-        "build": "npm run build-plugin && npm run build-inertia-helpers",
+        "build": "npm run typecheck && tsup && cp src/dev-server-index.html dist/",
+        "build:watch": "tsup --watch",
         "build-plugin": "rm -rf dist && tsc && cp src/dev-server-index.html dist/",
         "build-inertia-helpers": "rm -rf inertia-helpers && tsc --project tsconfig.inertia-helpers.json",
-        "lint": "eslint --ext .ts ./src ./tests",
-        "test": "vitest run"
+        "lint": "eslint --cache --ext .ts ./src ./tests",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit",
+        "prepublishOnly": "npm run build"
     },
     "devDependencies": {
-        "@types/node": "^18.11.9",
-        "@typescript-eslint/eslint-plugin": "^5.21.0",
-        "@typescript-eslint/parser": "^5.21.0",
-        "eslint": "^8.14.0",
-        "typescript": "^4.6.4",
-        "vite": "^4.0.0",
-        "vitest": "^0.25.2"
+        "@types/node": "^18.13.0",
+        "@typescript-eslint/eslint-plugin": "^5.51.0",
+        "@typescript-eslint/parser": "^5.51.0",
+        "eslint": "^8.34.0",
+        "tsup": "^6.6.0",
+        "typescript": "^4.9.5",
+        "vite": "^4.1.1",
+        "vitest": "^0.28.4"
     },
     "peerDependencies": {
         "vite": "^3.0.0 || ^4.0.0"

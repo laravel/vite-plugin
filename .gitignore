@@ -3,3 +3,6 @@
 /inertia-helpers/
 /npm-debug.log
 /package-lock.json
+.eslintcache
+/pnpm-lock.yaml
+/yarn.lock
