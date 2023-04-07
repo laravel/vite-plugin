@@ -61,7 +61,7 @@ body:
       label: Running in Sail?
       description: Please indicate if you're running your app and commands in Sail or a custom Docker setup.
       options:
-        - Nope
+        - "No"
         - Sail
         - Custom Docker
     validations:
