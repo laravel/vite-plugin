@@ -61,7 +61,7 @@ body:
       label: Running in Sail?
       description: Please indicate if you're running your app and commands in Sail or a custom Docker setup.
       options:
-        - No
+        - Nope
         - Sail
         - Custom Docker
     validations:
@@ -78,5 +78,4 @@ body:
       description: Provide detailed steps to reproduce your issue. If necessary, please provide a GitHub repository to demonstrate your issue using `laravel new bug-report --github="--public"`.
     validations:
       required: true
-      
-
+     
