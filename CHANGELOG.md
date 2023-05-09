@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.4...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.5...main)
+
+## [v0.7.5](https://github.com/laravel/vite-plugin/compare/v0.7.4...v0.7.5) - 2023-05-09
+
+- Build MJS and CJS versions of the plugin by @timacdonald in https://github.com/laravel/vite-plugin/pull/189
 
 ## [v0.7.4](https://github.com/laravel/vite-plugin/compare/v0.7.3...v0.7.4) - 2023-02-07
 
