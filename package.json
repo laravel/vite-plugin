@@ -1,6 +1,6 @@
 {
     "name": "laravel-vite-plugin",
-    "version": "0.7.5",
+    "version": "0.7.6",
     "description": "Laravel plugin for Vite.",
     "keywords": [
         "laravel",
