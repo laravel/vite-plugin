@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.5...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.6...main)
+
+## [v0.7.6](https://github.com/laravel/vite-plugin/compare/v0.7.5...v0.7.6) - 2023-05-10
+
+- Polyfill import.meta.url for CJS builds by @timacdonald in https://github.com/laravel/vite-plugin/pull/217
 
 ## [v0.7.5](https://github.com/laravel/vite-plugin/compare/v0.7.4...v0.7.5) - 2023-05-09
 
