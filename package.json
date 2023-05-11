@@ -25,6 +25,7 @@
             "types": "./inertia-helpers/index.d.ts"
         }
     },
+    "types": "./dist/index.d.ts",
     "files": [
         "/dist",
         "/inertia-helpers"
