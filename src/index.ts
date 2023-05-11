@@ -81,6 +81,7 @@ type DevServerUrl = `${'http'|'https'}://${string}:${number}`
 let exitHandlersBound = false
 
 export const refreshPaths = [
+    'app/Providers/**',
     'app/View/Components/**',
     'resources/views/**',
     'resources/lang/**',
