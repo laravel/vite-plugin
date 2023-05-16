@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.6...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.7...main)
+
+## [v0.7.7](https://github.com/laravel/vite-plugin/compare/v0.7.6...v0.7.7) - 2023-05-16
+
+- Expose base types by @timacdonald in https://github.com/laravel/vite-plugin/pull/220
+- Add a DOCTYPE by @matijs in https://github.com/laravel/vite-plugin/pull/215
 
 ## [v0.7.6](https://github.com/laravel/vite-plugin/compare/v0.7.5...v0.7.6) - 2023-05-10
 
