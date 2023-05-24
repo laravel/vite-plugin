@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.7...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.8...main)
+
+## [v0.7.8](https://github.com/laravel/vite-plugin/compare/v0.7.7...v0.7.8) - 2023-05-24
+
+- Ensure 'node' has a fallback type when working with static import linters by @timacdonald in https://github.com/laravel/vite-plugin/pull/227
 
 ## [v0.7.7](https://github.com/laravel/vite-plugin/compare/v0.7.6...v0.7.7) - 2023-05-16
 
