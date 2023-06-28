@@ -545,3 +545,9 @@ Update postcss.config.js to use module.exports:
 - export default {
 + module.exports = {
 ```
+
+Remove `type` from package.json
+
+```diff
+- "type": "module",
+```
