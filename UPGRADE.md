@@ -538,3 +538,10 @@ You may also wish to remove any `.gitignore` paths you are no longer using:
 - /bootstrap/ssr
 - /public/build
 ```
+
+Update postcss.config.js to use module.exports:
+
+```js
+- export default {
++ module.exports = {
+```
