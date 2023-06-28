@@ -541,7 +541,7 @@ You may also wish to remove any `.gitignore` paths you are no longer using:
 
 Update postcss.config.js to use module.exports:
 
-```js
+```diff
 - export default {
 + module.exports = {
 ```
