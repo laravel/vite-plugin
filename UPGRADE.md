@@ -539,14 +539,14 @@ You may also wish to remove any `.gitignore` paths you are no longer using:
 - /public/build
 ```
 
-Update postcss.config.js to use module.exports:
+Update `postcss.config.js` to use `module.exports`:
 
 ```diff
 - export default {
 + module.exports = {
 ```
 
-Remove `type` from package.json
+Remove `type` from `package.json`
 
 ```diff
 - "type": "module",
