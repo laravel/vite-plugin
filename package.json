@@ -1,5 +1,5 @@
 {
-    "name": "laravel-vite-plugin",
+    "name": "laravel-vite-plugin2",
     "version": "0.7.8",
     "description": "Laravel plugin for Vite.",
     "keywords": [
@@ -7,10 +7,10 @@
         "vite",
         "vite-plugin"
     ],
-    "homepage": "https://github.com/laravel/vite-plugin",
+    "homepage": "https://github.com/devhau/vite-plugin",
     "repository": {
         "type": "git",
-        "url": "https://github.com/laravel/vite-plugin"
+        "url": "https://github.com/devhau/vite-plugin"
     },
     "license": "MIT",
     "author": "Laravel",
