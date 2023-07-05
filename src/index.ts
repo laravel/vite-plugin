@@ -112,8 +112,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
     const defaultAliases: Record<string, string> = {
         '@': '/resources/js',
     };
-var listInputs =
-        userConfig.build?.rollupOptions?.input ??
+    let listInputs = userConfig.build?.rollupOptions?.input ??
         resolveInput(pluginConfig, ssr);
       if (listInputs && userConfig.root) {
         if (Array.isArray(listInputs)) {
