@@ -112,19 +112,6 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
     const defaultAliases: Record<string, string> = {
         '@': '/resources/js',
     };
-    let listInputs = userConfig.build?.rollupOptions?.input ??
-        resolveInput(pluginConfig, ssr);
-      if (listInputs && userConfig.root) {
-        if (Array.isArray(listInputs)) {
-          listInputs = listInputs.map((item) =>
-            userConfig.root ? path.join(userConfig.root, item) : item
-          );
-        } else if (!Array.isArray(listInputs) && listInputs != null) {
-          listInputs = userConfig.root
-            ? path.join(userConfig.root, listInputs + "")
-            : listInputs;
-        }
-      }
     return {
         name: 'laravel',
         enforce: 'post',
@@ -138,6 +125,16 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
             ensureCommandShouldRunInEnvironment(command, env)
 
+            let inputs = userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr);
+            if (inputs && userConfig.root) {
+                if (!Array.isArray(inputs)&&typeof inputs==='string') {
+                    inputs=[inputs];
+                }
+                if(Array.isArray(inputs)){
+                    inputs = inputs.map((item) =>
+                    userConfig.root ? path.join(userConfig.root, item) : item);
+                }
+            }
             return {
                 base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
                 publicDir: userConfig.publicDir ?? false,
@@ -145,7 +142,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     manifest: userConfig.build?.manifest ?? !ssr,
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),
                     rollupOptions: {
-                        input: listInputs
+                        input: inputs
                     },
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
