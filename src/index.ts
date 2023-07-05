@@ -112,7 +112,20 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
     const defaultAliases: Record<string, string> = {
         '@': '/resources/js',
     };
-
+var listInputs =
+        userConfig.build?.rollupOptions?.input ??
+        resolveInput(pluginConfig, ssr);
+      if (listInputs && userConfig.root) {
+        if (Array.isArray(listInputs)) {
+          listInputs = listInputs.map((item) =>
+            userConfig.root ? path.join(userConfig.root, item) : item
+          );
+        } else if (!Array.isArray(listInputs) && listInputs != null) {
+          listInputs = userConfig.root
+            ? path.join(userConfig.root, listInputs + "")
+            : listInputs;
+        }
+      }
     return {
         name: 'laravel',
         enforce: 'post',
@@ -133,7 +146,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     manifest: userConfig.build?.manifest ?? !ssr,
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),
                     rollupOptions: {
-                        input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
+                        input: listInputs
                     },
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
