@@ -131,8 +131,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     inputs=[inputs];
                 }
                 if(Array.isArray(inputs)){
-                    inputs = inputs.map((item) =>
-                    userConfig.root ? path.join(userConfig.root, item) : item);
+                    inputs = inputs.map((item) => path.join(userConfig.root, item));
                 }
             }
             return {
