@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.4...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.8...main)
+
+## [v0.7.8](https://github.com/laravel/vite-plugin/compare/v0.7.7...v0.7.8) - 2023-05-24
+
+- Ensure 'node' has a fallback type when working with static import linters by @timacdonald in https://github.com/laravel/vite-plugin/pull/227
+
+## [v0.7.7](https://github.com/laravel/vite-plugin/compare/v0.7.6...v0.7.7) - 2023-05-16
+
+- Expose base types by @timacdonald in https://github.com/laravel/vite-plugin/pull/220
+- Add a DOCTYPE by @matijs in https://github.com/laravel/vite-plugin/pull/215
+
+## [v0.7.6](https://github.com/laravel/vite-plugin/compare/v0.7.5...v0.7.6) - 2023-05-10
+
+- Polyfill import.meta.url for CJS builds by @timacdonald in https://github.com/laravel/vite-plugin/pull/217
+
+## [v0.7.5](https://github.com/laravel/vite-plugin/compare/v0.7.4...v0.7.5) - 2023-05-09
+
+- Build MJS and CJS versions of the plugin by @timacdonald in https://github.com/laravel/vite-plugin/pull/189
 
 ## [v0.7.4](https://github.com/laravel/vite-plugin/compare/v0.7.3...v0.7.4) - 2023-02-07
 

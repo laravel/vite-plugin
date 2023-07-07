@@ -1,6 +1,6 @@
 {
     "name": "laravel-vite-plugin",
-    "version": "0.7.4",
+    "version": "0.7.8",
     "description": "Laravel plugin for Vite.",
     "keywords": [
         "laravel",
@@ -14,15 +14,29 @@
     },
     "license": "MIT",
     "author": "Laravel",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs",
+            "types": "./dist/index.d.ts"
+        },
+        "./inertia-helpers": {
+            "import": "./inertia-helpers/index.js",
+            "types": "./inertia-helpers/index.d.ts",
+            "node": "./inertia-helpers/index.js"
+        }
+    },
+    "types": "./dist/index.d.ts",
     "files": [
         "/dist",
         "/inertia-helpers"
     ],
     "scripts": {
         "build": "npm run build-plugin && npm run build-inertia-helpers",
-        "build-plugin": "rm -rf dist && tsc && cp src/dev-server-index.html dist/",
+        "build-plugin": "rm -rf dist && npm run build-plugin-types && npm run build-plugin-esm && npm run build-plugin-cjs && cp src/dev-server-index.html dist/",
+        "build-plugin-types": "tsc --emitDeclarationOnly",
+        "build-plugin-cjs": "esbuild src/index.ts --platform=node --format=cjs --outfile=dist/index.cjs --define:import.meta.url=import_meta_url --inject:./import.meta.url-polyfill.js",
+        "build-plugin-esm": "esbuild src/index.ts --platform=node --format=esm --outfile=dist/index.mjs",
         "build-inertia-helpers": "rm -rf inertia-helpers && tsc --project tsconfig.inertia-helpers.json",
         "lint": "eslint --ext .ts ./src ./tests",
         "test": "vitest run"
@@ -31,6 +45,7 @@
         "@types/node": "^18.11.9",
         "@typescript-eslint/eslint-plugin": "^5.21.0",
         "@typescript-eslint/parser": "^5.21.0",
+        "esbuild": "0.16.10",
         "eslint": "^8.14.0",
         "typescript": "^4.6.4",
         "vite": "^4.0.0",

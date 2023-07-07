@@ -1,6 +1,7 @@
 import fs from 'fs'
 import { AddressInfo } from 'net'
 import os from 'os'
+import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
 import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption } from 'vite'
@@ -224,7 +225,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     res.statusCode = 404
 
                     res.end(
-                        fs.readFileSync(path.join(__dirname, 'dev-server-index.html')).toString().replace(/{{ APP_URL }}/g, appUrl)
+                        fs.readFileSync(path.join(dirname(), 'dev-server-index.html')).toString().replace(/{{ APP_URL }}/g, appUrl)
                     )
                 }
 
@@ -277,7 +278,7 @@ function laravelVersion(): string {
  */
 function pluginVersion(): string {
     try {
-        return JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json')).toString())?.version
+        return JSON.parse(fs.readFileSync(path.join(dirname(), '../package.json')).toString())?.version
     } catch {
         return ''
     }
@@ -538,4 +539,11 @@ function resolveValetHost(): string {
     const config: { tld: string } = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
 
     return path.basename(process.cwd()) + '.' + config.tld
+}
+
+/**
+ * The directory of the current file.
+ */
+function dirname(): string {
+    return fileURLToPath(new URL('.', import.meta.url))
 }

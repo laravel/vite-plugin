@@ -102,6 +102,12 @@ Update your NPM scripts in `package.json`:
   }
 ```
 
+You should also add `"type": "module"` as a top-level key / value pair to your project's `package.json` by running the following command:
+
+```shell
+npm pkg set type="module"
+```
+
 ### Vite compatible imports
 
 Vite only supports ES modules, so if you are upgrading an existing application you will need to replace any `require()` statements with `import`. You may refer to [this pull request](https://github.com/laravel/laravel/pull/5895/files) for an example.
@@ -265,7 +271,37 @@ Then you will need to specify the base URL for assets in your application's entr
 
 ### Optional: Configure Tailwind
 
-If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need to create a `postcss.config.js` file. Tailwind can generate this for you automatically:
+If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need to migrate your `tailwind.config.js` configuration file to use [Vite compatible imports](#vite-compatible-imports) and exports:
+
+```diff
+- const defaultTheme = require('tailwindcss/defaultTheme');
++ import defaultTheme from 'tailwindcss/defaultTheme';
++ import forms from '@tailwindcss/forms';
+
+/** @type {import('tailwindcss').Config} */
+- module.exports = {
++ export default {
+    content: [
+        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+        './storage/framework/views/*.php',
+        './resources/views/**/*.blade.php',
+        './resources/js/**/*.vue',
+    ],
+
+    theme: {
+        extend: {
+            fontFamily: {
+                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+            },
+        },
+    },
+
+-    plugins: [require('@tailwindcss/forms')],
++    plugins: [forms],
+};
+```
+
+You will also need to create a `postcss.config.cjs` file. Tailwind can generate this for you automatically:
 
 ```shell
 npx tailwindcss init -p
@@ -274,7 +310,7 @@ npx tailwindcss init -p
 Or, you can create it manually:
 
 ```js
-module.exports = {
+export default {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
@@ -423,6 +459,12 @@ Update your NPM scripts in `package.json`:
   }
 ```
 
+You should also remove the `type` key by running the following command:
+
+```shell
+npm pkg delete type
+```
+
 #### Inertia
 
 Vite requires a helper function to import page components which is not required with Laravel Mix. You can remove this as follows:
@@ -501,4 +543,56 @@ You may also wish to remove any `.gitignore` paths you are no longer using:
 ```gitignore
 - /bootstrap/ssr
 - /public/build
+```
+
+### Optional: Configure Tailwind
+
+If you are using Tailwind, perhaps with one of Laravel's starter kits, you will need to update your `tailwind.config.js` configuration file to use CommonJS imports and exports:
+
+```diff
+- import defaultTheme from 'tailwindcss/defaultTheme';
+- import forms from '@tailwindcss/forms';
++ const defaultTheme = require('tailwindcss/defaultTheme');
+
+- export default {
++ module.exports = {
+    content: [
+        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+        './storage/framework/views/*.php',
+        './resources/views/**/*.blade.php',
+        './resources/js/**/*.vue',
+    ],
+
+    theme: {
+        extend: {
+            fontFamily: {
+                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+            },
+        },
+    },
+
+-    plugins: [forms],
++    plugins: [require('@tailwindcss/forms')],
+};
+```
+
+You may also migrate any PostCSS plugins from your `postcss.config.js` file to your `webpack.mix.js` file:
+
+```diff
+ mix.js('resources/js/app.js', 'public/js')
+     .postCss('resources/css/app.css', 'public/css', [
+-        //
++        require("tailwindcss"),
+     ]);
+```
+
+> **Note**  
+> You do not need to include the `autoprefixer` plugin as Laravel Mix includes this by default.
+
+If you are using other PostCSS plugins, such as `postcss-import`, you will need to include them in your configuration. See the [Laravel Mix PostCSS documentation](https://laravel-mix.com/docs/6.0/postcss) for more information.
+
+Finally, you may also remove your PostCSS config file:
+
+```shell
+rm postcss.config.js
 ```
