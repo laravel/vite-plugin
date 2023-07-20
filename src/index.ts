@@ -505,10 +505,12 @@ function resolveValetServerConfig(host: string|boolean): {
         return
     }
 
-    host = host === true ? resolveValetHost() : host
+    const configPath = determineValetConfigPath();
 
-    const keyPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.key`)
-    const certPath = path.resolve(os.homedir(), `.config/valet/Certificates/${host}.crt`)
+    host = host === true ? resolveValetHost(configPath) : host
+
+    const keyPath = path.resolve(configPath, 'Certificates', `${host}.key`)
+    const certPath = path.resolve(configPath, 'Certificates', `${host}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
         throw Error(`Unable to find Valet certificate files for your host [${host}]. Ensure you have run "valet secure".`)
@@ -525,16 +527,29 @@ function resolveValetServerConfig(host: string|boolean): {
 }
 
 /**
+ * Resolve the path to the Valet configuration directory.
+ */
+function determineValetConfigPath(): string {
+    const herdConfigPath = path.resolve(os.homedir(), 'Library', 'Application Support', 'Herd', 'config', 'valet')
+
+    if (fs.existsSync(herdConfigPath)) {
+        return herdConfigPath
+    }
+
+    return path.resolve(os.homedir(), '.config', 'valet');
+}
+
+/**
  * Resolve the valet valet host for the current directory.
  */
-function resolveValetHost(): string {
-    const configPath = os.homedir() + `/.config/valet/config.json`
+function resolveValetHost(configPath: string): string {
+    const configFile = path.resolve(configPath, 'config.json')
 
-    if (! fs.existsSync(configPath)) {
+    if (! fs.existsSync(configFile)) {
         throw Error('Unable to find the Valet configuration file. You will need to manually specify the host in the `valetTls` configuration option.')
     }
 
-    const config: { tld: string } = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+    const config: { tld: string } = JSON.parse(fs.readFileSync(configFile, 'utf-8'))
 
     return path.basename(process.cwd()) + '.' + config.tld
 }
