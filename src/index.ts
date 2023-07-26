@@ -55,7 +55,7 @@ interface PluginConfig {
     refresh?: boolean|string|string[]|RefreshConfig|RefreshConfig[]
 
     /**
-     * Utilise the valet TLS certificates.
+     * Utilise the Herd or Valet TLS certificates.
      *
      * @default false
      */
@@ -121,7 +121,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
             const serverConfig = command === 'serve'
-                ? (resolveValetServerConfig(pluginConfig.valetTls) ?? resolveEnvironmentServerConfig(env))
+                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.valetTls) ?? resolveEnvironmentServerConfig(env))
                 : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
@@ -492,11 +492,10 @@ function resolveHostFromEnv(env: Record<string, string>): string|undefined
     }
 }
 
-
 /**
- * Resolve the valet server config for the given host.
+ * Resolve the Herd or Valet server config for the given host.
  */
-function resolveValetServerConfig(host: string|boolean): {
+function resolveDevelopmentEnvironmentServerConfig(host: string|boolean): {
     hmr?: { host: string }
     host?: string,
     https?: { cert: Buffer, key: Buffer }
@@ -505,15 +504,15 @@ function resolveValetServerConfig(host: string|boolean): {
         return
     }
 
-    const configPath = determineValetConfigPath();
+    const configPath = determineDevelopmentEnvironmentConfigPath();
 
-    host = host === true ? resolveValetHost(configPath) : host
+    host = host === true ? resolveDevelopmentEnvironmentHost(configPath) : host
 
     const keyPath = path.resolve(configPath, 'Certificates', `${host}.key`)
     const certPath = path.resolve(configPath, 'Certificates', `${host}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        throw Error(`Unable to find Valet certificate files for your host [${host}]. Ensure you have run "valet secure".`)
+        throw Error(`Unable to find certificate files for your host [${host}] in the [${configPath}/Certificates] directory. Ensure you have run secured the site via the Herd UI or run \`valet secure\`.`)
     }
 
     return {
@@ -527,9 +526,9 @@ function resolveValetServerConfig(host: string|boolean): {
 }
 
 /**
- * Resolve the path to the Valet configuration directory.
+ * Resolve the path to the Herd or Valet configuration directory.
  */
-function determineValetConfigPath(): string {
+function determineDevelopmentEnvironmentConfigPath(): string {
     const herdConfigPath = path.resolve(os.homedir(), 'Library', 'Application Support', 'Herd', 'config', 'valet')
 
     if (fs.existsSync(herdConfigPath)) {
@@ -540,13 +539,13 @@ function determineValetConfigPath(): string {
 }
 
 /**
- * Resolve the valet valet host for the current directory.
+ * Resolve the Herd or Valet host for the current directory.
  */
-function resolveValetHost(configPath: string): string {
+function resolveDevelopmentEnvironmentHost(configPath: string): string {
     const configFile = path.resolve(configPath, 'config.json')
 
     if (! fs.existsSync(configFile)) {
-        throw Error('Unable to find the Valet configuration file. You will need to manually specify the host in the `valetTls` configuration option.')
+        throw Error(`Unable to find the configuration file [${configFile}]. You will need to manually specify the host in the \`valetTls\` configuration option.`)
     }
 
     const config: { tld: string } = JSON.parse(fs.readFileSync(configFile, 'utf-8'))
