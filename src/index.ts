@@ -59,6 +59,14 @@ interface PluginConfig {
      *
      * @default false
      */
+    detectTls?: string|boolean,
+
+    /**
+     * Utilise the Herd or Valet TLS certificates.
+     *
+     * @default false
+     * @deprecated use "detectTls" instead
+     */
     valetTls?: string|boolean,
 
     /**
@@ -121,7 +129,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
             const serverConfig = command === 'serve'
-                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.valetTls) ?? resolveEnvironmentServerConfig(env))
+                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls) ?? resolveEnvironmentServerConfig(env))
                 : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
@@ -333,6 +341,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         refresh: config.refresh ?? false,
         hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
         valetTls: config.valetTls ?? false,
+        detectTls: config.detectTls ?? config.valetTls ?? false,
         transformOnServe: config.transformOnServe ?? ((code) => code),
     }
 }
@@ -512,7 +521,7 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean): {
     const certPath = path.resolve(configPath, 'Certificates', `${host}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        throw Error(`Unable to find certificate files for your host [${host}] in the [${configPath}/Certificates] directory. Ensure you have run secured the site via the Herd UI or run \`valet secure\`.`)
+        throw Error(`Unable to find certificate files for your host [${host}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI or run \`valet secure\`.`)
     }
 
     return {
@@ -545,7 +554,7 @@ function resolveDevelopmentEnvironmentHost(configPath: string): string {
     const configFile = path.resolve(configPath, 'config.json')
 
     if (! fs.existsSync(configFile)) {
-        throw Error(`Unable to find the configuration file [${configFile}]. You will need to manually specify the host in the \`valetTls\` configuration option.`)
+        throw Error(`Unable to find the configuration file [${configFile}]. You will need to manually specify the host in the \`detectTls\` configuration option.`)
     }
 
     const config: { tld: string } = JSON.parse(fs.readFileSync(configFile, 'utf-8'))
