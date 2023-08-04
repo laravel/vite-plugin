@@ -17,13 +17,11 @@
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs"
+            "default": "./dist/index.mjs"
         },
         "./inertia-helpers": {
             "types": "./inertia-helpers/index.d.ts",
-            "import": "./inertia-helpers/index.js",
-            "node": "./inertia-helpers/index.js"
+            "default": "./inertia-helpers/index.js"
         }
     },
     "types": "./dist/index.d.ts",
