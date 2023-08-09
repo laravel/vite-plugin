@@ -18,7 +18,7 @@
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "default": "./dist/index.mjs"
+            "default": "./dist/index.js"
         },
         "./inertia-helpers": {
             "types": "./inertia-helpers/index.d.ts",
@@ -34,7 +34,7 @@
         "build": "npm run build-plugin && npm run build-inertia-helpers",
         "build-plugin": "rm -rf dist && npm run build-plugin-types && npm run build-plugin-esm && cp src/dev-server-index.html dist/",
         "build-plugin-types": "tsc --emitDeclarationOnly",
-        "build-plugin-esm": "esbuild src/index.ts --platform=node --format=esm --outfile=dist/index.mjs",
+        "build-plugin-esm": "esbuild src/index.ts --platform=node --format=esm --outfile=dist/index.js",
         "build-inertia-helpers": "rm -rf inertia-helpers && tsc --project tsconfig.inertia-helpers.json",
         "lint": "eslint --ext .ts ./src ./tests",
         "test": "vitest run"
