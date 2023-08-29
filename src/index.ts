@@ -107,6 +107,7 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
 function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlugin {
     let viteDevServerUrl: DevServerUrl
     let resolvedConfig: ResolvedConfig
+    let userConfig: UserConfig
 
     const defaultAliases: Record<string, string> = {
         '@': '/resources/js',
@@ -115,7 +116,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
     return {
         name: 'laravel',
         enforce: 'post',
-        config: (userConfig, { command, mode }) => {
+        config: (config, { command, mode }) => {
+            userConfig = config
             const ssr = !! userConfig.build?.ssr
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
@@ -193,7 +195,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
-                    viteDevServerUrl = resolveDevServerUrl(address, server.config)
+                    viteDevServerUrl = resolveDevServerUrl(address, server.config, userConfig)
                     fs.writeFileSync(pluginConfig.hotFile, viteDevServerUrl)
 
                     setTimeout(() => {
@@ -396,7 +398,7 @@ function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): P
 /**
  * Resolve the dev server URL from the server address and configuration.
  */
-function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevServerUrl {
+function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig, userConfig: UserConfig): DevServerUrl {
     const configHmrProtocol = typeof config.server.hmr === 'object' ? config.server.hmr.protocol : null
     const clientProtocol = configHmrProtocol ? (configHmrProtocol === 'wss' ? 'https' : 'http') : null
     const serverProtocol = config.server.https ? 'https' : 'http'
@@ -404,8 +406,9 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig): DevS
 
     const configHmrHost = typeof config.server.hmr === 'object' ? config.server.hmr.host : null
     const configHost = typeof config.server.host === 'string' ? config.server.host : null
+    const sailHost = process.env.LARAVEL_SAIL && ! userConfig.server?.host ? 'localhost' : null
     const serverAddress = isIpv6(address) ? `[${address.address}]` : address.address
-    const host = configHmrHost ?? configHost ?? serverAddress
+    const host = configHmrHost ?? sailHost ?? configHost ?? serverAddress
 
     const configHmrClientPort = typeof config.server.hmr === 'object' ? config.server.hmr.clientPort : null
     const port = configHmrClientPort ?? address.port
