@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.8.0...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.8.1...main)
+
+## [v0.8.1](https://github.com/laravel/vite-plugin/compare/v0.8.0...v0.8.1) - 2023-09-26
+
+- [0.8] Fix issue with `0.0.0.0` network resolution by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/241
+- Upgrade vitest by [@sapphi-red](https://github.com/sapphi-red) in https://github.com/laravel/vite-plugin/pull/246
 
 ## [v0.8.0](https://github.com/laravel/vite-plugin/compare/v0.7.8...v0.8.0) - 2023-08-08
 
