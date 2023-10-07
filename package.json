@@ -30,6 +30,9 @@
         "/dist",
         "/inertia-helpers"
     ],
+    "bin": {
+        "purge-orphaned-assets": "bin/purge-orphaned-assets.js"
+    },
     "scripts": {
         "build": "npm run build-plugin && npm run build-inertia-helpers",
         "build-plugin": "rm -rf dist && npm run build-plugin-types && npm run build-plugin-esm && cp src/dev-server-index.html dist/",
