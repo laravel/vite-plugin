@@ -30,15 +30,15 @@ const assetsDirectory = argument(`assets`, () => `${dirname(manifestPath)}/asset
 /*
  * Helpers.
  */
-
-const write = quiet ? (() => undefined) : console.log
+const info = quiet ? (() => undefined) : console.log
+const error = quiet ? (() => undefined) : console.error
 
 /*
  * Clean.
  */
 
 const main = () => {
-    write(`Reading manifest [${manifestPath}].`)
+    info(`Reading manifest [${manifestPath}].`)
 
     const manifest = JSON.parse(readFileSync(manifestPath).toString())
 
@@ -47,20 +47,20 @@ const main = () => {
     const isSsr = Array.isArray(manifest[manifestKeys[0]])
 
     if (wantsSsr && ! isSsr) {
-        write('Did not find an SSR manifest.')
+        error('Did not expected SSR manifest.')
 
         process.exit(1)
     }
 
     isSsr
-        ? write(`SSR manifest found.`)
-        : write(`Non-SSR manifest found.`)
+        ? info(`SSR manifest found.`)
+        : info(`Non-SSR manifest found.`)
 
     const manifestAssets = isSsr
         ? manifestKeys.flatMap(key => manifest[key])
         : manifestKeys.map(key => manifest[key].file)
 
-    write(`Verify assets in [${assetsDirectory}].`)
+    info(`Verify assets in [${assetsDirectory}].`)
 
     const allAssets = readdirSync(assetsDirectory, { withFileTypes: true })
 
@@ -68,18 +68,18 @@ const main = () => {
         .filter(file => manifestAssets.findIndex(asset => asset.endsWith(`/${file.name}`)) === -1)
 
     if (orphanedAssets.length === 0) {
-        write(`No ophaned assets found.`)
+        info(`No ophaned assets found.`)
     } else {
         orphanedAssets.length === 1
-            ? write(`[${orphanedAssets.length}] orphaned asset found.`)
-            : write(`[${orphanedAssets.length}] orphaned assets found.`)
+            ? info(`[${orphanedAssets.length}] orphaned asset found.`)
+            : info(`[${orphanedAssets.length}] orphaned assets found.`)
 
         orphanedAssets.forEach(asset => {
             const path = `${assetsDirectory}/${asset.name}`
 
             dryRun
-                ? write(`Orphaned asset [${path}] would be removed.`)
-                : write(`Removing orphaned asset [${path}].`)
+                ? info(`Orphaned asset [${path}] would be removed.`)
+                : info(`Removing orphaned asset [${path}].`)
 
             if (! dryRun) {
                 unlinkSync(path)
