@@ -160,8 +160,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                             ...serverConfig.hmr,
                             ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
                         },
-                        https: userConfig.server?.https === false ? false : {
+                        // @ts-ignore `https: boolean` is removed in Vite 5
+                        https: userConfig.server?.https === false ? false as any : {
                             ...serverConfig.https,
+                            // @ts-ignore `https: boolean` is removed in Vite 5
                             ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
                         },
                     } : undefined),
