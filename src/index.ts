@@ -160,9 +160,11 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                             ...serverConfig.hmr,
                             ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
                         },
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore `https: boolean` is removed in Vite 5
-                        https: userConfig.server?.https === false ? false as any : {
+                        https: userConfig.server?.https === false ? false as never : {
                             ...serverConfig.https,
+                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-ignore `https: boolean` is removed in Vite 5
                             ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
                         },
