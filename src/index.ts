@@ -204,7 +204,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
-                    viteDevServerUrl = resolvedConfig.server?.origin ? resolvedConfig.server.origin : resolveDevServerUrl(address, server.config, userConfig)
+                    viteDevServerUrl = resolvedConfig.server?.origin ? resolvedConfig.server.origin as DevServerUrl : resolveDevServerUrl(address, server.config, userConfig)
                     fs.writeFileSync(pluginConfig.hotFile, viteDevServerUrl)
 
                     setTimeout(() => {
