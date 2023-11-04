@@ -21,7 +21,6 @@
         },
         "./inertia-helpers": {
             "import": "./inertia-helpers/index.js",
-            "types": "./inertia-helpers/index.d.ts",
             "node": "./inertia-helpers/index.js"
         }
     },
