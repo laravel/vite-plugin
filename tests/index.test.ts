@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import laravel from '../src'
-import { resolvePageComponent } from '../src/inertia-helpers';
+import { PageNotFoundError, resolvePageComponent } from '../src/inertia-helpers';
 
 describe('laravel-vite-plugin', () => {
     afterEach(() => {
@@ -375,5 +375,10 @@ describe('inertia-helpers', () => {
     it('pass eagerly globed value to resolvePageComponent', async () => {
         const file = await resolvePageComponent<{ default: string }>(path, import.meta.glob('./__data__/*.ts', { eager: true }))
         expect(file.default).toBe('Dummy File')
+    })
+
+    it('throws PageNotFoundError when path is not found', async () => {
+        const callback = () => resolvePageComponent<{ default: string }>('./__data__/_does_not_exist_.ts', import.meta.glob('./__data__/*.ts'))
+        await expect(callback).rejects.toThrowError(PageNotFoundError)
     })
 })
