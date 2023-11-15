@@ -73,6 +73,13 @@ interface PluginConfig {
      * Transform the code while serving.
      */
     transformOnServe?: (code: string, url: DevServerUrl) => string,
+
+    /**
+     * Show a Laravel-specific prompt when starting the development server.
+     *
+     * @default true
+     */
+    prompt?: boolean
 }
 
 interface RefreshConfig {
@@ -207,11 +214,13 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     viteDevServerUrl = resolveDevServerUrl(address, server.config, userConfig)
                     fs.writeFileSync(pluginConfig.hotFile, viteDevServerUrl)
 
-                    setTimeout(() => {
-                        server.config.logger.info(`\n  ${colors.red(`${colors.bold('LARAVEL')} ${laravelVersion()}`)}  ${colors.dim('plugin')} ${colors.bold(`v${pluginVersion()}`)}`)
-                        server.config.logger.info('')
-                        server.config.logger.info(`  ${colors.green('➜')}  ${colors.bold('APP_URL')}: ${colors.cyan(appUrl.replace(/:(\d+)/, (_, port) => `:${colors.bold(port)}`))}`)
-                    }, 100)
+                    if (pluginConfig.prompt) {
+                      setTimeout(() => {
+                          server.config.logger.info(`\n  ${colors.red(`${colors.bold('LARAVEL')} ${laravelVersion()}`)}  ${colors.dim('plugin')} ${colors.bold(`v${pluginVersion()}`)}`)
+                          server.config.logger.info('')
+                          server.config.logger.info(`  ${colors.green('➜')}  ${colors.bold('APP_URL')}: ${colors.cyan(appUrl.replace(/:(\d+)/, (_, port) => `:${colors.bold(port)}`))}`)
+                      }, 100)
+                    }
                 }
             })
 
@@ -344,6 +353,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
         valetTls: config.valetTls ?? false,
         detectTls: config.detectTls ?? config.valetTls ?? false,
+        prompt: config.prompt ?? true,
         transformOnServe: config.transformOnServe ?? ((code) => code),
     }
 }
