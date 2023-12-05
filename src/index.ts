@@ -125,7 +125,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
     return {
         name: 'laravel',
         enforce: 'post',
-        config: (config, { command, mode }) => {
+        config: (config, { command, mode }): UserConfig => {
             userConfig = config
             const ssr = !! userConfig.build?.ssr
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
@@ -136,7 +136,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
             ensureCommandShouldRunInEnvironment(command, env)
 
-            return {
+            return <UserConfig> {
                 base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
                 publicDir: userConfig.publicDir ?? false,
                 build: {

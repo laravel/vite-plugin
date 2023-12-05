@@ -1,6 +1,7 @@
 {
     "name": "laravel-vite-plugin",
     "version": "0.8.1",
+    "type": "module",
     "description": "Laravel plugin for Vite.",
     "keywords": [
         "laravel",
@@ -42,7 +43,7 @@
         "test": "vitest run"
     },
     "devDependencies": {
-        "@types/node": "^18.11.9 || ^19.0.0 || ^20.0.0",
+        "@types/node": "^18.11.9 || ^20.0.0",
         "@typescript-eslint/eslint-plugin": "^5.21.0 || ^6.0.0",
         "@typescript-eslint/parser": "^5.21.0 || ^6.0.0",
         "esbuild": "0.16.10",
@@ -55,7 +56,7 @@
         "vite": "^4.0.0 || ^5.0.0"
     },
     "engines": {
-        "node": ">=14"
+        "node": ">=18"
     },
     "dependencies": {
         "picocolors": "^1.0.0",
