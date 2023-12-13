@@ -4,12 +4,12 @@
 
 This version adds support for Vite 5 while removing support for Vite 3 and 4.
 
-### Changes
+### Notable Changes
 
 1. Dropped support for CJS: https://github.com/laravel/vite-plugin/pull/235
 2. Dropped support for a `boolean` value of `server.https` option in `vite.config.js`: https://github.com/laravel/vite-plugin/pull/254
 
-### Upgrade path
+### Upgrade Path
 
 1. Update to the latest version of the `laravel-vite-plugin`, `vite`, and any Vite plugins you may have installed, such as [@vitejs/plugin-vue](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) or [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react).
 
