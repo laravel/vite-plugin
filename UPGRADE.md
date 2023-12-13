@@ -13,13 +13,17 @@ This version adds support for Vite 5 while removing support for Vite 3 and 4.
 
 1. Update to the latest version of the `laravel-vite-plugin`, `vite`, and any Vite plugins you may have installed, such as [@vitejs/plugin-vue](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) or [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react).
 
-You should also check the upgrading guide and changelogs for those packages.
+The following command will update `laravel-vite-plugin` and `vite` only:
 
 ```
-npm install vite@^5.0.0 laravel-vite-plugin@^1.x ...additional plugins
+npm install vite@^5.0.0 laravel-vite-plugin@^1.x
 ```
 
-2. Ensure your `package.json` contains `"type": "modules"`. Run the following command in your project's root directory or anywhere you have your `package.json` files.
+You should also check the upgrading guide and changelogs for any packages you update. The [`vite` migrations guide](https://vitejs.dev/guide/migration.html) is available on their website.
+
+2. Ensure your `package.json` contains `"type": "modules"`.
+
+Run the following command in your project's root directory or anywhere you have your `package.json` files:
 
 ```sh
 npm pkg set type=module
