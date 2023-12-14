@@ -21,7 +21,7 @@ npm install vite@^5.0.0 laravel-vite-plugin@^1.x
 
 You should also check the upgrading guide and changelogs for any packages you update. The [`vite` migrations guide](https://vitejs.dev/guide/migration.html) is available on their website.
 
-2. Ensure your `package.json` contains `"type": "modules"`.
+2. Ensure your `package.json` contains `"type": "module"`.
 
 Run the following command in your project's root directory or anywhere you have your `package.json` files:
 
