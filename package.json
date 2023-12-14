@@ -31,7 +31,7 @@
         "/inertia-helpers"
     ],
     "bin": {
-        "purge-orphaned-assets": "bin/purge-orphaned-assets.js"
+        "clean-orphaned-assets": "bin/clean.js"
     },
     "scripts": {
         "build": "npm run build-plugin && npm run build-inertia-helpers",
