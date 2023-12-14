@@ -212,8 +212,14 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         server.config.logger.info('')
                         server.config.logger.info(`  ${colors.green('➜')}  ${colors.bold('APP_URL')}: ${colors.cyan(appUrl.replace(/:(\d+)/, (_, port) => `:${colors.bold(port)}`))}`)
 
-                        if (typeof resolvedConfig.server.https === 'object' && typeof resolvedConfig.server.https.key === 'string' && resolvedConfig.server.https.key.startsWith(path.resolve(os.homedir(), '.config/valet/Certificates/'))) {
-                            server.config.logger.info(`  ${colors.green('➜')}  Using Valet certificate to secure Vite.`)
+                        if (typeof resolvedConfig.server.https === 'object' && typeof resolvedConfig.server.https.key === 'string') {
+                            if (resolvedConfig.server.https.key.startsWith(herdConfigPath())) {
+                                server.config.logger.info(`  ${colors.green('➜')}  Using Herd certificate to secure Vite.`)
+                            }
+
+                            if (resolvedConfig.server.https.key.startsWith(valetConfigPath())) {
+                                server.config.logger.info(`  ${colors.green('➜')}  Using Valet certificate to secure Vite.`)
+                            }
                         }
                     }, 100)
                 }
@@ -520,28 +526,19 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
         return
     }
 
-    // determine the Herd or Valet configuration directory existence...
-
     const configPath = determineDevelopmentEnvironmentConfigPath();
-
-    // host has not been configured, which is "silent auto-detection", and
-    // there is no good config path so we will quietly move on...
 
     if (typeof configPath === 'undefined' && host === null) {
         return
     }
 
-    // okay, so we now know that the user explicitly wants certificates to be
-    // resolved and we should throw errors if we run into issues!
-
-    // host HAS been configured, but we cannot find the configuration
-    // directory...
-
     if (typeof configPath === 'undefined') {
-        throw Error(`Unable to find the Herd or Valet configuration directory.`)
+        throw Error(`Unable to find the Herd or Valet configuration directory. Please check they are correctly installed.`)
     }
 
-    const resolvedHost = host === true || host === null ? resolveDevelopmentEnvironmentHost(configPath) : host
+    const resolvedHost = host === true || host === null
+        ? path.basename(process.cwd()) + '.' + resolveDevelopmentEnvironmentTld(configPath)
+        : host
 
     const keyPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.key`)
     const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
@@ -564,32 +561,28 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
  * Resolve the path to the Herd or Valet configuration directory.
  */
 function determineDevelopmentEnvironmentConfigPath(): string|undefined {
-    const herdConfigPath = path.resolve(os.homedir(), 'Library', 'Application Support', 'Herd', 'config', 'valet')
-
-    if (fs.existsSync(herdConfigPath)) {
-        return herdConfigPath
+    if (fs.existsSync(herdConfigPath())) {
+        return herdConfigPath()
     }
 
-    const valetConfigPath = path.resolve(os.homedir(), '.config', 'valet')
-
-    if (fs.existsSync(valetConfigPath)) {
-        return valetConfigPath
+    if (fs.existsSync(valetConfigPath())) {
+        return valetConfigPath()
     }
 }
 
 /**
- * Resolve the Herd or Valet host for the current directory.
+ * Resolve the TLD via the config path.
  */
-function resolveDevelopmentEnvironmentHost(configPath: string): string {
+function resolveDevelopmentEnvironmentTld(configPath: string): string {
     const configFile = path.resolve(configPath, 'config.json')
 
     if (! fs.existsSync(configFile)) {
-        throw Error(`Unable to find the configuration file [${configFile}]. You will need to manually specify the host in the \`detectTls\` configuration option.`)
+        throw Error(`Unable to find the configuration file [${configFile}].`)
     }
 
     const config: { tld: string } = JSON.parse(fs.readFileSync(configFile, 'utf-8'))
 
-    return path.basename(process.cwd()) + '.' + config.tld
+    return config.tld
 }
 
 /**
@@ -597,4 +590,18 @@ function resolveDevelopmentEnvironmentHost(configPath: string): string {
  */
 function dirname(): string {
     return fileURLToPath(new URL('.', import.meta.url))
+}
+
+/**
+ * Herd's configuration directory.
+ */
+function herdConfigPath(): string {
+    return path.resolve(os.homedir(), 'Library', 'Application Support', 'Herd', 'config', 'valet')
+}
+
+/**
+ * Valet's configuration directory.
+ */
+function valetConfigPath(): string {
+    return path.resolve(os.homedir(), '.config', 'valet')
 }
