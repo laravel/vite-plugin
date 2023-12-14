@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.7.8...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.8.1...main)
+
+## [v0.8.1](https://github.com/laravel/vite-plugin/compare/v0.8.0...v0.8.1) - 2023-09-26
+
+- [0.8] Fix issue with `0.0.0.0` network resolution by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/241
+- Upgrade vitest by [@sapphi-red](https://github.com/sapphi-red) in https://github.com/laravel/vite-plugin/pull/246
+
+## [v0.8.0](https://github.com/laravel/vite-plugin/compare/v0.7.8...v0.8.0) - 2023-08-08
+
+- fix: compile error following upgrade.md's vite to mix guide by [@AshboDev](https://github.com/AshboDev) in https://github.com/laravel/vite-plugin/pull/231
+- Support Laravel Herd by [@claudiodekker](https://github.com/claudiodekker) in https://github.com/laravel/vite-plugin/pull/233
 
 ## [v0.7.8](https://github.com/laravel/vite-plugin/compare/v0.7.7...v0.7.8) - 2023-05-24
 
