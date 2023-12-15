@@ -550,6 +550,8 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
 
         if (configPath === herdConfigPath()) {
             throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI.`)
+        } else if (typeof host === 'string') {
+            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure ${host}\`.`)
         } else {
             throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure\`.`)
         }
