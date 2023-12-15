@@ -1,5 +1,36 @@
 # Upgrade Guide
 
+## `0.x` to `1.x`
+
+This release adds support for Vite 5 and removes support for Vite 3 and 4.
+
+### Notable Changes
+
+1. Dropped support for CJS: https://github.com/laravel/vite-plugin/pull/235
+2. Dropped support for a `boolean` value of `server.https` option in `vite.config.js`: https://github.com/laravel/vite-plugin/pull/254
+
+### Upgrade Path
+
+1. Update to the latest version of the `laravel-vite-plugin`, `vite`, and any Vite plugins you may have installed, such as [@vitejs/plugin-vue](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) or [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react).
+
+The following command will update `laravel-vite-plugin` and `vite` only:
+
+```
+npm install vite@^5.0.0 laravel-vite-plugin@^1.x
+```
+
+You should also check the upgrade guide and changelogs for any packages you update. The [`vite` migrations guide](https://vitejs.dev/guide/migration.html) is available on their website.
+
+2. Ensure your `package.json` contains `"type": "module"`.
+
+Run the following command in your project's root directory or anywhere you have your `package.json` files:
+
+```sh
+npm pkg set type=module
+```
+
+You may also need to rename any `*.js` configuration files that contain CJS, which is the older-style Node-flavored `var plugin = require('plugin')` syntax, to `filename.cjs` after making this change.
+
 ## Migrating from Laravel Mix to Vite
 
 > **Note**  
