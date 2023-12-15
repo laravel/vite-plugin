@@ -199,7 +199,6 @@ describe('laravel-vite-plugin', () => {
         const plugin = laravel('resources/js/app.js')[0]
 
         const config = plugin.config({}, { command: 'serve', mode: 'development' })
-        console.log(config)
         expect(config.server.host).toBe('0.0.0.0')
         expect(config.server.port).toBe(1234)
         expect(config.server.strictPort).toBe(true)
