@@ -544,11 +544,15 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
     const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        if (host !== null) {
-            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI or run \`valet secure\`.`)
+        if (host === null) {
+            return
         }
 
-        return
+        if (configPath === herdConfigPath()) {
+            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI.`)
+        } else {
+            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure\`.`)
+        }
     }
 
     return {
