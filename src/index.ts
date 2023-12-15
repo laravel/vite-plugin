@@ -532,9 +532,7 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
         return
     }
 
-    // The logic here is not right. Check tests locally when this directory exists.
-
-    if (typeof configPath === 'undefined' && host !== null) {
+    if (typeof configPath === 'undefined') {
         throw Error(`Unable to find the Herd or Valet configuration directory. Please check they are correctly installed.`)
     }
 
@@ -546,9 +544,11 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
     const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        console.log(host)
-        console.log(configPath)
-        throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI or run \`valet secure\`.`)
+        if (host !== null) {
+            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI or run \`valet secure\`.`)
+        }
+
+        return
     }
 
     return {
