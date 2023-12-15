@@ -64,7 +64,7 @@ interface PluginConfig {
     /**
      * Utilise the Herd or Valet TLS certificates.
      *
-     * @default false
+     * @default null
      * @deprecated use "detectTls" instead
      */
     valetTls?: string|boolean|null,
@@ -532,7 +532,9 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
         return
     }
 
-    if (typeof configPath === 'undefined') {
+    // The logic here is not right. Check tests locally when this directory exists.
+
+    if (typeof configPath === 'undefined' && host !== null) {
         throw Error(`Unable to find the Herd or Valet configuration directory. Please check they are correctly installed.`)
     }
 
@@ -544,6 +546,8 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
     const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+        console.log(host)
+        console.log(configPath)
         throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI or run \`valet secure\`.`)
     }
 
