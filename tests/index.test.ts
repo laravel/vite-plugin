@@ -376,4 +376,9 @@ describe('inertia-helpers', () => {
         const file = await resolvePageComponent<{ default: string }>(path, import.meta.glob('./__data__/*.ts', { eager: true }))
         expect(file.default).toBe('Dummy File')
     })
+
+    it('accepts array of paths', async () => {
+        const file = await resolvePageComponent<{ default: string }>(['missing-page', path], import.meta.glob('./__data__/*.ts', { eager: true }), path)
+        expect(file.default).toBe('Dummy File')
+    })
 })
