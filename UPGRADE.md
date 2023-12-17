@@ -2,12 +2,17 @@
 
 ## `0.x` to `1.x`
 
-This release adds support for Vite 5 and removes support for Vite 3 and 4.
+- Adds support for Vite 5 and removes support for Vite 3 and 4.
+- Introduces an `npx clean-orphaned-assets` command to clean orphaned assets in Vite's build directories.
+- Introduces Valet / Herd TLS certificate auto detection.
 
 ### Notable Changes
 
-1. Dropped support for CJS: https://github.com/laravel/vite-plugin/pull/235
+1. Dropped CJS build: https://github.com/laravel/vite-plugin/pull/235
 2. Dropped support for a `boolean` value of `server.https` option in `vite.config.js`: https://github.com/laravel/vite-plugin/pull/254
+3. Dropped support for Node 14, 15, 16, 17, and 19: https://github.com/laravel/vite-plugin/pull/269
+
+Please see the Vite migration documentation for why these changes have been made and additional changes you may need to consider: https://vitejs.dev/guide/migration
 
 ### Upgrade Path
 
@@ -16,10 +21,10 @@ This release adds support for Vite 5 and removes support for Vite 3 and 4.
 The following command will update `laravel-vite-plugin` and `vite` only:
 
 ```
-npm install vite@^5.0.0 laravel-vite-plugin@^1.x
+npm install vite@^5.0.0 laravel-vite-plugin@^1.0.0
 ```
 
-You should also check the upgrade guide and changelogs for any packages you update. The [`vite` migrations guide](https://vitejs.dev/guide/migration.html) is available on their website.
+You should also check the upgrade guide and changelogs for any packages you update, including [Vite's migrations guide](https://vitejs.dev/guide/migration.html).
 
 2. Ensure your `package.json` contains `"type": "module"`.
 
