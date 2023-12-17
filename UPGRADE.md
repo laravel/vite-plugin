@@ -12,7 +12,7 @@
 2. Dropped support for a `boolean` value of `server.https` option in `vite.config.js`: https://github.com/laravel/vite-plugin/pull/254
 3. Dropped support for Node 14, 15, 16, 17, and 19: https://github.com/laravel/vite-plugin/pull/269
 
-Please see the Vite migration documentation for why these changes have been made and additional changes you may need to consider: https://vitejs.dev/guide/migration
+Please see the [Vite migration documentation](https://vitejs.dev/guide/migration) for why these changes have been made and additional changes you may need to consider.
 
 ### Upgrade Path
 
