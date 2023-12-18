@@ -60,6 +60,6 @@
     },
     "dependencies": {
         "picocolors": "^1.0.0",
-        "vite-plugin-full-reload": "^1.0.5"
+        "vite-plugin-full-reload": "^1.1.0"
     }
 }
