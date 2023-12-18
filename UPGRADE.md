@@ -21,7 +21,7 @@ Please see the [Vite migration documentation](https://vitejs.dev/guide/migration
 The following command will update `laravel-vite-plugin` and `vite` only:
 
 ```
-npm install vite@^5.0.0 laravel-vite-plugin@^1.0.0
+npm install --save-dev vite@^5.0.0 laravel-vite-plugin@^1.0.0
 ```
 
 You should also check the upgrade guide and changelogs for any packages you update, including [Vite's migrations guide](https://vitejs.dev/guide/migration.html).
