@@ -89,10 +89,11 @@ type DevServerUrl = `${'http'|'https'}://${string}:${number}`
 let exitHandlersBound = false
 
 export const refreshPaths = [
+    'app/Livewire/**',
     'app/View/Components/**',
-    'resources/views/**',
-    'resources/lang/**',
     'lang/**',
+    'resources/lang/**',
+    'resources/views/**',
     'routes/**',
 ]
 

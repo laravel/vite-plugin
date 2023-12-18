@@ -5,6 +5,7 @@
 - Adds support for Vite 5 and removes support for Vite 3 and 4.
 - Introduces an `npx clean-orphaned-assets` command to clean orphaned assets in Vite's build directories.
 - Introduces Valet / Herd TLS certificate auto detection.
+- Adds `app/Livewire/**` to the default "refresh" paths.
 
 ### Notable Changes
 
