@@ -53,7 +53,7 @@ describe('laravel-vite-plugin', () => {
 
         const config = plugin.config({}, { command: 'build', mode: 'production' })
         expect(config.base).toBe('/other-build/')
-        expect(config.build.manifest).toBe(true)
+        expect(config.build.manifest).toBe('manifest.json')
         expect(config.build.outDir).toBe('other-public/other-build')
         expect(config.build.rollupOptions.input).toBe('resources/js/app.ts')
 
@@ -62,6 +62,30 @@ describe('laravel-vite-plugin', () => {
         expect(ssrConfig.build.manifest).toBe(false)
         expect(ssrConfig.build.outDir).toBe('other-ssr-output')
         expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.ts')
+    })
+
+    it('respects the users build.manifest config option', () => {
+        const plugin = laravel({
+            input: 'resources/js/app.js',
+        })[0]
+
+        const userConfig = { build: { manifest: 'my-custom-manifest.json' }}
+
+        const config = plugin.config(userConfig, { command: 'build', mode: 'production' })
+
+        expect(config.build.manifest).toBe('my-custom-manifest.json')
+    })
+
+    it('has a default manifest path', () => {
+        const plugin = laravel({
+            input: 'resources/js/app.js',
+        })[0]
+
+        const userConfig = {}
+
+        const config = plugin.config(userConfig, { command: 'build', mode: 'production' })
+
+        expect(config.build.manifest).toBe('manifest.json')
     })
 
     it('respects users base config option', () => {
@@ -84,7 +108,7 @@ describe('laravel-vite-plugin', () => {
 
         const config = plugin.config({}, { command: 'build', mode: 'production' })
         expect(config.base).toBe('/build/')
-        expect(config.build.manifest).toBe(true)
+        expect(config.build.manifest).toBe('manifest.json')
         expect(config.build.outDir).toBe('public/build')
         expect(config.build.rollupOptions.input).toBe('resources/js/app.js')
 

@@ -140,7 +140,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
                 publicDir: userConfig.publicDir ?? false,
                 build: {
-                    manifest: userConfig.build?.manifest ?? !ssr,
+                    manifest: userConfig.build?.manifest ?? (!ssr ? 'manifest.json' : false),
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),
                     rollupOptions: {
                         input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
