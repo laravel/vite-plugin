@@ -47,7 +47,7 @@ const main = () => {
     const isSsr = Array.isArray(manifest[manifestKeys[0]])
 
     if (wantsSsr && ! isSsr) {
-        error('Did not expected SSR manifest.')
+        error('Did not find expected SSR manifest.')
 
         process.exit(1)
     }
