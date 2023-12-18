@@ -405,4 +405,14 @@ describe('inertia-helpers', () => {
         const file = await resolvePageComponent<{ default: string }>(['missing-page', path], import.meta.glob('./__data__/*.ts', { eager: true }), path)
         expect(file.default).toBe('Dummy File')
     })
+
+    it('throws an error when a page is not found', async () => {
+        const callback = () => resolvePageComponent<{ default: string }>('missing-page', import.meta.glob('./__data__/*.ts'))
+        await expect(callback).rejects.toThrowError(new Error('Page not found: missing-page'))
+    })
+
+    it('throws an error when a page is not found', async () => {
+        const callback = () => resolvePageComponent<{ default: string }>(['missing-page-1', 'missing-page-2'], import.meta.glob('./__data__/*.ts'))
+        await expect(callback).rejects.toThrowError(new Error('Page not found: missing-page-1,missing-page-2'))
+    })
 })
