@@ -17,9 +17,9 @@ Please see the [Vite migration documentation](https://vitejs.dev/guide/migration
 
 ### Upgrade Path
 
-1. Update to the latest version of the `laravel-vite-plugin`, `vite`, and any Vite plugins you may have installed, such as [@vitejs/plugin-vue](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) or [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react).
+1. Update to the latest version of the `laravel-vite-plugin`, `vite`, and any Vite plugins you may have installed, such as [@vitejs/plugin-vue](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) which requires version `^4.5.0` or [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react) which requires version `^4.2.0` to be compatible with Vite 5.
 
-The following command will update `laravel-vite-plugin` and `vite` only:
+The following command will update `laravel-vite-plugin` and `vite` only. You may need to include any additional plugin updates as needed by your application:
 
 ```
 npm install --save-dev vite@^5.0.0 laravel-vite-plugin@^1.0.0
