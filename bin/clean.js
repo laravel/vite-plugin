@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, readdirSync, unlinkSync } from 'fs'
+import { readFileSync, readdirSync, unlinkSync, existsSync } from 'fs'
 import { dirname } from 'path'
 
 /*
@@ -24,7 +24,13 @@ const option = (name) => process.argv.includes(`--${name}`)
 const dryRun = option(`dry-run`)
 const quiet = option(`quiet`)
 const wantsSsr = option('ssr')
-const manifestPath = argument(`manifest`, () => wantsSsr ? `./bootstrap/ssr/ssr-manifest.json` : `./public/build/manifest.json`)
+const manifestPath = argument(`manifest`, () => {
+    if (! wantsSsr) {
+        return `./public/build/manifest.json`
+    }
+
+    return existsSync(`./bootstrap/ssr/ssr-manifest.json`) ? `./bootstrap/ssr/ssr-manifest.json` : `./public/build/manifest.json`
+})
 const assetsDirectory = argument(`assets`, () => `${dirname(manifestPath)}/assets`)
 
 /*
@@ -45,12 +51,6 @@ const main = () => {
     const manifestKeys = Object.keys(manifest)
 
     const isSsr = Array.isArray(manifest[manifestKeys[0]])
-
-    if (wantsSsr && ! isSsr) {
-        error('Did not find expected SSR manifest.')
-
-        process.exit(1)
-    }
 
     isSsr
         ? info(`SSR manifest found.`)
