@@ -37,7 +37,6 @@ const assetsDirectory = argument(`assets`, () => `${dirname(manifestPath)}/asset
  * Helpers.
  */
 const info = quiet ? (() => undefined) : console.log
-const error = quiet ? (() => undefined) : console.error
 
 /*
  * Clean.
