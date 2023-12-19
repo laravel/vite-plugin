@@ -7,63 +7,62 @@ import { dirname } from 'path'
  * Argv helpers.
  */
 
-const argument = (name, fallback) => {
+const argument = (name) => {
     const index = process.argv.findIndex(argument => argument.startsWith(`--${name}=`))
 
     return index === -1
-        ? fallback()
+        ? undefined
         : process.argv[index].substring(`--${name}=`.length)
 }
 
 const option = (name) => process.argv.includes(`--${name}`)
 
 /*
- * Configuration.
- */
-
-const dryRun = option(`dry-run`)
-const quiet = option(`quiet`)
-const wantsSsr = option('ssr')
-const manifestPath = argument(`manifest`, () => {
-    if (! wantsSsr) {
-        return `./public/build/manifest.json`
-    }
-
-    return existsSync(`./bootstrap/ssr/ssr-manifest.json`) ? `./bootstrap/ssr/ssr-manifest.json` : `./public/build/manifest.json`
-})
-const assetsDirectory = argument(`assets`, () => `${dirname(manifestPath)}/assets`)
-
-/*
  * Helpers.
  */
-const info = quiet ? (() => undefined) : console.log
+const info = option(`quiet`) ? (() => undefined) : console.log
+const error = option(`quiet`) ? (() => undefined) : console.error
 
 /*
  * Clean.
  */
 
 const main = () => {
-    info(`Reading manifest [${manifestPath}].`)
+    const manifestPaths = argument(`manifest`) ? [argument(`manifest`)] : (option(`ssr`)
+        ? [`./bootstrap/ssr/ssr-manifest.json`, `./bootstrap/ssr/manifest.json`]
+        : [`./public/build/manifest.json`])
 
-    const manifest = JSON.parse(readFileSync(manifestPath).toString())
+    const foundManifestPath = manifestPaths.find(existsSync)
 
-    const manifestKeys = Object.keys(manifest)
+    if (! foundManifestPath) {
+        error(`Unable to find manifest file.`)
 
-    const isSsr = Array.isArray(manifest[manifestKeys[0]])
+        process.exit(1)
+    }
+
+    info(`Reading manifest [${foundManifestPath}].`)
+
+    const manifest = JSON.parse(readFileSync(foundManifestPath).toString())
+
+    const manifestFiles = Object.keys(manifest)
+
+    const isSsr = Array.isArray(manifest[manifestFiles[0]])
 
     isSsr
         ? info(`SSR manifest found.`)
         : info(`Non-SSR manifest found.`)
 
     const manifestAssets = isSsr
-        ? manifestKeys.flatMap(key => manifest[key])
-        : manifestKeys.map(key => manifest[key].file)
+        ? manifestFiles.flatMap(key => manifest[key])
+        : manifestFiles.map(key => manifest[key].file)
 
-    info(`Verify assets in [${assetsDirectory}].`)
+    const assetsPath = argument('assets') ?? dirname(foundManifestPath)+'/assets'
 
-    const allAssets = readdirSync(assetsDirectory, { withFileTypes: true })
+    info(`Verify assets in [${assetsPath}].`)
 
-    const orphanedAssets = allAssets.filter(file => file.isFile())
+    const existingAssets = readdirSync(assetsPath, { withFileTypes: true })
+
+    const orphanedAssets = existingAssets.filter(file => file.isFile())
         .filter(file => manifestAssets.findIndex(asset => asset.endsWith(`/${file.name}`)) === -1)
 
     if (orphanedAssets.length === 0) {
@@ -74,13 +73,13 @@ const main = () => {
             : info(`[${orphanedAssets.length}] orphaned assets found.`)
 
         orphanedAssets.forEach(asset => {
-            const path = `${assetsDirectory}/${asset.name}`
+            const path = `${assetsPath}/${asset.name}`
 
-            dryRun
+            option(`dry-run`)
                 ? info(`Orphaned asset [${path}] would be removed.`)
                 : info(`Removing orphaned asset [${path}].`)
 
-            if (! dryRun) {
+            if (! option(`dry-run`)) {
                 unlinkSync(path)
             }
         })
