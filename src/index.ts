@@ -164,7 +164,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         },
                         https: typeof userConfig.server?.https !== 'undefined' ? userConfig.server.https : {
                             ...serverConfig.https,
-                            ...(userConfig.server?.https === true ? {} : userConfig.server?.https),
+                            ...(typeof userConfig.server?.https === 'undefined' ? {} : userConfig.server?.https),
                         },
                     } : undefined),
                 },
