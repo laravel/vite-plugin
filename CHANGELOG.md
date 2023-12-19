@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v0.8.1...main)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.0.0...1.x)
+
+## [v1.0.0](https://github.com/laravel/vite-plugin/compare/v0.8.1...v1.0.0) - 2023-12-19
+
+* [1.0] Drop CJS build and export types first by [@benmccann](https://github.com/benmccann) in https://github.com/laravel/vite-plugin/pull/235
+* [1.x] Introduce `clean-orphaned-assets` binary by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/251
+* [0.8.x] Respect vite server.origin in viteDevServerUrl by [@nurdism](https://github.com/nurdism) in https://github.com/laravel/vite-plugin/pull/255
+* [1.x] Vite 5 by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/269
+* [0.8.x] Fallback pages by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/271
+* [1.x] Auto detect Valet / Herd TLS certificates by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/180
 
 ## [v0.8.1](https://github.com/laravel/vite-plugin/compare/v0.8.0...v0.8.1) - 2023-09-26
 
