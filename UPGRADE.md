@@ -6,6 +6,7 @@
 - Introduces an `npx clean-orphaned-assets` command to clean orphaned assets in Vite's build directories.
 - Introduces Valet / Herd TLS certificate auto detection.
 - Adds `app/Livewire/**` to the default "refresh" paths.
+- Adds output of SSR manifest for SSR builds.
 
 ### Notable Changes
 
