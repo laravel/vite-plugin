@@ -54,7 +54,10 @@ const main = () => {
 
     const manifestAssets = isSsr
         ? manifestFiles.flatMap(key => manifest[key])
-        : manifestFiles.map(key => manifest[key].file)
+        : manifestFiles.flatMap(key => [
+            ...manifest[key].css ?? [],
+            manifest[key].file,
+        ])
 
     const assetsPath = argument('assets') ?? dirname(foundManifestPath)+'/assets'
 
