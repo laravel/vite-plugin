@@ -235,9 +235,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 }
 
                 process.on('exit', clean)
-                process.on('SIGINT', process.exit)
-                process.on('SIGTERM', process.exit)
-                process.on('SIGHUP', process.exit)
+                process.on('SIGINT', () => process.exit())
+                process.on('SIGTERM', () => process.exit())
+                process.on('SIGHUP', () => process.exit())
 
                 exitHandlersBound = true
             }
