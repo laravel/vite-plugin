@@ -162,7 +162,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                             ...serverConfig.hmr,
                             ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
                         },
-                        https: typeof userConfig.server?.https !== 'undefined' ? userConfig.server.https : serverConfig.https,
+                        https: userConfig.server?.https ?? serverConfig.https,
                     } : undefined),
                 },
                 resolve: {
