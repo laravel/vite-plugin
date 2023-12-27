@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.0.0...1.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.0.1...1.x)
+
+## [v1.0.1](https://github.com/laravel/vite-plugin/compare/v1.0.0...v1.0.1) - 2023-12-27
+
+* [1.x] Simpler conditional by [@Jubeki](https://github.com/Jubeki) in https://github.com/laravel/vite-plugin/pull/273
+* [1.x] Account for imported CSS files while cleaning by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/275
+* [1.x] Fix exit error messages by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/276
 
 ## [v1.0.0](https://github.com/laravel/vite-plugin/compare/v0.8.1...v1.0.0) - 2023-12-19
 
