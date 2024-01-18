@@ -7,4 +7,4 @@ Releases are managed by [@taylorotwell](https://github.com/taylorotwell), [@jess
 3. `npm install`
 4. `npm run build`
 5. `npm publish`
-6. Create a new GitHub release for this version with the release notes
+6. [Create a new GitHub release](https://github.com/laravel/vite-plugin/releases/new) for this version with the release notes
