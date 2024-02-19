@@ -95,7 +95,7 @@ export const refreshPaths = [
     'resources/lang/**',
     'resources/views/**',
     'routes/**',
-]
+].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
 
 /**
  * Laravel plugin for Vite.
