@@ -2,6 +2,23 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import laravel from '../src'
 import { resolvePageComponent } from '../src/inertia-helpers';
 
+vi.mock('fs', async () => {
+    const actual = await vi.importActual<typeof import('fs')>('fs')
+
+    return {
+        default: {
+            ...actual,
+            existsSync: (path: string) => [
+                'app/Livewire/',
+                'app/View/Components/',
+                'resources/views/',
+                'lang/',
+                'routes/'
+            ].includes(path) || actual.existsSync(path)
+        }
+    }
+})
+
 describe('laravel-vite-plugin', () => {
     afterEach(() => {
         vi.clearAllMocks()
@@ -317,7 +334,6 @@ describe('laravel-vite-plugin', () => {
                 'app/Livewire/**',
                 'app/View/Components/**',
                 'lang/**',
-                'resources/lang/**',
                 'resources/views/**',
                 'routes/**',
             ],
