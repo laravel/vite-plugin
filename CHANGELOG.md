@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.0.1...1.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.0.2...1.x)
+
+## [v1.0.2](https://github.com/laravel/vite-plugin/compare/v1.0.1...v1.0.2) - 2024-02-28
+
+* [1.x] Fix HMR issue when `resources/lang` directory doesn't exist and a symlink is present in the root directory by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/vite-plugin/pull/285
 
 ## [v1.0.1](https://github.com/laravel/vite-plugin/compare/v1.0.0...v1.0.1) - 2023-12-27
 
