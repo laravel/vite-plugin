@@ -84,7 +84,7 @@ interface LaravelPlugin extends Plugin {
     config: (config: UserConfig, env: ConfigEnv) => UserConfig
 }
 
-type DevServerUrl = `${'http'|'https'}://${string}:${number}`
+type DevServerUrl = `${'http'|'https'}://${string}:${number}${string}`
 
 let exitHandlersBound = false
 
@@ -431,8 +431,9 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig, userC
 
     const configHmrClientPort = typeof config.server.hmr === 'object' ? config.server.hmr.clientPort : null
     const port = configHmrClientPort ?? address.port
+    const base = config.base.replace(/\/$/, '')
 
-    return `${protocol}://${host}:${port}`
+    return `${protocol}://${host}:${port}${base}`
 }
 
 function isIpv6(address: AddressInfo): boolean {
