@@ -212,7 +212,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         server.config.logger.info(`  ${colors.green('➜')}  ${colors.bold('APP_URL')}: ${colors.cyan(appUrl.replace(/:(\d+)/, (_, port) => `:${colors.bold(port)}`))}`)
 
                         if (typeof resolvedConfig.server.https === 'object' && typeof resolvedConfig.server.https.key === 'string') {
-                            if (resolvedConfig.server.https.key.startsWith(herdConfigPath())) {
+                            if (resolvedConfig.server.https.key.startsWith(herdMacConfigPath()) || resolvedConfig.server.https.key.startsWith(herdWindowsConfigPath())) {
                                 server.config.logger.info(`  ${colors.green('➜')}  Using Herd certificate to secure Vite.`)
                             }
 
@@ -547,7 +547,7 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
             return
         }
 
-        if (configPath === herdConfigPath()) {
+        if (configPath === herdMacConfigPath() || configPath === herdWindowsConfigPath()) {
             throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI.`)
         } else if (typeof host === 'string') {
             throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure ${host}\`.`)
@@ -570,8 +570,12 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
  * Resolve the path to the Herd or Valet configuration directory.
  */
 function determineDevelopmentEnvironmentConfigPath(): string|undefined {
-    if (fs.existsSync(herdConfigPath())) {
-        return herdConfigPath()
+    if (fs.existsSync(herdMacConfigPath())) {
+        return herdMacConfigPath()
+    }
+
+    if (fs.existsSync(herdWindowsConfigPath())) {
+        return herdWindowsConfigPath()
     }
 
     if (fs.existsSync(valetConfigPath())) {
@@ -602,10 +606,17 @@ function dirname(): string {
 }
 
 /**
- * Herd's configuration directory.
+ * Herd's Mac configuration directory.
  */
-function herdConfigPath(): string {
+function herdMacConfigPath(): string {
     return path.resolve(os.homedir(), 'Library', 'Application Support', 'Herd', 'config', 'valet')
+}
+
+/**
+ * Herd's Windows configuration directory.
+ */
+function herdWindowsConfigPath(): string {
+    return path.resolve(os.homedir(), ".config", "herd", "config", "valet")
 }
 
 /**
