@@ -49,14 +49,14 @@
         "esbuild": "0.16.10",
         "eslint": "^8.14.0",
         "typescript": "^4.6.4",
-        "vite": "^5.0.0",
+        "vite": "^6.0.0",
         "vitest": "^0.34.4"
     },
     "peerDependencies": {
-        "vite": "^5.0.0"
+        "vite": "^6.0.0"
     },
     "engines": {
-        "node": "^18.0.0 || >=20.0.0"
+        "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
     },
     "dependencies": {
         "picocolors": "^1.0.0",
