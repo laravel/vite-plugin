@@ -73,7 +73,7 @@ interface PluginConfig {
     /**
      * Transform the code while serving.
      */
-    transformOnServe?: (code: string, url: DevServerUrl) => string,
+    transformOnServe?: (code: string, url: string) => string,
 }
 
 interface RefreshConfig {
@@ -84,8 +84,6 @@ interface RefreshConfig {
 interface LaravelPlugin extends Plugin {
     config: (config: UserConfig, env: ConfigEnv) => UserConfig
 }
-
-type DevServerUrl = `${'http'|'https'}://${string}:${number}`
 
 let exitHandlersBound = false
 
@@ -116,7 +114,8 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
  * Resolve the Laravel Plugin configuration.
  */
 function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlugin {
-    let viteDevServerUrl: DevServerUrl
+    const exposedDevServerFormat = process.env.LARAVEL_VITE_EXPOSED_DEV_SERVER_URL ? process.env.LARAVEL_VITE_EXPOSED_DEV_SERVER_URL : '{protocol}://{host}:{port}'
+    let exposedDevServerUrl: string
     let resolvedConfig: ResolvedConfig
     let userConfig: UserConfig
 
@@ -152,6 +151,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 },
                 server: {
                     origin: userConfig.server?.origin ?? '__laravel_vite_placeholder__',
+                    ...(process.env.VITE_HOST ? {
+                        host: process.env.VITE_HOST
+                    } : undefined),
                     ...(process.env.LARAVEL_SAIL ? {
                         host: userConfig.server?.host ?? '0.0.0.0',
                         port: userConfig.server?.port ?? (env.VITE_PORT ? parseInt(env.VITE_PORT) : 5173),
@@ -190,9 +192,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
         },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
-                code = code.replace(/__laravel_vite_placeholder__/g, viteDevServerUrl)
+                code = code.replace(/__laravel_vite_placeholder__/g, exposedDevServerUrl)
 
-                return pluginConfig.transformOnServe(code, viteDevServerUrl)
+                return pluginConfig.transformOnServe(code, exposedDevServerUrl)
             }
         },
         configureServer(server) {
@@ -204,9 +206,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
-                    viteDevServerUrl = userConfig.server?.origin ? userConfig.server.origin as DevServerUrl : resolveDevServerUrl(address, server.config, userConfig)
+                    exposedDevServerUrl = userConfig.server?.origin ? userConfig.server.origin : resolveDevServerUrl(address, server.config, userConfig, exposedDevServerFormat)
 
-                    fs.writeFileSync(pluginConfig.hotFile, `${viteDevServerUrl}${server.config.base.replace(/\/$/, '')}`)
+                    fs.writeFileSync(pluginConfig.hotFile, `${exposedDevServerUrl}${server.config.base.replace(/\/$/, '')}`)
 
                     setTimeout(() => {
                         server.config.logger.info(`\n  ${colors.red(`${colors.bold('LARAVEL')} ${laravelVersion()}`)}  ${colors.dim('plugin')} ${colors.bold(`v${pluginVersion()}`)}`)
@@ -419,7 +421,7 @@ function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): P
 /**
  * Resolve the dev server URL from the server address and configuration.
  */
-function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig, userConfig: UserConfig): DevServerUrl {
+function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig, userConfig: UserConfig, format: string): string {
     const configHmrProtocol = typeof config.server.hmr === 'object' ? config.server.hmr.protocol : null
     const clientProtocol = configHmrProtocol ? (configHmrProtocol === 'wss' ? 'https' : 'http') : null
     const serverProtocol = config.server.https ? 'https' : 'http'
@@ -434,7 +436,9 @@ function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig, userC
     const configHmrClientPort = typeof config.server.hmr === 'object' ? config.server.hmr.clientPort : null
     const port = configHmrClientPort ?? address.port
 
-    return `${protocol}://${host}:${port}`
+    return format.replace('{protocol}', protocol)
+                 .replace('{host}', host)
+                 .replace('{port}', port.toString())
 }
 
 function isIpv6(address: AddressInfo): boolean {
