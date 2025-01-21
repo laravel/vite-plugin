@@ -488,6 +488,7 @@ describe('laravel-vite-plugin', () => {
             'https://my-app.test:8',
             // APP_URL
             'http://example.com',
+            'https://subdomain.my-app.test',
         ].some((url) => resolvedConfig.server.cors.origin.some((regex) => test(regex, url)))).toBe(true)
         // Disallowed origins...
         expect([
