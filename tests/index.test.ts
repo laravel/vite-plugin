@@ -524,7 +524,7 @@ describe('laravel-vite-plugin', () => {
             command: 'serve'
         })
 
-        expect(resolvedConfig.server.cors)
+        expect(resolvedConfig.server.cors).toBe(true)
     })
 })
 
