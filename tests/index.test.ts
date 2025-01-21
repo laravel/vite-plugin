@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import fs from 'fs'
 import laravel from '../src'
 import { resolvePageComponent } from '../src/inertia-helpers';
+import path from 'path';
 
 vi.mock('fs', async () => {
     const actual = await vi.importActual<typeof import('fs')>('fs')
@@ -448,6 +450,80 @@ describe('laravel-vite-plugin', () => {
             paths: ['another/to/watch/**'],
             config: { delay: 123 }
         })
+    })
+
+    it('configures default cors.origin values', () => {
+        const test = (pattern: RegExp|string, value: string) => pattern instanceof RegExp ? pattern.test(value) : pattern === value
+        fs.writeFileSync(path.join(__dirname, '.env'), 'APP_URL=http://example.com')
+
+        const plugins = laravel({
+            input: 'resources/js/app.js',
+        })
+        const resolvedConfig = plugins[0].config({ envDir: __dirname }, {
+            mode: '',
+            command: 'serve'
+        })
+
+        // Allowed origins...
+        expect([
+            // localhost
+            'http://localhost',
+            'https://localhost',
+            'http://localhost:8080',
+            'https://localhost:8080',
+            // 127.0.0.1
+            'http://127.0.0.1',
+            'https://127.0.0.1',
+            'http://127.0.0.1:8000',
+            'https://127.0.0.1:8000',
+            // *.test
+            'http://laravel.test',
+            'https://laravel.test',
+            'http://laravel.test:8000',
+            'https://laravel.test:8000',
+            'http://my-app.test',
+            'https://my-app.test',
+            'http://my-app.test:8000',
+            'https://my-app.test:8000',
+            'https://my-app.test:8',
+            // APP_URL
+            'http://example.com',
+        ].some((url) => resolvedConfig.server.cors.origin.some((regex) => test(regex, url)))).toBe(true)
+        // Disallowed origins...
+        expect([
+            'http://laravel.com',
+            'https://laravel.com',
+            'http://laravel.com:8000',
+            'https://laravel.com:8000',
+            'http://128.0.0.1',
+            'https://128.0.0.1',
+            'http://128.0.0.1:8000',
+            'https://128.0.0.1:8000',
+            'https://example.com',
+            'http://example.com:8000',
+            'https://example.com:8000',
+            'http://exampletest',
+            'http://example.test:',
+        ].some((url) => resolvedConfig.server.cors.origin.some((regex) => test(regex, url)))).toBe(false)
+
+        fs.rmSync(path.join(__dirname, '.env'))
+    })
+
+    it("respects the user's server.cors config", () => {
+        const plugins = laravel({
+            input: 'resources/js/app.js',
+        })
+        const resolvedConfig = plugins[0].config({
+            envDir: __dirname,
+            server: {
+                cors: true,
+            }
+        }, {
+            mode: '',
+            command: 'serve'
+        })
+
+        expect(resolvedConfig.server.cors)
     })
 })
 
