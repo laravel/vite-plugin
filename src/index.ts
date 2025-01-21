@@ -190,7 +190,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
         },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
-                code = code.replace(/__laravel_vite_placeholder__/g, viteDevServerUrl)
+                code = code.replace(/http:\/\/__laravel_vite_placeholder__\.test/g, viteDevServerUrl)
 
                 return pluginConfig.transformOnServe(code, viteDevServerUrl)
             }
