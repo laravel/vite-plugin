@@ -154,10 +154,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     origin: userConfig.server?.origin ?? '__laravel_vite_placeholder__',
                     cors: userConfig.server?.cors ?? {
                         origin: userConfig.server?.origin ?? [
+                            /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/,
                             ...(env.APP_URL ? [env.APP_URL] : []),   // *               (APP_URL="http://my-app.tld")
-                            /^https?:\/\/127\.0\.0\.1(:\d+)?$/,      // Artisan serve   (SCHEME://127.0.0.1:PORT)
                             /^https?:\/\/.*\.test(:\d+)?$/,          // Valet / Herd    (SCHEME://*.test:PORT)
-                            /^https?:\/\/localhost(:\d+)?$/,         // Docker          (SCHEME://localhost:PORT)
                         ],
                     },
                     ...(process.env.LARAVEL_SAIL ? {
