@@ -78,7 +78,7 @@ interface PluginConfig {
     /**
      * Run a callback each time Vite is stopped
      */
-    runAfterServe?: (config: ResolvedConfig) => void,
+    runAfterServe?: ((config: ResolvedConfig) => void)|null,
 }
 
 interface RefreshConfig {
@@ -371,7 +371,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         valetTls: config.valetTls ?? null,
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
-        runAfterServe: config.runAfterServe ?? (() => {})
+        runAfterServe: config.runAfterServe ?? null
     }
 }
 
