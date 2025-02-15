@@ -74,6 +74,11 @@ interface PluginConfig {
      * Transform the code while serving.
      */
     transformOnServe?: (code: string, url: DevServerUrl) => string,
+
+    /**
+     * Run a callback each time Vite is stopped
+     */
+    runAfterServe?: (config: ResolvedConfig) => void,
 }
 
 interface RefreshConfig {
@@ -240,7 +245,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     }
                 }
 
-                process.on('exit', clean)
+                process.on('exit', () => {
+                    clean();
+                    pluginConfig.runAfterServe?.(resolvedConfig);
+                })
                 process.on('SIGINT', () => process.exit())
                 process.on('SIGTERM', () => process.exit())
                 process.on('SIGHUP', () => process.exit())
@@ -363,6 +371,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         valetTls: config.valetTls ?? null,
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
+        runAfterServe: config.runAfterServe ?? (() => {})
     }
 }
 
