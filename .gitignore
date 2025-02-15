@@ -1,5 +1,8 @@
+.DS_Store
 /node_modules/
 /dist/
 /inertia-helpers/
 /npm-debug.log
 /package-lock.json
+/pnpm-lock.yaml
+/yarn.lock
