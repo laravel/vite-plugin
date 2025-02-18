@@ -154,9 +154,9 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     origin: userConfig.server?.origin ?? 'http://__laravel_vite_placeholder__.test',
                     cors: userConfig.server?.cors ?? {
                         origin: userConfig.server?.origin ?? [
-                            /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/,
-                            ...(env.APP_URL ? [env.APP_URL] : []),   // *               (APP_URL="http://my-app.tld")
-                            /^https?:\/\/.*\.test(:\d+)?$/,          // Valet / Herd    (SCHEME://*.test:PORT)
+                            /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/, // Copied from Vite itself. We can import this once we drop 5.0 support and require Vite 6.1+. Source: https://github.com/vitejs/vite/blob/0c854645bd17960abbe8f01b602d1a1da1a2b9fd/packages/vite/src/node/constants.ts#L200-L201
+                            ...(env.APP_URL ? [env.APP_URL] : []),                                  // *               (APP_URL="http://my-app.tld")
+                            /^https?:\/\/.*\.test(:\d+)?$/,                                         // Valet / Herd    (SCHEME://*.test:PORT)
                         ],
                     },
                     ...(process.env.LARAVEL_SAIL ? {
