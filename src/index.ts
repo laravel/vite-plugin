@@ -359,7 +359,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
         refresh: config.refresh ?? false,
-        hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
+        hotFile: path.resolve(config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot')),
         valetTls: config.valetTls ?? null,
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
