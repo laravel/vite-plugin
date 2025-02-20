@@ -203,6 +203,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const content = new Promise<string>((resolve) => resolve(update.read()))
 
             viteDevServerUrl = (await content).trim() as DevServerUrl
+
+            update.server.ws.send({ type: 'full-reload' })
         },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
