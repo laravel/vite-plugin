@@ -195,6 +195,15 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
         configResolved(config) {
             resolvedConfig = config
         },
+        async handleHotUpdate(update) {
+            if (update.file !== pluginConfig.hotFile) {
+                return
+            }
+
+            const content = new Promise<string>((resolve) => resolve(update.read()))
+
+            viteDevServerUrl = (await content).trim() as DevServerUrl
+        },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
                 code = code.replace(/http:\/\/__laravel_vite_placeholder__\.test/g, viteDevServerUrl)
