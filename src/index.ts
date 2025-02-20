@@ -4,9 +4,13 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, createLogger } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 import { InputOption } from "rollup"
+
+const logger = createLogger('info', {
+    prefix: '[laravel-vite-plugin]'
+})
 
 interface PluginConfig {
     /**
@@ -205,6 +209,11 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             viteDevServerUrl = (await content).trim() as DevServerUrl
 
             update.server.ws.send({ type: 'full-reload' })
+
+            logger.info(`${colors.green('page reload')} Hot file changed ${colors.dim(viteDevServerUrl)}`, {
+                timestamp: true,
+                clear: true,
+            })
         },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
