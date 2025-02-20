@@ -4,9 +4,13 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, createLogger } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 import { InputOption } from "rollup"
+
+const logger = createLogger('info', {
+    prefix: '[laravel-vite-plugin]'
+})
 
 interface PluginConfig {
     /**
@@ -195,6 +199,22 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
         configResolved(config) {
             resolvedConfig = config
         },
+        async handleHotUpdate(update) {
+            if (update.file !== pluginConfig.hotFile) {
+                return
+            }
+
+            const content = new Promise<string>((resolve) => resolve(update.read()))
+
+            viteDevServerUrl = (await content).trim() as DevServerUrl
+
+            update.server.ws.send({ type: 'full-reload' })
+
+            logger.info(`${colors.green('page reload')} Hot file changed ${colors.dim(viteDevServerUrl)}`, {
+                timestamp: true,
+                clear: true,
+            })
+        },
         transform(code) {
             if (resolvedConfig.command === 'serve') {
                 code = code.replace(/http:\/\/__laravel_vite_placeholder__\.test/g, viteDevServerUrl)
@@ -359,7 +379,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
         refresh: config.refresh ?? false,
-        hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
+        hotFile: path.resolve(config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot')),
         valetTls: config.valetTls ?? null,
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
