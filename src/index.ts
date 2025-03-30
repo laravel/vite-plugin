@@ -122,6 +122,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
     const defaultAliases: Record<string, string> = {
         '@': '/resources/js',
+        "@actions/": "./resources/js/actions",
+        "@routes/": "./resources/js/routes",
     };
 
     return {
