@@ -4,15 +4,14 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
-import { InputOption } from "rollup"
 
 interface PluginConfig {
     /**
      * The path or paths of the entry points to compile.
      */
-    input: InputOption
+    input: Rollup.InputOption
 
     /**
      * Laravel's public directory.
@@ -38,7 +37,7 @@ interface PluginConfig {
     /**
      * The path of the SSR entry point.
      */
-    ssr?: InputOption
+    ssr?: Rollup.InputOption
 
     /**
      * The directory where the SSR bundle should be written.
