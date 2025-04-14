@@ -375,7 +375,7 @@ function resolveBase(config: Required<PluginConfig>, assetUrl: string): string {
 /**
  * Resolve the Vite input path from the configuration.
  */
-function resolveInput(config: Required<PluginConfig>, ssr: boolean): InputOption|undefined {
+function resolveInput(config: Required<PluginConfig>, ssr: boolean): Rollup.InputOption|undefined {
     if (ssr) {
         return config.ssr
     }
