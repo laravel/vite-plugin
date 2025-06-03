@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.2.0...1.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.3.0...1.x)
+
+## [v1.3.0](https://github.com/laravel/vite-plugin/compare/v1.2.0...v1.3.0) - 2025-06-03
+
+* Use rollup types from Vite by [@sapphi-red](https://github.com/sapphi-red) in https://github.com/laravel/vite-plugin/pull/325
 
 ## [v1.2.0](https://github.com/laravel/vite-plugin/compare/v1.1.1...v1.2.0) - 2025-01-21
 
