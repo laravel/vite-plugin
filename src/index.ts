@@ -543,6 +543,8 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null, pr
         } else {
             candidateConfigs.push(...configsAvailable.herd, ...configsAvailable.valet)
         }
+    } else {
+        candidateConfigs.push(...configsAvailable.herd, ...configsAvailable.valet)
     }
 
     const configPath = candidateConfigs[0]
