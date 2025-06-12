@@ -132,7 +132,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
             const serverConfig = command === 'serve'
-                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls) ?? resolveEnvironmentServerConfig(env))
+                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls, env.LARAVEL_PREFER_DEVELOPMENT_ENVIRONMENT) ?? resolveEnvironmentServerConfig(env))
                 : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
@@ -524,7 +524,7 @@ function resolveHostFromEnv(env: Record<string, string>): string|undefined
 /**
  * Resolve the Herd or Valet server config for the given host.
  */
-function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
+function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null, prefer?: "herd"|"valet"|string): {
     hmr?: { host: string }
     host?: string,
     https?: { cert: string, key: string }
@@ -533,7 +533,19 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
         return
     }
 
-    const configPath = determineDevelopmentEnvironmentConfigPath();
+    const configsAvailable = determineDevelopmentEnvironmentConfigPath()
+    const candidateConfigs: string[] = []
+    if (configsAvailable.herd.length > 0 && configsAvailable.valet.length > 0) {
+        if (prefer === 'herd') {
+            candidateConfigs.push(...configsAvailable.herd)
+        } else if (prefer === 'valet') {
+            candidateConfigs.push(...configsAvailable.valet)
+        } else {
+            candidateConfigs.push(...configsAvailable.herd, ...configsAvailable.valet)
+        }
+    }
+
+    const configPath = candidateConfigs[0]
 
     if (typeof configPath === 'undefined' && host === null) {
         return
@@ -574,24 +586,32 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
     }
 }
 
+function resolveHerdConfigs(): string[]
+{
+    return [
+        herdMacConfigPath(),
+        herdWindowsConfigPath(),
+    ].filter(fs.existsSync)
+}
+
+function resolveValetConfigs(): string[]
+{
+    return [
+        valetMacConfigPath(),
+        valetLinuxConfigPath(),
+    ].filter(fs.existsSync);
+}
+
 /**
  * Resolve the path to the Herd or Valet configuration directory.
  */
-function determineDevelopmentEnvironmentConfigPath(): string|undefined {
-    if (fs.existsSync(herdMacConfigPath())) {
-        return herdMacConfigPath()
-    }
-
-    if (fs.existsSync(herdWindowsConfigPath())) {
-        return herdWindowsConfigPath()
-    }
-
-    if (fs.existsSync(valetMacConfigPath())) {
-        return valetMacConfigPath()
-    }
-
-    if (fs.existsSync(valetLinuxConfigPath())) {
-        return valetLinuxConfigPath()
+function determineDevelopmentEnvironmentConfigPath(): {
+    herd: string[],
+    valet: string[]
+} {
+    return {
+        herd: resolveHerdConfigs(),
+        valet: resolveValetConfigs(),
     }
 }
 
