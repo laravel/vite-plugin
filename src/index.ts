@@ -521,6 +521,32 @@ function resolveHostFromEnv(env: Record<string, string>): string|undefined
     }
 }
 
+function resolveCertsInEnvironment(host: string|boolean|null, configPath: string): {
+    key: string,
+    cert: string,
+    resolvedHost: string,
+    configPath: string
+}|undefined
+{
+    const resolvedHost = host === true || host === null
+        ? path.basename(process.cwd()) + '.' + resolveDevelopmentEnvironmentTld(configPath)
+        : host as string
+
+    const keyPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.key`)
+    const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
+    const config = {
+        key: keyPath,
+        cert: certPath,
+        resolvedHost: resolvedHost,
+        configPath: configPath
+    }
+
+    if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+        return
+    }
+    return config
+}
+
 /**
  * Resolve the Herd or Valet server config for the given host.
  */
@@ -547,36 +573,30 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null, pr
         candidateConfigs.push(...configsAvailable.herd, ...configsAvailable.valet)
     }
 
-    const configPath = candidateConfigs[0]
+    const configs = candidateConfigs.map(path => resolveCertsInEnvironment(host, path))
 
-    if (typeof configPath === 'undefined' && host === null) {
+    const resolvedConfig = configs.find(config => config !== undefined)
+
+    if (typeof resolvedConfig === 'undefined' && host === null) {
         return
     }
 
-    if (typeof configPath === 'undefined') {
+    if (typeof resolvedConfig === 'undefined') {
+        if (prefer !== undefined && configsAvailable.herd.length > 0 && configsAvailable.valet.length > 0) {
+            if (prefer == 'valet') {
+                throw Error(`Unable to find certificate files for your project in Valet. Ensure you have secured the site with Valet by running by running \`valet secure ${host}\`.`)
+            } else if (prefer == 'herd') {
+                throw Error(`Unable to find certificate files for your project in Herd. Ensure you have secured the site with the Herd UI.`)
+            } else {
+                throw Error(`Unable to find certificate files for your project in Valet and Herd. Ensure you have secured the site.`)
+            }
+        }
         throw Error(`Unable to find the Herd or Valet configuration directory. Please check they are correctly installed.`)
     }
 
-    const resolvedHost = host === true || host === null
-        ? path.basename(process.cwd()) + '.' + resolveDevelopmentEnvironmentTld(configPath)
-        : host
-
-    const keyPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.key`)
-    const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
-
-    if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        if (host === null) {
-            return
-        }
-
-        if (configPath === herdMacConfigPath() || configPath === herdWindowsConfigPath()) {
-            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI.`)
-        } else if (typeof host === 'string') {
-            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure ${host}\`.`)
-        } else {
-            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure\`.`)
-        }
-    }
+    const resolvedHost = resolvedConfig.resolvedHost
+    const keyPath = resolvedConfig.key
+    const certPath = resolvedConfig.cert
 
     return {
         hmr: { host: resolvedHost },
