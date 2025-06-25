@@ -43,7 +43,7 @@
         "test": "vitest run"
     },
     "devDependencies": {
-        "@types/node": "^18.11.9 || ^24.0.4",
+        "@types/node": "^18.11.9 || ^20.11.0 || ^22.11.0",
         "@typescript-eslint/eslint-plugin": "^5.21.0 || ^8.35.0",
         "@typescript-eslint/parser": "^5.21.0 || ^8.35.0",
         "esbuild": "0.16.10",
