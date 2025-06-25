@@ -43,17 +43,17 @@
         "test": "vitest run"
     },
     "devDependencies": {
-        "@types/node": "^18.11.9",
-        "@typescript-eslint/eslint-plugin": "^5.21.0",
-        "@typescript-eslint/parser": "^5.21.0",
+        "@types/node": "^18.11.9 || ^24.0.4",
+        "@typescript-eslint/eslint-plugin": "^5.21.0 || ^8.35.0",
+        "@typescript-eslint/parser": "^5.21.0 || ^8.35.0",
         "esbuild": "0.16.10",
         "eslint": "^8.14.0",
-        "typescript": "^4.6.4",
-        "vite": "^6.0.0",
-        "vitest": "^0.34.4"
+        "typescript": "^4.6.4 || ^5.8.3",
+        "vite": "^7.0.0",
+        "vitest": "^0.34.4 || ^3.2.4"
     },
     "peerDependencies": {
-        "vite": "^5.0.0 || ^6.0.0"
+        "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
     },
     "engines": {
         "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
