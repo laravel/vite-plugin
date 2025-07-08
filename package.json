@@ -43,10 +43,10 @@
         "test": "vitest run"
     },
     "devDependencies": {
-        "esbuild": "0.16.10",
         "@types/node": "^20.19.0 || >=22.12.0",
         "@typescript-eslint/eslint-plugin": "^5.21.0",
         "@typescript-eslint/parser": "^5.21.0",
+        "esbuild": "0.16.10",
         "eslint": "^8.14.0",
         "typescript": "^4.6.4",
         "vite": "^7.0.0",
