@@ -132,7 +132,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
             const serverConfig = command === 'serve'
-                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls) ?? resolveEnvironmentServerConfig(env))
+                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls, env.LARAVEL_PREFER_DEVELOPMENT_ENVIRONMENT) ?? resolveEnvironmentServerConfig(env))
                 : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
@@ -521,10 +521,36 @@ function resolveHostFromEnv(env: Record<string, string>): string|undefined
     }
 }
 
+function resolveCertsInEnvironment(host: string|boolean|null, configPath: string): {
+    key: string,
+    cert: string,
+    resolvedHost: string,
+    configPath: string
+}|undefined
+{
+    const resolvedHost = host === true || host === null
+        ? path.basename(process.cwd()) + '.' + resolveDevelopmentEnvironmentTld(configPath)
+        : host as string
+
+    const keyPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.key`)
+    const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
+    const config = {
+        key: keyPath,
+        cert: certPath,
+        resolvedHost: resolvedHost,
+        configPath: configPath
+    }
+
+    if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
+        return
+    }
+    return config
+}
+
 /**
  * Resolve the Herd or Valet server config for the given host.
  */
-function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
+function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null, prefer?: "herd"|"valet"|string): {
     hmr?: { host: string }
     host?: string,
     https?: { cert: string, key: string }
@@ -533,36 +559,44 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
         return
     }
 
-    const configPath = determineDevelopmentEnvironmentConfigPath();
+    const configsAvailable = determineDevelopmentEnvironmentConfigPath()
+    const candidateConfigs: string[] = []
+    if (configsAvailable.herd.length > 0 && configsAvailable.valet.length > 0) {
+        if (prefer === 'herd') {
+            candidateConfigs.push(...configsAvailable.herd)
+        } else if (prefer === 'valet') {
+            candidateConfigs.push(...configsAvailable.valet)
+        } else {
+            candidateConfigs.push(...configsAvailable.herd, ...configsAvailable.valet)
+        }
+    } else {
+        candidateConfigs.push(...configsAvailable.herd, ...configsAvailable.valet)
+    }
 
-    if (typeof configPath === 'undefined' && host === null) {
+    const configs = candidateConfigs.map(path => resolveCertsInEnvironment(host, path))
+
+    const resolvedConfig = configs.find(config => config !== undefined)
+
+    if (typeof resolvedConfig === 'undefined' && host === null) {
         return
     }
 
-    if (typeof configPath === 'undefined') {
+    if (typeof resolvedConfig === 'undefined') {
+        if (prefer !== undefined && configsAvailable.herd.length > 0 && configsAvailable.valet.length > 0) {
+            if (prefer == 'valet') {
+                throw Error(`Unable to find certificate files for your project in Valet. Ensure you have secured the site with Valet by running by running \`valet secure ${host}\`.`)
+            } else if (prefer == 'herd') {
+                throw Error(`Unable to find certificate files for your project in Herd. Ensure you have secured the site with the Herd UI.`)
+            } else {
+                throw Error(`Unable to find certificate files for your project in Valet and Herd. Ensure you have secured the site.`)
+            }
+        }
         throw Error(`Unable to find the Herd or Valet configuration directory. Please check they are correctly installed.`)
     }
 
-    const resolvedHost = host === true || host === null
-        ? path.basename(process.cwd()) + '.' + resolveDevelopmentEnvironmentTld(configPath)
-        : host
-
-    const keyPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.key`)
-    const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
-
-    if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
-        if (host === null) {
-            return
-        }
-
-        if (configPath === herdMacConfigPath() || configPath === herdWindowsConfigPath()) {
-            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI.`)
-        } else if (typeof host === 'string') {
-            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure ${host}\`.`)
-        } else {
-            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure\`.`)
-        }
-    }
+    const resolvedHost = resolvedConfig.resolvedHost
+    const keyPath = resolvedConfig.key
+    const certPath = resolvedConfig.cert
 
     return {
         hmr: { host: resolvedHost },
@@ -574,24 +608,32 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
     }
 }
 
+function resolveHerdConfigs(): string[]
+{
+    return [
+        herdMacConfigPath(),
+        herdWindowsConfigPath(),
+    ].filter(fs.existsSync)
+}
+
+function resolveValetConfigs(): string[]
+{
+    return [
+        valetMacConfigPath(),
+        valetLinuxConfigPath(),
+    ].filter(fs.existsSync);
+}
+
 /**
  * Resolve the path to the Herd or Valet configuration directory.
  */
-function determineDevelopmentEnvironmentConfigPath(): string|undefined {
-    if (fs.existsSync(herdMacConfigPath())) {
-        return herdMacConfigPath()
-    }
-
-    if (fs.existsSync(herdWindowsConfigPath())) {
-        return herdWindowsConfigPath()
-    }
-
-    if (fs.existsSync(valetMacConfigPath())) {
-        return valetMacConfigPath()
-    }
-
-    if (fs.existsSync(valetLinuxConfigPath())) {
-        return valetLinuxConfigPath()
+function determineDevelopmentEnvironmentConfigPath(): {
+    herd: string[],
+    valet: string[]
+} {
+    return {
+        herd: resolveHerdConfigs(),
+        valet: resolveValetConfigs(),
     }
 }
 
