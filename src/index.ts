@@ -214,7 +214,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                     const hotFileParentDirectory = path.dirname(pluginConfig.hotFile);
 
-                    if (!fs.existsSync(hotFileParentDirectory)) {
+                    if (! fs.existsSync(hotFileParentDirectory)) {
                         fs.mkdirSync(hotFileParentDirectory, { recursive: true })
                     }
 
