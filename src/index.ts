@@ -212,6 +212,12 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 if (isAddressInfo(address)) {
                     viteDevServerUrl = userConfig.server?.origin ? userConfig.server.origin as DevServerUrl : resolveDevServerUrl(address, server.config, userConfig)
 
+                    const hotFileParentDirectory = path.dirname(pluginConfig.hotFile);
+
+                    if (!fs.existsSync(hotFileParentDirectory)) {
+                        fs.mkdirSync(hotFileParentDirectory, { recursive: true })
+                    }
+
                     fs.writeFileSync(pluginConfig.hotFile, `${viteDevServerUrl}${server.config.base.replace(/\/$/, '')}`)
 
                     setTimeout(() => {
