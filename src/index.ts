@@ -216,6 +216,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
                     if (! fs.existsSync(hotFileParentDirectory)) {
                         fs.mkdirSync(hotFileParentDirectory, { recursive: true })
+
+                        setTimeout(() => {
+                            server.config.logger.info(`${colors.green('laravel')} Hot file directory created ${colors.dim(fs.realpathSync(hotFileParentDirectory))}`, { clear: true, timestamp: true })
+                        }, 200)
                     }
 
                     fs.writeFileSync(pluginConfig.hotFile, `${viteDevServerUrl}${server.config.base.replace(/\/$/, '')}`)
