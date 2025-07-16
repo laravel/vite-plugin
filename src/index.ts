@@ -4,7 +4,7 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup, createLogger } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
@@ -96,6 +96,10 @@ export const refreshPaths = [
     'resources/views/**',
     'routes/**',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
+
+const logger = createLogger('info', {
+    prefix: '[laravel-vite-plugin]'
+})
 
 /**
  * Laravel plugin for Vite.
@@ -218,7 +222,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         fs.mkdirSync(hotFileParentDirectory, { recursive: true })
 
                         setTimeout(() => {
-                            server.config.logger.info(`${colors.green('laravel')} Hot file directory created ${colors.dim(fs.realpathSync(hotFileParentDirectory))}`, { clear: true, timestamp: true })
+                            logger.info(`Hot file directory created ${colors.dim(fs.realpathSync(hotFileParentDirectory))}`, { clear: true, timestamp: true })
                         }, 200)
                     }
 
