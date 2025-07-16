@@ -4,7 +4,7 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup, createLogger } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
@@ -96,6 +96,10 @@ export const refreshPaths = [
     'resources/views/**',
     'routes/**',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
+
+const logger = createLogger('info', {
+    prefix: '[laravel-vite-plugin]'
+})
 
 /**
  * Laravel plugin for Vite.
@@ -211,6 +215,16 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                 const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
                 if (isAddressInfo(address)) {
                     viteDevServerUrl = userConfig.server?.origin ? userConfig.server.origin as DevServerUrl : resolveDevServerUrl(address, server.config, userConfig)
+
+                    const hotFileParentDirectory = path.dirname(pluginConfig.hotFile);
+
+                    if (! fs.existsSync(hotFileParentDirectory)) {
+                        fs.mkdirSync(hotFileParentDirectory, { recursive: true })
+
+                        setTimeout(() => {
+                            logger.info(`Hot file directory created ${colors.dim(fs.realpathSync(hotFileParentDirectory))}`, { clear: true, timestamp: true })
+                        }, 200)
+                    }
 
                     fs.writeFileSync(pluginConfig.hotFile, `${viteDevServerUrl}${server.config.base.replace(/\/$/, '')}`)
 
