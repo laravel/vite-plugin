@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v1.3.0...1.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v2.0.1...2.x)
+
+## [v2.0.1](https://github.com/laravel/vite-plugin/compare/v1.3.0...v2.0.1) - 2025-08-26
+
+* Automatically create hotFile parent directory by [@adrum](https://github.com/adrum) in https://github.com/laravel/vite-plugin/pull/334
 
 ## [v1.3.0](https://github.com/laravel/vite-plugin/compare/v1.2.0...v1.3.0) - 2025-06-03
 
