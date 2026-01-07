@@ -489,7 +489,7 @@ describe('laravel-vite-plugin', () => {
             // APP_URL
             'http://example.com',
             'https://subdomain.my-app.test',
-        ].some((url) => resolvedConfig.server.cors.origin.some((regex) => test(regex, url)))).toBe(true)
+        ].every((url) => resolvedConfig.server.cors.origin.some((regex) => test(regex, url)))).toBe(true)
         // Disallowed origins...
         expect([
             'http://laravel.com',
@@ -505,7 +505,7 @@ describe('laravel-vite-plugin', () => {
             'https://example.com:8000',
             'http://exampletest',
             'http://example.test:',
-        ].some((url) => resolvedConfig.server.cors.origin.some((regex) => test(regex, url)))).toBe(false)
+        ].every((url) => resolvedConfig.server.cors.origin.some((regex) => test(regex, url)))).toBe(false)
 
         fs.rmSync(path.join(__dirname, '.env'))
     })
