@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v2.0.1...2.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v2.1.0...2.x)
+
+## [v2.1.0](https://github.com/laravel/vite-plugin/compare/v2.0.1...v2.1.0) - 2026-01-20
+
+* fix: missing 2.0.0 release notes in changelog by [@james2doyle](https://github.com/james2doyle) in https://github.com/laravel/vite-plugin/pull/338
+* [2.x] Use vite export to future proof additional pattern changes by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/vite-plugin/pull/339
 
 ## [v2.0.1](https://github.com/laravel/vite-plugin/compare/v2.0.0...v2.0.1) - 2025-08-26
 
