@@ -148,8 +148,8 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     manifest: userConfig.build?.manifest ?? (ssr ? false : 'manifest.json'),
                     ssrManifest: userConfig.build?.ssrManifest ?? (ssr ? 'ssr-manifest.json' : false),
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),
-                    rollupOptions: {
-                        input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
+                    rolldownOptions: {
+                        input: userConfig.build?.rolldownOptions?.input ?? resolveInput(pluginConfig, ssr)
                     },
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
