@@ -4,14 +4,14 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup, createLogger, defaultAllowedOrigins } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
     /**
      * The path or paths of the entry points to compile.
      */
-    input: Rollup.InputOption
+    input: Rolldown.InputOption
 
     /**
      * Laravel's public directory.
@@ -37,7 +37,7 @@ interface PluginConfig {
     /**
      * The path of the SSR entry point.
      */
-    ssr?: Rollup.InputOption
+    ssr?: Rolldown.InputOption
 
     /**
      * The directory where the SSR bundle should be written.
@@ -389,7 +389,7 @@ function resolveBase(config: Required<PluginConfig>, assetUrl: string): string {
 /**
  * Resolve the Vite input path from the configuration.
  */
-function resolveInput(config: Required<PluginConfig>, ssr: boolean): Rollup.InputOption|undefined {
+function resolveInput(config: Required<PluginConfig>, ssr: boolean): Rolldown.InputOption|undefined {
     if (ssr) {
         return config.ssr
     }
