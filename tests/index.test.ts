@@ -42,10 +42,10 @@ describe('laravel-vite-plugin', () => {
         const plugin = laravel('resources/js/app.ts')[0]
 
         const config = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(config.build.rollupOptions.input).toBe('resources/js/app.ts')
+        expect(config.build.rolldownOptions.input).toBe('resources/js/app.ts')
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/app.ts')
+        expect(ssrConfig.build.rolldownOptions.input).toBe('resources/js/app.ts')
     })
 
     it('accepts an array of inputs', () => {
@@ -55,10 +55,10 @@ describe('laravel-vite-plugin', () => {
         ])[0]
 
         const config = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(config.build.rollupOptions.input).toEqual(['resources/js/app.ts', 'resources/js/other.js'])
+        expect(config.build.rolldownOptions.input).toEqual(['resources/js/app.ts', 'resources/js/other.js'])
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.build.rollupOptions.input).toEqual(['resources/js/app.ts', 'resources/js/other.js'])
+        expect(ssrConfig.build.rolldownOptions.input).toEqual(['resources/js/app.ts', 'resources/js/other.js'])
     })
 
     it('accepts a full configuration', () => {
@@ -74,13 +74,13 @@ describe('laravel-vite-plugin', () => {
         expect(config.base).toBe('/other-build/')
         expect(config.build.manifest).toBe('manifest.json')
         expect(config.build.outDir).toBe('other-public/other-build')
-        expect(config.build.rollupOptions.input).toBe('resources/js/app.ts')
+        expect(config.build.rolldownOptions.input).toBe('resources/js/app.ts')
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
         expect(ssrConfig.base).toBe('/other-build/')
         expect(ssrConfig.build.manifest).toBe(false)
         expect(ssrConfig.build.outDir).toBe('other-ssr-output')
-        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.ts')
+        expect(ssrConfig.build.rolldownOptions.input).toBe('resources/js/ssr.ts')
     })
 
     it('accepts a single input within a full configuration', () => {
@@ -90,10 +90,10 @@ describe('laravel-vite-plugin', () => {
         })[0]
 
         const config = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(config.build.rollupOptions.input).toBe('resources/js/app.ts')
+        expect(config.build.rolldownOptions.input).toBe('resources/js/app.ts')
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.ts')
+        expect(ssrConfig.build.rolldownOptions.input).toBe('resources/js/ssr.ts')
     })
 
     it('accepts an array of inputs within a full configuration', () => {
@@ -103,10 +103,10 @@ describe('laravel-vite-plugin', () => {
         })[0]
 
         const config = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(config.build.rollupOptions.input).toEqual(['resources/js/app.ts', 'resources/js/other.js'])
+        expect(config.build.rolldownOptions.input).toEqual(['resources/js/app.ts', 'resources/js/other.js'])
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.build.rollupOptions.input).toEqual(['resources/js/ssr.ts', 'resources/js/other.js'])
+        expect(ssrConfig.build.rolldownOptions.input).toEqual(['resources/js/ssr.ts', 'resources/js/other.js'])
     })
 
     it('accepts an input object within a full configuration', () => {
@@ -116,10 +116,10 @@ describe('laravel-vite-plugin', () => {
         })[0]
 
         const config = plugin.config({}, { command: 'build', mode: 'production' })
-        expect(config.build.rollupOptions.input).toEqual({ app: 'resources/js/entrypoint-browser.js' })
+        expect(config.build.rolldownOptions.input).toEqual({ app: 'resources/js/entrypoint-browser.js' })
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.build.rollupOptions.input).toEqual({ ssr: 'resources/js/entrypoint-ssr.js' })
+        expect(ssrConfig.build.rolldownOptions.input).toEqual({ ssr: 'resources/js/entrypoint-ssr.js' })
     })
 
     it('respects the users build.manifest config option', () => {
@@ -168,13 +168,13 @@ describe('laravel-vite-plugin', () => {
         expect(config.base).toBe('/build/')
         expect(config.build.manifest).toBe('manifest.json')
         expect(config.build.outDir).toBe('public/build')
-        expect(config.build.rollupOptions.input).toBe('resources/js/app.js')
+        expect(config.build.rolldownOptions.input).toBe('resources/js/app.js')
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
         expect(ssrConfig.base).toBe('/build/')
         expect(ssrConfig.build.manifest).toBe(false)
         expect(ssrConfig.build.outDir).toBe('bootstrap/ssr')
-        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
+        expect(ssrConfig.build.rolldownOptions.input).toBe('resources/js/ssr.js')
     })
 
     it('uses the default entry point when ssr entry point is not provided', () => {
@@ -182,7 +182,7 @@ describe('laravel-vite-plugin', () => {
         const plugin = laravel('resources/js/ssr.js')[0]
 
         const ssrConfig = plugin.config({ build: { ssr: true } }, { command: 'build', mode: 'production' })
-        expect(ssrConfig.build.rollupOptions.input).toBe('resources/js/ssr.js')
+        expect(ssrConfig.build.rolldownOptions.input).toBe('resources/js/ssr.js')
     })
 
     it('prefixes the base with ASSET_URL in production mode', () => {

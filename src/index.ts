@@ -4,14 +4,14 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup, createLogger, defaultAllowedOrigins } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
     /**
      * The path or paths of the entry points to compile.
      */
-    input: Rollup.InputOption
+    input: Rolldown.InputOption
 
     /**
      * Laravel's public directory.
@@ -37,7 +37,7 @@ interface PluginConfig {
     /**
      * The path of the SSR entry point.
      */
-    ssr?: Rollup.InputOption
+    ssr?: Rolldown.InputOption
 
     /**
      * The directory where the SSR bundle should be written.
@@ -148,8 +148,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     manifest: userConfig.build?.manifest ?? (ssr ? false : 'manifest.json'),
                     ssrManifest: userConfig.build?.ssrManifest ?? (ssr ? 'ssr-manifest.json' : false),
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),
-                    rollupOptions: {
-                        input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
+                    rolldownOptions: {
+                        input: userConfig.build?.rolldownOptions?.input
+                            ?? userConfig.build?.rollupOptions?.input
+                            ?? resolveInput(pluginConfig, ssr)
                     },
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
@@ -389,7 +391,7 @@ function resolveBase(config: Required<PluginConfig>, assetUrl: string): string {
 /**
  * Resolve the Vite input path from the configuration.
  */
-function resolveInput(config: Required<PluginConfig>, ssr: boolean): Rollup.InputOption|undefined {
+function resolveInput(config: Required<PluginConfig>, ssr: boolean): Rolldown.InputOption|undefined {
     if (ssr) {
         return config.ssr
     }
