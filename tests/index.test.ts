@@ -526,6 +526,42 @@ describe('laravel-vite-plugin', () => {
 
         expect(resolvedConfig.server.cors).toBe(true)
     })
+
+    it('does not include assets plugin when no assets are configured', () => {
+        const plugins = laravel('resources/js/app.ts')
+
+        expect(plugins.find(plugin => plugin.name === 'laravel:assets')).toBeUndefined()
+    })
+
+    it('emits assets as chunks when assets is a string', () => {
+        const plugins = laravel({
+            input: 'resources/js/app.ts',
+            assets: 'tests/__data__/*.ts',
+        })
+
+        const assetsPlugin = plugins.find(plugin => plugin.name === 'laravel:assets')!
+        const emitFile = vi.fn()
+
+        assetsPlugin.buildStart!.call({ emitFile })
+
+        expect(emitFile).toHaveBeenCalledWith({ type: 'chunk', id: expect.stringContaining('dummy.ts') })
+    })
+
+    it('emits assets as chunks when assets is an array', () => {
+        const plugins = laravel({
+            input: 'resources/js/app.ts',
+            assets: ['tests/__data__/*.ts'],
+        })
+
+        const assetsPlugin = plugins.find(plugin => plugin.name === 'laravel:assets')!
+        const emitFile = vi.fn()
+
+        assetsPlugin.buildStart!.call({ emitFile })
+
+        expect(emitFile).toHaveBeenCalledWith({ type: 'chunk', id: expect.stringContaining('dummy.ts') })
+    })
+
+
 })
 
 describe('inertia-helpers', () => {

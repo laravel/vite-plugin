@@ -73,6 +73,17 @@ interface PluginConfig {
      * Transform the code while serving.
      */
     transformOnServe?: (code: string, url: DevServerUrl) => string,
+
+    /**
+     * Asset file glob patterns to include in the build.
+     *
+     * Files matching these patterns will be processed and versioned by Vite,
+     * even if they are not imported in your JavaScript. This is useful for
+     * assets referenced in Blade templates via `Vite::asset()`.
+     *
+     * @default []
+     */
+    assets?: string|string[]
 }
 
 interface RefreshConfig {
@@ -111,6 +122,7 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
 
     return [
         resolveLaravelPlugin(pluginConfig),
+        ...resolveAssetPlugin(pluginConfig.assets),
         ...resolveFullReloadConfig(pluginConfig) as Plugin[],
     ];
 }
@@ -378,6 +390,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         valetTls: config.valetTls ?? null,
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
+        assets: typeof config.assets === 'string' ? [config.assets] : config.assets ?? [],
     }
 }
 
@@ -408,6 +421,27 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
     }
 
     return path.join(config.publicDirectory, config.buildDirectory)
+}
+
+/**
+ * Resolve the asset-emitting plugin from the configuration.
+ */
+function resolveAssetPlugin(assets: string|string[]): Plugin[] {
+    if (assets.length === 0) {
+        return []
+    }
+
+    return [{
+        name: 'laravel:assets',
+        apply: 'build',
+        buildStart() {
+            for (const file of fs.globSync(assets)) {
+                if (fs.statSync(file).isFile()) {
+                    this.emitFile({ type: 'chunk', id: file })
+                }
+            }
+        },
+    }]
 }
 
 function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): PluginOption[]{
