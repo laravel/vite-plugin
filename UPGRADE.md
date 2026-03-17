@@ -1,5 +1,44 @@
 # Upgrade Guide
 
+## `2.x` to `3.x`
+
+- Adds support for Vite 8
+
+### Upgrade Path
+
+If you are using `import.meta.glob` to add static assets into your build, you will need to migrate them to the new `assets` config option, e.g.,
+
+```diff
+// file: ./resources/js/app.js
+
+import './bootstrap';
+
+- import.meta.glob([
+-     '../images/**',
+-     '../favicons/**',
+- ])
+```
+
+```diff
+// file: ./vite.config.js
+
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
++           assets: [
++               '../images/**',
++               '../favicons/**',
++           ],
+        }),
+    ],
+});
+```
+
 ## `0.x` to `1.x`
 
 - Adds support for Vite 5 and removes support for Vite 3 and 4.
