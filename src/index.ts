@@ -3,6 +3,7 @@ import { AddressInfo } from 'net'
 import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import { globSync } from 'tinyglobby'
 import colors from 'picocolors'
 import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
@@ -435,7 +436,7 @@ function resolveAssetPlugin(assets: string|string[]): Plugin[] {
         name: 'laravel:assets',
         apply: 'build',
         buildStart() {
-            for (const file of fs.globSync(assets)) {
+            for (const file of globSync(assets)) {
                 if (fs.statSync(file).isFile()) {
                     this.emitFile({ type: 'chunk', id: file })
                 }
