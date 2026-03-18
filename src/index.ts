@@ -3,15 +3,16 @@ import { AddressInfo } from 'net'
 import os from 'os'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import { globSync } from 'tinyglobby'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rollup, createLogger, defaultAllowedOrigins } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
     /**
      * The path or paths of the entry points to compile.
      */
-    input: Rollup.InputOption
+    input: Rolldown.InputOption
 
     /**
      * Laravel's public directory.
@@ -37,7 +38,7 @@ interface PluginConfig {
     /**
      * The path of the SSR entry point.
      */
-    ssr?: Rollup.InputOption
+    ssr?: Rolldown.InputOption
 
     /**
      * The directory where the SSR bundle should be written.
@@ -73,6 +74,17 @@ interface PluginConfig {
      * Transform the code while serving.
      */
     transformOnServe?: (code: string, url: DevServerUrl) => string,
+
+    /**
+     * Asset file glob patterns to include in the build.
+     *
+     * Files matching these patterns will be processed and versioned by Vite,
+     * even if they are not imported in your JavaScript. This is useful for
+     * assets referenced in Blade templates via `Vite::asset()`.
+     *
+     * @default []
+     */
+    assets?: string|string[]
 }
 
 interface RefreshConfig {
@@ -111,6 +123,7 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
 
     return [
         resolveLaravelPlugin(pluginConfig),
+        ...resolveAssetPlugin(pluginConfig.assets),
         ...resolveFullReloadConfig(pluginConfig) as Plugin[],
     ];
 }
@@ -148,8 +161,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     manifest: userConfig.build?.manifest ?? (ssr ? false : 'manifest.json'),
                     ssrManifest: userConfig.build?.ssrManifest ?? (ssr ? 'ssr-manifest.json' : false),
                     outDir: userConfig.build?.outDir ?? resolveOutDir(pluginConfig, ssr),
-                    rollupOptions: {
-                        input: userConfig.build?.rollupOptions?.input ?? resolveInput(pluginConfig, ssr)
+                    rolldownOptions: {
+                        input: userConfig.build?.rolldownOptions?.input
+                            ?? userConfig.build?.rollupOptions?.input
+                            ?? resolveInput(pluginConfig, ssr)
                     },
                     assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
                 },
@@ -376,6 +391,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         valetTls: config.valetTls ?? null,
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
+        assets: typeof config.assets === 'string' ? [config.assets] : config.assets ?? [],
     }
 }
 
@@ -389,7 +405,7 @@ function resolveBase(config: Required<PluginConfig>, assetUrl: string): string {
 /**
  * Resolve the Vite input path from the configuration.
  */
-function resolveInput(config: Required<PluginConfig>, ssr: boolean): Rollup.InputOption|undefined {
+function resolveInput(config: Required<PluginConfig>, ssr: boolean): Rolldown.InputOption|undefined {
     if (ssr) {
         return config.ssr
     }
@@ -406,6 +422,27 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
     }
 
     return path.join(config.publicDirectory, config.buildDirectory)
+}
+
+/**
+ * Resolve the asset-emitting plugin from the configuration.
+ */
+function resolveAssetPlugin(assets: string|string[]): Plugin[] {
+    if (assets.length === 0) {
+        return []
+    }
+
+    return [{
+        name: 'laravel:assets',
+        apply: 'build',
+        buildStart() {
+            for (const file of globSync(assets)) {
+                if (fs.statSync(file).isFile()) {
+                    this.emitFile({ type: 'chunk', id: file })
+                }
+            }
+        },
+    }]
 }
 
 function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): PluginOption[]{
