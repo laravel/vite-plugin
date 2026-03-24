@@ -533,10 +533,10 @@ describe('laravel-vite-plugin', () => {
         expect(plugins.find(plugin => plugin.name === 'laravel:assets')).toBeUndefined()
     })
 
-    it('emits assets as chunks when assets is a string', () => {
+    it('emits assets as static assets when assets is a string', () => {
         const plugins = laravel({
             input: 'resources/js/app.ts',
-            assets: 'tests/__data__/*.ts',
+            assets: 'tests/__data__/*.png',
         })
 
         const assetsPlugin = plugins.find(plugin => plugin.name === 'laravel:assets')!
@@ -544,13 +544,13 @@ describe('laravel-vite-plugin', () => {
 
         assetsPlugin.buildStart!.call({ emitFile })
 
-        expect(emitFile).toHaveBeenCalledWith({ type: 'chunk', id: expect.stringContaining('dummy.ts') })
+        expect(emitFile).toHaveBeenCalledWith({ type: 'asset', name: 'dummy.png', originalFileName: expect.stringContaining('dummy.png'), source: expect.any(Buffer) })
     })
 
-    it('emits assets as chunks when assets is an array', () => {
+    it('emits assets as static assets when assets is an array', () => {
         const plugins = laravel({
             input: 'resources/js/app.ts',
-            assets: ['tests/__data__/*.ts'],
+            assets: ['tests/__data__/*.png'],
         })
 
         const assetsPlugin = plugins.find(plugin => plugin.name === 'laravel:assets')!
@@ -558,7 +558,7 @@ describe('laravel-vite-plugin', () => {
 
         assetsPlugin.buildStart!.call({ emitFile })
 
-        expect(emitFile).toHaveBeenCalledWith({ type: 'chunk', id: expect.stringContaining('dummy.ts') })
+        expect(emitFile).toHaveBeenCalledWith({ type: 'asset', name: 'dummy.png', originalFileName: expect.stringContaining('dummy.png'), source: expect.any(Buffer) })
     })
 
 
