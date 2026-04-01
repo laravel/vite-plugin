@@ -438,7 +438,7 @@ function resolveAssetPlugin(assets: string|string[]): Plugin[] {
         buildStart() {
             for (const file of globSync(assets)) {
                 if (fs.statSync(file).isFile()) {
-                    this.emitFile({ type: 'chunk', id: file })
+                    this.emitFile({ type: 'asset', name: path.basename(file), originalFileName: file, source: fs.readFileSync(file) })
                 }
             }
         },
