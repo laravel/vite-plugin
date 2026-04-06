@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { validateFontsConfig, resolveLocalFonts, familyToSlug } from './config.js'
-import { generateFontCss } from './css.js'
+import { generateFontCss, generateFamilyStyles } from './css.js'
 import { buildManifest, buildDevManifest } from './manifest.js'
 import { resolveCacheDir } from './cache.js'
 import { resolveGoogleFont } from './providers/resolve-google.js'
@@ -168,6 +168,7 @@ export function resolveFontsPlugin(
 
             const cssFileName = this.getFileName(fontsCssRef)
             const finalCss = generateFontCss(resolvedFamilies, resolvedFilePathMap, fontsFallbackMap)
+            const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, resolvedFilePathMap, fontsFallbackMap)
 
             for (const [key, chunk] of Object.entries(bundle)) {
                 if (key === cssFileName && chunk.type === 'asset') {
@@ -177,7 +178,7 @@ export function resolveFontsPlugin(
                 }
             }
 
-            const manifest = buildManifest(resolvedFamilies, cssFileName, resolvedFilePathMap)
+            const manifest = buildManifest(resolvedFamilies, cssFileName, resolvedFilePathMap, familyStyles, variables)
 
             this.emitFile({
                 type: 'asset',
@@ -204,7 +205,8 @@ export function resolveFontsPlugin(
                     const fallbackMap = await buildFallbackMap(resolvedFamilies)
                     const urlMap = buildDevUrlMap(resolvedFamilies, devServerUrl)
                     const css = generateFontCss(resolvedFamilies, urlMap, fallbackMap)
-                    const manifest = buildDevManifest(resolvedFamilies, css, urlMap)
+                    const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, urlMap, fallbackMap)
+                    const manifest = buildDevManifest(resolvedFamilies, css, urlMap, familyStyles, variables)
 
                     const hotManifestDir = path.dirname(hotManifestPath)
                     if (! fs.existsSync(hotManifestDir)) {

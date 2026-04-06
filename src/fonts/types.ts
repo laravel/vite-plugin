@@ -130,6 +130,8 @@ export interface FontManifest {
     style: {
         file?: string
         inline?: string
+        familyStyles: Record<string, string>
+        variables: string
     }
     preloads: FontManifestPreload[]
     families: Record<string, FontManifestFamily>

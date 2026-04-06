@@ -81,6 +81,30 @@ export function generateCssVariables(families: ResolvedFontFamily[]): string {
     return `:root {\n${vars.join('\n')}\n}`
 }
 
+export function generateFamilyStyles(
+    families: ResolvedFontFamily[],
+    filePathMap: Map<string, string>,
+    fallbackMap?: Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>,
+): { familyStyles: Record<string, string>, variables: string } {
+    const familyStyles: Record<string, string> = {}
+
+    for (const family of families) {
+        let css = generateFontFace(family, filePathMap)
+
+        if (family.fallback && fallbackMap?.has(family.family)) {
+            const fb = fallbackMap.get(family.family)!
+            css += '\n\n' + generateFallbackFontFace(family.family, fb.fallbackFamily, fb.metrics)
+        }
+
+        familyStyles[family.family] = css
+    }
+
+    return {
+        familyStyles,
+        variables: generateCssVariables(families),
+    }
+}
+
 export function generateFontCss(
     families: ResolvedFontFamily[],
     filePathMap: Map<string, string>,

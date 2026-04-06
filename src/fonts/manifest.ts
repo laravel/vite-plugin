@@ -16,6 +16,8 @@ export function buildManifest(
     families: ResolvedFontFamily[],
     cssFile: string,
     filePathMap: Map<string, string>,
+    familyStyles: Record<string, string>,
+    variables: string,
 ): FontManifest {
     const preloads: FontManifestPreload[] = []
     const familyEntries: Record<string, FontManifestFamily> = {}
@@ -57,7 +59,7 @@ export function buildManifest(
 
     return {
         version: 1,
-        style: { file: cssFile },
+        style: { file: cssFile, familyStyles, variables },
         preloads,
         families: familyEntries,
     }
@@ -67,6 +69,8 @@ export function buildDevManifest(
     families: ResolvedFontFamily[],
     inlineCss: string,
     urlMap: Map<string, string>,
+    familyStyles: Record<string, string>,
+    variables: string,
 ): FontManifest {
     const preloads: FontManifestPreload[] = []
     const familyEntries: Record<string, FontManifestFamily> = {}
@@ -108,7 +112,7 @@ export function buildDevManifest(
 
     return {
         version: 1,
-        style: { inline: inlineCss },
+        style: { inline: inlineCss, familyStyles, variables },
         preloads,
         families: familyEntries,
     }
