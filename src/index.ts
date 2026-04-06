@@ -7,6 +7,8 @@ import { globSync } from 'tinyglobby'
 import colors from 'picocolors'
 import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
+import { resolveFontsPlugin } from './fonts/plugin.js'
+import type { FontConfig } from './fonts/types.js'
 
 interface PluginConfig {
     /**
@@ -85,6 +87,16 @@ interface PluginConfig {
      * @default []
      */
     assets?: string|string[]
+
+    /**
+     * Font configurations for automatic self-hosting and optimization.
+     *
+     * Use provider helpers from `laravel-vite-plugin/fonts`:
+     * `local()`, `google()`, `bunny()`, `fontsource()`.
+     *
+     * @default []
+     */
+    fonts?: FontConfig[]
 }
 
 interface RefreshConfig {
@@ -124,6 +136,7 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
     return [
         resolveLaravelPlugin(pluginConfig),
         ...resolveAssetPlugin(pluginConfig.assets),
+        ...resolveFontsPlugin(pluginConfig.fonts, pluginConfig.hotFile),
         ...resolveFullReloadConfig(pluginConfig) as Plugin[],
     ];
 }
@@ -392,6 +405,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
         assets: typeof config.assets === 'string' ? [config.assets] : config.assets ?? [],
+        fonts: config.fonts ?? [],
     }
 }
 
