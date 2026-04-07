@@ -71,6 +71,16 @@ export function generateFallbackFontFace(
     ].join('\n')
 }
 
+export function generateFontClassForFamily(family: ResolvedFontFamily): string {
+    return `.${family.variable.replace(/^--/, '')} {\n  font-family: var(${family.variable});\n}`
+}
+
+export function generateFontClasses(families: ResolvedFontFamily[]): string {
+    return families
+        .map(f => generateFontClassForFamily(f))
+        .join('\n\n')
+}
+
 export function generateCssVariables(families: ResolvedFontFamily[]): string {
     const vars = families.map(f =>
         f.fallback
@@ -95,6 +105,8 @@ export function generateFamilyStyles(
             const fb = fallbackMap.get(family.family)!
             css += '\n\n' + generateFallbackFontFace(family.family, fb.fallbackFamily, fb.metrics)
         }
+
+        css += '\n\n' + generateFontClassForFamily(family)
 
         familyStyles[family.family] = css
     }
@@ -122,6 +134,7 @@ export function generateFontCss(
     }
 
     parts.push(generateCssVariables(families))
+    parts.push(generateFontClasses(families))
 
     return parts.join('\n\n') + '\n'
 }

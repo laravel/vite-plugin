@@ -184,6 +184,21 @@ describe('fonts manifest', () => {
 
             expect(manifest.families['Inter'].fallbackFamily).toBeUndefined()
         })
+
+        it('familyStyles include font classes', () => {
+            const families = [makeFamily()]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400-abc123.woff2'],
+            ])
+            const familyStyles = {
+                'Inter': '@font-face { font-family: "Inter"; }\n\n.font-inter {\n  font-family: var(--font-inter);\n}',
+            }
+            const variables = ':root { --font-inter: "Inter"; }'
+
+            const manifest = buildManifest(families, 'assets/fonts-abc123.css', filePathMap, familyStyles, variables)
+
+            expect(manifest.style.familyStyles['Inter']).toContain('.font-inter')
+        })
     })
 
     describe('buildDevManifest', () => {
@@ -259,6 +274,21 @@ describe('fonts manifest', () => {
             expect(manifest.families['Inter'].variants['400:normal'].files[0].url)
                 .toBe('http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2')
             expect(manifest.families['Inter'].variants['400:normal'].files[0].file).toBeUndefined()
+        })
+
+        it('familyStyles in dev manifest include font classes', () => {
+            const families = [makeFamily()]
+            const urlMap = new Map([
+                ['/fonts/inter-400.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2'],
+            ])
+            const familyStyles = {
+                'Inter': '@font-face { font-family: "Inter"; }\n\n.font-inter {\n  font-family: var(--font-inter);\n}',
+            }
+            const variables = ':root { --font-inter: "Inter"; }'
+
+            const manifest = buildDevManifest(families, '@font-face { ... }', urlMap, familyStyles, variables)
+
+            expect(manifest.style.familyStyles['Inter']).toContain('.font-inter')
         })
     })
 })
