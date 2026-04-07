@@ -126,18 +126,25 @@ describe('fonts config', () => {
     })
 
     describe('validateFontsConfig', () => {
-        it('rejects duplicate CSS variable names', () => {
+        it('rejects duplicate family names', () => {
             expect(() => validateFontsConfig([
                 { family: 'Inter', provider: google() },
                 { family: 'Inter', provider: bunny() },
+            ])).toThrowError('Duplicate font family "Inter"')
+        })
+
+        it('rejects duplicate CSS variable names across different families', () => {
+            expect(() => validateFontsConfig([
+                { family: 'Inter', provider: google() },
+                { family: 'Roboto', provider: bunny(), variable: '--font-inter' },
             ])).toThrowError('Duplicate CSS variable "--font-inter"')
         })
 
-        it('allows duplicate families with explicit different variables', () => {
+        it('rejects duplicate family names even with different variables', () => {
             expect(() => validateFontsConfig([
                 { family: 'Inter', provider: google(), variable: '--font-inter-google' },
                 { family: 'Inter', provider: bunny(), variable: '--font-inter-bunny' },
-            ])).not.toThrow()
+            ])).toThrowError('Duplicate font family "Inter"')
         })
 
         it('allows explicit variable and tailwind mappings', () => {

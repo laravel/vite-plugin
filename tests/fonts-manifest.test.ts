@@ -101,6 +101,37 @@ describe('fonts manifest', () => {
             expect(interFamily.variants['400:normal'].files[0].file).toBe('assets/inter-400.woff2')
         })
 
+        it('merges files for variants sharing the same weight and style', () => {
+            const families = [makeFamily({
+                variants: [
+                    {
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source: '/fonts/inter-latin.woff2', format: 'woff2', unicodeRange: 'U+0000-00FF' }],
+                    },
+                    {
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source: '/fonts/inter-cyrillic.woff2', format: 'woff2', unicodeRange: 'U+0400-045F' }],
+                    },
+                ],
+            })]
+
+            const filePathMap = new Map([
+                ['/fonts/inter-latin.woff2', 'assets/inter-latin.woff2'],
+                ['/fonts/inter-cyrillic.woff2', 'assets/inter-cyrillic.woff2'],
+            ])
+
+            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, '')
+
+            const variant = manifest.families['Inter'].variants['400:normal']
+            expect(variant.files).toHaveLength(2)
+            expect(variant.files[0].file).toBe('assets/inter-latin.woff2')
+            expect(variant.files[0].unicodeRange).toBe('U+0000-00FF')
+            expect(variant.files[1].file).toBe('assets/inter-cyrillic.woff2')
+            expect(variant.files[1].unicodeRange).toBe('U+0400-045F')
+        })
+
         it('preserves unicode-range in manifest variant files', () => {
             const families = [makeFamily({
                 variants: [{
@@ -184,6 +215,37 @@ describe('fonts manifest', () => {
 
             expect(manifest.preloads[0].url).toBe('http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2')
             expect(manifest.preloads[0].file).toBeUndefined()
+        })
+
+        it('merges files for variants sharing the same weight and style', () => {
+            const families = [makeFamily({
+                variants: [
+                    {
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source: '/fonts/inter-latin.woff2', format: 'woff2', unicodeRange: 'U+0000-00FF' }],
+                    },
+                    {
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source: '/fonts/inter-cyrillic.woff2', format: 'woff2', unicodeRange: 'U+0400-045F' }],
+                    },
+                ],
+            })]
+
+            const urlMap = new Map([
+                ['/fonts/inter-latin.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/latin.woff2'],
+                ['/fonts/inter-cyrillic.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/cyrillic.woff2'],
+            ])
+
+            const manifest = buildDevManifest(families, 'css', urlMap, {}, '')
+
+            const variant = manifest.families['Inter'].variants['400:normal']
+            expect(variant.files).toHaveLength(2)
+            expect(variant.files[0].url).toBe('http://localhost:5173/__laravel_vite_plugin__/fonts/latin.woff2')
+            expect(variant.files[0].unicodeRange).toBe('U+0000-00FF')
+            expect(variant.files[1].url).toBe('http://localhost:5173/__laravel_vite_plugin__/fonts/cyrillic.woff2')
+            expect(variant.files[1].unicodeRange).toBe('U+0400-045F')
         })
 
         it('uses URLs in variant files', () => {

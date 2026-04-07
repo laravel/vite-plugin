@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import { parseFontFaceCss } from '../src/fonts/css-parser'
+import { buildCss2Url } from '../src/fonts/providers/resolve-remote'
+import { google } from '../src/fonts/index'
 
 const GOOGLE_INTER_CSS = fs.readFileSync(
     path.resolve(__dirname, 'fixtures/providers/google-inter.css'),
@@ -9,6 +11,60 @@ const GOOGLE_INTER_CSS = fs.readFileSync(
 )
 
 describe('fonts providers', () => {
+    describe('buildCss2Url', () => {
+        it('includes default latin subset', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
+                family: 'Inter',
+                provider: google(),
+            })
+
+            expect(url).toContain('&subset=latin')
+        })
+
+        it('includes configured subsets', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
+                family: 'Inter',
+                provider: google(),
+                subsets: ['latin', 'cyrillic'],
+            })
+
+            expect(url).toContain('&subset=latin,cyrillic')
+        })
+
+        it('builds correct axes for italic styles', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
+                family: 'Inter',
+                provider: google(),
+                weights: [400],
+                styles: ['normal', 'italic'],
+            })
+
+            expect(url).toContain('ital,wght@')
+            expect(url).toContain('0,400')
+            expect(url).toContain('1,400')
+        })
+
+        it('builds correct axes for normal-only styles', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
+                family: 'Inter',
+                provider: google(),
+                weights: [400, 700],
+            })
+
+            expect(url).toContain('wght@400;700')
+            expect(url).not.toContain('ital')
+        })
+
+        it('replaces spaces in family names', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
+                family: 'Open Sans',
+                provider: google(),
+            })
+
+            expect(url).toContain('family=Open+Sans')
+        })
+    })
+
     describe('css parser', () => {
         it('parses multiple @font-face rules', () => {
             const faces = parseFontFaceCss(GOOGLE_INTER_CSS)

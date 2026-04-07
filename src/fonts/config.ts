@@ -64,10 +64,19 @@ export function validateFontConfig(config: FontConfig): void {
 }
 
 export function validateFontsConfig(fonts: FontConfig[]): void {
+    const families = new Set<string>()
     const variables = new Set<string>()
 
     for (const font of fonts) {
         validateFontConfig(font)
+
+        if (families.has(font.family)) {
+            throw new Error(
+                `laravel-vite-plugin: Duplicate font family "${font.family}". ` +
+                `Each family name must be unique because the manifest is keyed by family name.`
+            )
+        }
+        families.add(font.family)
 
         const variable = font.variable ?? familyToVariable(font.family)
         if (variables.has(variable)) {

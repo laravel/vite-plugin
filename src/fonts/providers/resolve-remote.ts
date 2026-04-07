@@ -45,7 +45,12 @@ export function buildCss2Url(baseUrl: string, config: FontConfig): string {
     const axisStr = axes.join(',')
     const tupleStr = tuples.join(';')
 
-    return `${baseUrl}?family=${family}:${axisStr}@${tupleStr}&display=${config.display ?? 'swap'}`
+    let url = `${baseUrl}?family=${family}:${axisStr}@${tupleStr}&display=${config.display ?? 'swap'}`
+
+    const subsets = config.subsets ?? ['latin']
+    url += `&subset=${subsets.join(',')}`
+
+    return url
 }
 
 export async function resolveRemoteFont(

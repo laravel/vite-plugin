@@ -12,13 +12,11 @@ function variantKey(weight: string|number, style: string): string {
     return `${weight}:${style}`
 }
 
-export function buildManifest(
+function resolveEntries(
     families: ResolvedFontFamily[],
-    cssFile: string,
-    filePathMap: Map<string, string>,
-    familyStyles: Record<string, string>,
-    variables: string,
-): FontManifest {
+    pathMap: Map<string, string>,
+    pathKey: 'file' | 'url',
+): { preloads: FontManifestPreload[], familyEntries: Record<string, FontManifestFamily> } {
     const preloads: FontManifestPreload[] = []
     const familyEntries: Record<string, FontManifestFamily> = {}
 
@@ -27,12 +25,18 @@ export function buildManifest(
 
         for (const variant of family.variants) {
             const files: FontManifestVariantFile[] = variant.files.map(f => ({
-                file: filePathMap.get(f.source),
+                [pathKey]: pathMap.get(f.source),
                 format: f.format,
                 unicodeRange: f.unicodeRange,
             }))
 
-            variants[variantKey(variant.weight, variant.style)] = { files }
+            const key = variantKey(variant.weight, variant.style)
+
+            if (variants[key]) {
+                variants[key].files.push(...files)
+            } else {
+                variants[key] = { files }
+            }
 
             for (const f of variant.files) {
                 if (f.format === 'woff2') {
@@ -40,11 +44,11 @@ export function buildManifest(
                         family: family.family,
                         weight: variant.weight,
                         style: variant.style,
-                        file: filePathMap.get(f.source),
+                        [pathKey]: pathMap.get(f.source),
                         as: 'font',
                         type: FORMAT_MIME[f.format],
                         crossorigin: 'anonymous',
-                    })
+                    } as FontManifestPreload)
                 }
             }
         }
@@ -56,6 +60,18 @@ export function buildManifest(
             variants,
         }
     }
+
+    return { preloads, familyEntries }
+}
+
+export function buildManifest(
+    families: ResolvedFontFamily[],
+    cssFile: string,
+    filePathMap: Map<string, string>,
+    familyStyles: Record<string, string>,
+    variables: string,
+): FontManifest {
+    const { preloads, familyEntries } = resolveEntries(families, filePathMap, 'file')
 
     return {
         version: 1,
@@ -72,43 +88,7 @@ export function buildDevManifest(
     familyStyles: Record<string, string>,
     variables: string,
 ): FontManifest {
-    const preloads: FontManifestPreload[] = []
-    const familyEntries: Record<string, FontManifestFamily> = {}
-
-    for (const family of families) {
-        const variants: Record<string, FontManifestVariant> = {}
-
-        for (const variant of family.variants) {
-            const files: FontManifestVariantFile[] = variant.files.map(f => ({
-                url: urlMap.get(f.source),
-                format: f.format,
-                unicodeRange: f.unicodeRange,
-            }))
-
-            variants[variantKey(variant.weight, variant.style)] = { files }
-
-            for (const f of variant.files) {
-                if (f.format === 'woff2') {
-                    preloads.push({
-                        family: family.family,
-                        weight: variant.weight,
-                        style: variant.style,
-                        url: urlMap.get(f.source),
-                        as: 'font',
-                        type: FORMAT_MIME[f.format],
-                        crossorigin: 'anonymous',
-                    })
-                }
-            }
-        }
-
-        familyEntries[family.family] = {
-            variable: family.variable,
-            tailwind: family.tailwind,
-            fallbackFamily: family.fallback ? `${family.family} fallback` : undefined,
-            variants,
-        }
-    }
+    const { preloads, familyEntries } = resolveEntries(families, urlMap, 'url')
 
     return {
         version: 1,
