@@ -100,6 +100,7 @@ function emitFontAssets(
 export function resolveFontsPlugin(
     fonts: FontConfig[]|undefined,
     hotFile: string,
+    buildDirectory: string,
 ): Plugin[] {
     if (! fonts || fonts.length === 0) {
         return []
@@ -161,14 +162,17 @@ export function resolveFontsPlugin(
                 return
             }
 
-            const resolvedFilePathMap = new Map<string, string>()
+            const relativeFilePathMap = new Map<string, string>()
+            const absoluteFilePathMap = new Map<string, string>()
             for (const [source, ref] of fontsFileRefMap) {
-                resolvedFilePathMap.set(source, this.getFileName(ref))
+                const fileName = this.getFileName(ref)
+                relativeFilePathMap.set(source, fileName)
+                absoluteFilePathMap.set(source, `/${buildDirectory}/${fileName}`)
             }
 
             const cssFileName = this.getFileName(fontsCssRef)
-            const finalCss = generateFontCss(resolvedFamilies, resolvedFilePathMap, fontsFallbackMap)
-            const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, resolvedFilePathMap, fontsFallbackMap)
+            const finalCss = generateFontCss(resolvedFamilies, absoluteFilePathMap, fontsFallbackMap)
+            const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, absoluteFilePathMap, fontsFallbackMap)
 
             for (const [key, chunk] of Object.entries(bundle)) {
                 if (key === cssFileName && chunk.type === 'asset') {
@@ -178,7 +182,7 @@ export function resolveFontsPlugin(
                 }
             }
 
-            const manifest = buildManifest(resolvedFamilies, cssFileName, resolvedFilePathMap, familyStyles, variables)
+            const manifest = buildManifest(resolvedFamilies, cssFileName, relativeFilePathMap, familyStyles, variables)
 
             this.emitFile({
                 type: 'asset',
@@ -189,6 +193,9 @@ export function resolveFontsPlugin(
 
         configureServer(server) {
             const projectRoot = resolvedConfig.root
+
+            const fontMiddleware = createFontMiddleware()
+            server.middlewares.use(fontMiddleware.middleware)
 
             server.httpServer?.once('listening', async () => {
                 try {
@@ -202,6 +209,8 @@ export function resolveFontsPlugin(
                         ? fs.readFileSync(hotFile, 'utf-8').trim()
                         : `http://localhost:${server.config.server.port ?? 5173}`
 
+                    fontMiddleware.update(resolvedFamilies)
+
                     const fallbackMap = await buildFallbackMap(resolvedFamilies)
                     const urlMap = buildDevUrlMap(resolvedFamilies, devServerUrl)
                     const css = generateFontCss(resolvedFamilies, urlMap, fallbackMap)
@@ -214,8 +223,6 @@ export function resolveFontsPlugin(
                     }
 
                     fs.writeFileSync(hotManifestPath, JSON.stringify(manifest, null, 2))
-
-                    server.middlewares.use(createFontMiddleware(resolvedFamilies))
                 } catch (e) {
                     server.config.logger.error(`[laravel:fonts] ${(e as Error).message}`)
                 }

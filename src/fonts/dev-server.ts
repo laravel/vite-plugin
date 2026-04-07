@@ -27,21 +27,28 @@ export function buildDevUrlMap(
     return urlMap
 }
 
-export function createFontMiddleware(
-    families: ResolvedFontFamily[],
-): (req: IncomingMessage, res: ServerResponse, next: () => void) => void {
-    const lookup = new Map<string, { source: string, format: FontFormat }>()
+export function createFontMiddleware(): {
+    middleware: (req: IncomingMessage, res: ServerResponse, next: () => void) => void,
+    update: (families: ResolvedFontFamily[]) => void,
+} {
+    let lookup = new Map<string, { source: string, format: FontFormat }>()
 
-    for (const family of families) {
-        for (const variant of family.variants) {
-            for (const file of variant.files) {
-                const hash = cacheKey(file.source)
-                lookup.set(hash, { source: file.source, format: file.format })
+    function update(families: ResolvedFontFamily[]): void {
+        const newLookup = new Map<string, { source: string, format: FontFormat }>()
+
+        for (const family of families) {
+            for (const variant of family.variants) {
+                for (const file of variant.files) {
+                    const hash = cacheKey(file.source)
+                    newLookup.set(hash, { source: file.source, format: file.format })
+                }
             }
         }
+
+        lookup = newLookup
     }
 
-    return (req, res, next) => {
+    function middleware(req: IncomingMessage, res: ServerResponse, next: () => void): void {
         if (! req.url?.startsWith(FONT_ROUTE_PREFIX + '/')) {
             return next()
         }
@@ -72,4 +79,6 @@ export function createFontMiddleware(
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
         res.end(data)
     }
+
+    return { middleware, update }
 }

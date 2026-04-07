@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { createRequire } from 'module'
 import { parseFontFaceCss } from '../css-parser.js'
 import { familyToVariable, familyToSlug } from '../config.js'
 import type { FontConfig, FontsourceProviderConfig, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant, FontStyle } from '../types.js'
@@ -13,8 +14,9 @@ export function resolveFontsourceFont(
 
     let packageDir: string
     try {
+        const require = createRequire(path.join(projectRoot, 'package.json'))
         packageDir = path.dirname(
-            require.resolve(`${packageName}/package.json`, { paths: [projectRoot] })
+            require.resolve(`${packageName}/package.json`)
         )
     } catch {
         throw new Error(
@@ -31,7 +33,9 @@ export function resolveFontsourceFont(
     for (const weight of weights) {
         for (const style of styles) {
             for (const subset of subsets) {
-                const cssFileName = `${subset}-${weight}-${style}.css`
+                const cssFileName = style === 'italic'
+                    ? `${subset}-${weight}-italic.css`
+                    : `${subset}-${weight}.css`
                 const cssFilePath = path.join(packageDir, cssFileName)
 
                 if (! fs.existsSync(cssFilePath)) {

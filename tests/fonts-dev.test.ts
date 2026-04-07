@@ -74,7 +74,8 @@ describe('fonts dev server', () => {
         }
 
         it('passes through non-font requests', () => {
-            const middleware = createFontMiddleware([makeFamily()])
+            const { middleware, update } = createFontMiddleware()
+            update([makeFamily()])
             const { req, res } = mockReqRes('/index.html')
             let nextCalled = false
 
@@ -84,7 +85,8 @@ describe('fonts dev server', () => {
         })
 
         it('returns 404 for unknown font hash', () => {
-            const middleware = createFontMiddleware([makeFamily()])
+            const { middleware, update } = createFontMiddleware()
+            update([makeFamily()])
             const { req, res } = mockReqRes('/__laravel_vite_plugin__/fonts/unknown-hash.woff2')
             let nextCalled = false
 

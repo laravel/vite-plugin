@@ -136,7 +136,7 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
     return [
         resolveLaravelPlugin(pluginConfig),
         ...resolveAssetPlugin(pluginConfig.assets),
-        ...resolveFontsPlugin(pluginConfig.fonts, pluginConfig.hotFile),
+        ...resolveFontsPlugin(pluginConfig.fonts, pluginConfig.hotFile, pluginConfig.buildDirectory),
         ...resolveFullReloadConfig(pluginConfig) as Plugin[],
     ];
 }
