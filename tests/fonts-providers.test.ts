@@ -13,31 +13,24 @@ const GOOGLE_INTER_CSS = fs.readFileSync(
 describe('fonts providers', () => {
     describe('buildCss2Url', () => {
         it('includes default latin subset', () => {
-            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
-                family: 'Inter',
-                provider: google(),
-            })
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Inter'))
 
             expect(url).toContain('&subset=latin')
         })
 
         it('includes configured subsets', () => {
-            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
-                family: 'Inter',
-                provider: google(),
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Inter', {
                 subsets: ['latin', 'cyrillic'],
-            })
+            }))
 
             expect(url).toContain('&subset=latin,cyrillic')
         })
 
         it('builds correct axes for italic styles', () => {
-            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
-                family: 'Inter',
-                provider: google(),
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Inter', {
                 weights: [400],
                 styles: ['normal', 'italic'],
-            })
+            }))
 
             expect(url).toContain('ital,wght@')
             expect(url).toContain('0,400')
@@ -45,21 +38,16 @@ describe('fonts providers', () => {
         })
 
         it('builds correct axes for normal-only styles', () => {
-            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
-                family: 'Inter',
-                provider: google(),
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Inter', {
                 weights: [400, 700],
-            })
+            }))
 
             expect(url).toContain('wght@400;700')
             expect(url).not.toContain('ital')
         })
 
         it('replaces spaces in family names', () => {
-            const url = buildCss2Url('https://fonts.googleapis.com/css2', {
-                family: 'Open Sans',
-                provider: google(),
-            })
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Open Sans'))
 
             expect(url).toContain('family=Open+Sans')
         })

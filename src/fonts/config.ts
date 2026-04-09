@@ -1,13 +1,13 @@
 import path from 'path'
 import fs from 'fs'
 import type {
-    FontConfig,
+    BaseFontOptions,
+    FontDefinition,
     FontFormat,
-    FontStyle,
+    FontProviderType,
     ResolvedFontFamily,
     ResolvedFontFile,
     ResolvedFontVariant,
-    LocalProviderConfig,
 } from './types.js'
 
 const FORMAT_MAP: Record<string, FontFormat> = {
@@ -28,6 +28,53 @@ export function familyToSlug(family: string): string {
     return family.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
+export function aliasToVariable(alias: string): string {
+    return '--font-' + alias
+}
+
+export function buildFontDefinition(
+    family: string,
+    provider: FontProviderType,
+    options?: BaseFontOptions,
+    extra?: Partial<FontDefinition>,
+): FontDefinition {
+    const alias = options?.alias ?? familyToSlug(family)
+
+    return {
+        family,
+        alias,
+        provider,
+        variable: options?.variable ?? aliasToVariable(alias),
+        tailwind: options?.tailwind,
+        weights: options?.weights ?? [400],
+        styles: options?.styles ?? ['normal'],
+        subsets: options?.subsets ?? ['latin'],
+        display: options?.display ?? 'swap',
+        preload: options?.preload ?? true,
+        fallbacks: options?.fallbacks ?? [],
+        optimizedFallbacks: options?.optimizedFallbacks ?? true,
+        ...extra,
+    }
+}
+
+export function buildResolvedFamily(
+    definition: FontDefinition,
+    variants: ResolvedFontVariant[],
+): ResolvedFontFamily {
+    return {
+        family: definition.family,
+        alias: definition.alias,
+        variable: definition.variable,
+        tailwind: definition.tailwind,
+        display: definition.display,
+        optimizedFallbacks: definition.optimizedFallbacks,
+        fallbacks: definition.fallbacks,
+        preload: definition.preload,
+        provider: definition.provider,
+        variants,
+    }
+}
+
 export function inferFormat(filePath: string): FontFormat {
     const ext = path.extname(filePath).toLowerCase()
     const format = FORMAT_MAP[ext]
@@ -42,102 +89,185 @@ export function inferFormat(filePath: string): FontFormat {
     return format
 }
 
-export function validateFontConfig(config: FontConfig): void {
-    if (! config.family || typeof config.family !== 'string' || config.family.trim() === '') {
+export function validateFontDefinition(definition: FontDefinition): void {
+    if (! definition.family || typeof definition.family !== 'string' || definition.family.trim() === '') {
         throw new Error('laravel-vite-plugin: Font family name must be a non-empty string.')
     }
 
-    if (! config.provider || typeof config.provider !== 'object' || ! config.provider.type) {
-        throw new Error(`laravel-vite-plugin: Font "${config.family}" has an invalid provider configuration.`)
+    if (! definition.alias || typeof definition.alias !== 'string' || definition.alias.trim() === '') {
+        throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid or empty alias.`)
     }
 
-    if (config.variable !== undefined && typeof config.variable !== 'string') {
-        throw new Error(`laravel-vite-plugin: Font "${config.family}" has an invalid variable name.`)
+    if (definition.variable !== undefined && typeof definition.variable !== 'string') {
+        throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid variable name.`)
     }
 
-    if (config.provider.type === 'local') {
-        const src = config.provider.src
-        if (! src || (typeof src === 'string' && src.trim() === '') || (Array.isArray(src) && src.length === 0)) {
-            throw new Error(`laravel-vite-plugin: Local font "${config.family}" must specify at least one source file.`)
+    if (definition.provider === 'local') {
+        const variants = definition._local?.variants
+        if (! variants || variants.length === 0) {
+            throw new Error(
+                `laravel-vite-plugin: Local font "${definition.family}" must specify at least one variant.`
+            )
+        }
+
+        for (const v of variants) {
+            const sources = Array.isArray(v.src) ? v.src : [v.src]
+            if (sources.length === 0 || sources.some(s => typeof s !== 'string' || s.trim() === '')) {
+                throw new Error(
+                    `laravel-vite-plugin: Local font "${definition.family}" has a variant with an invalid or empty src.`
+                )
+            }
         }
     }
 }
 
-export function validateFontsConfig(fonts: FontConfig[]): void {
-    const families = new Set<string>()
-    const variables = new Set<string>()
+export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] {
+    const byAlias = new Map<string, FontDefinition>()
+    const result: FontDefinition[] = []
 
     for (const font of fonts) {
-        validateFontConfig(font)
+        const existing = byAlias.get(font.alias)
 
-        if (families.has(font.family)) {
+        if (! existing) {
+            const clone = { ...font }
+            if (font._local) {
+                clone._local = { variants: [...font._local.variants] }
+            }
+            byAlias.set(font.alias, clone)
+            result.push(clone)
+
+            continue
+        }
+
+        if (existing.provider !== font.provider) {
             throw new Error(
-                `laravel-vite-plugin: Duplicate font family "${font.family}". ` +
-                `Each family name must be unique because the manifest is keyed by family name.`
+                `laravel-vite-plugin: Cannot merge font definitions for alias "${font.alias}": ` +
+                `provider mismatch ("${existing.provider}" vs "${font.provider}").`
             )
         }
-        families.add(font.family)
 
-        const variable = font.variable ?? familyToVariable(font.family)
-        if (variables.has(variable)) {
+        if (existing.variable !== font.variable) {
             throw new Error(
-                `laravel-vite-plugin: Duplicate CSS variable "${variable}". ` +
-                `Use the "variable" option to set a unique variable name for font "${font.family}".`
+                `laravel-vite-plugin: Cannot merge font definitions for alias "${font.alias}": ` +
+                `variable mismatch ("${existing.variable}" vs "${font.variable}").`
             )
         }
-        variables.add(variable)
+
+        if (existing.display !== font.display) {
+            throw new Error(
+                `laravel-vite-plugin: Cannot merge font definitions for alias "${font.alias}": ` +
+                `display mismatch ("${existing.display}" vs "${font.display}").`
+            )
+        }
+
+        if (JSON.stringify(existing.fallbacks) !== JSON.stringify(font.fallbacks)) {
+            throw new Error(
+                `laravel-vite-plugin: Cannot merge font definitions for alias "${font.alias}": ` +
+                `fallbacks mismatch.`
+            )
+        }
+
+        if (JSON.stringify(existing.preload) !== JSON.stringify(font.preload)) {
+            throw new Error(
+                `laravel-vite-plugin: Cannot merge font definitions for alias "${font.alias}": ` +
+                `preload mismatch.`
+            )
+        }
+
+        const weightSet = new Set(existing.weights.map(String))
+        for (const w of font.weights) {
+            if (! weightSet.has(String(w))) {
+                existing.weights.push(w)
+                weightSet.add(String(w))
+            }
+        }
+
+        const styleSet = new Set(existing.styles)
+        for (const s of font.styles) {
+            if (! styleSet.has(s)) {
+                existing.styles.push(s)
+                styleSet.add(s)
+            }
+        }
+
+        const subsetSet = new Set(existing.subsets)
+        for (const s of font.subsets) {
+            if (! subsetSet.has(s)) {
+                existing.subsets.push(s)
+                subsetSet.add(s)
+            }
+        }
+
+        if (existing._local && font._local) {
+            existing._local.variants.push(...font._local.variants)
+        }
     }
+
+    return result
 }
 
-export function resolveLocalFont(config: FontConfig, projectRoot: string): ResolvedFontFamily {
-    const provider = config.provider as LocalProviderConfig
-    const sources = Array.isArray(provider.src) ? provider.src : [provider.src]
-    const weights = config.weights ?? [400]
-    const styles = config.styles ?? ['normal']
+export function validateFontsConfig(fonts: FontDefinition[]): FontDefinition[] {
+    const merged = mergeFontDefinitions(fonts)
+    const aliases = new Set<string>()
+    const variables = new Set<string>()
 
-    const resolvedFiles: ResolvedFontFile[] = []
+    for (const font of merged) {
+        validateFontDefinition(font)
 
-    for (const src of sources) {
-        const absolutePath = path.isAbsolute(src) ? src : path.resolve(projectRoot, src)
-
-        if (! fs.existsSync(absolutePath)) {
+        if (aliases.has(font.alias)) {
             throw new Error(
-                `laravel-vite-plugin: Local font file not found: "${src}" ` +
-                `(resolved to "${absolutePath}") for font "${config.family}".`
+                `laravel-vite-plugin: Duplicate font alias "${font.alias}". ` +
+                `Each alias must be unique. Use the "alias" option to disambiguate.`
             )
         }
+        aliases.add(font.alias)
 
-        resolvedFiles.push({
-            source: absolutePath,
-            format: inferFormat(absolutePath),
+        if (variables.has(font.variable)) {
+            throw new Error(
+                `laravel-vite-plugin: Duplicate CSS variable "${font.variable}". ` +
+                `Use the "variable" option to set a unique variable name.`
+            )
+        }
+        variables.add(font.variable)
+    }
+
+    return merged
+}
+
+export function resolveLocalVariants(definition: FontDefinition, projectRoot: string): ResolvedFontVariant[] {
+    const localConfig = definition._local!
+    const variants: ResolvedFontVariant[] = []
+
+    for (const v of localConfig.variants) {
+        const sources = Array.isArray(v.src) ? v.src : [v.src]
+        const files: ResolvedFontFile[] = []
+
+        for (const src of sources) {
+            const absolutePath = path.isAbsolute(src) ? src : path.resolve(projectRoot, src)
+
+            if (! fs.existsSync(absolutePath)) {
+                throw new Error(
+                    `laravel-vite-plugin: Local font file not found: "${src}" ` +
+                    `(resolved to "${absolutePath}") for font "${definition.family}".`
+                )
+            }
+
+            files.push({
+                source: absolutePath,
+                format: inferFormat(absolutePath),
+            })
+        }
+
+        variants.push({
+            weight: v.weight,
+            style: v.style ?? 'normal',
+            files,
         })
     }
 
-    const variants: ResolvedFontVariant[] = []
-
-    for (const weight of weights) {
-        for (const style of styles) {
-            variants.push({
-                weight,
-                style: style as FontStyle,
-                files: resolvedFiles,
-            })
-        }
-    }
-
-    return {
-        family: config.family,
-        variable: config.variable ?? familyToVariable(config.family),
-        tailwind: config.tailwind,
-        display: config.display ?? 'swap',
-        fallback: config.fallback ?? true,
-        provider: 'local',
-        variants,
-    }
+    return variants
 }
 
-export function resolveLocalFonts(fonts: FontConfig[], projectRoot: string): ResolvedFontFamily[] {
-    return fonts
-        .filter(f => f.provider.type === 'local')
-        .map(f => resolveLocalFont(f, projectRoot))
+export function resolveLocalFont(definition: FontDefinition, projectRoot: string): ResolvedFontFamily {
+    return buildResolvedFamily(definition, resolveLocalVariants(definition, projectRoot))
 }

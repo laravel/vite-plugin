@@ -8,124 +8,116 @@ export type FontWeight = number | string
 
 export type FontDisplay = 'auto' | 'block' | 'swap' | 'fallback' | 'optional'
 
-export interface FontConfig {
-    /**
-     * The provider configuration (from google(), bunny(), fontsource(), or local()).
-     */
-    provider: FontProviderConfig
+export type PreloadSelector = {
+    weight: FontWeight
+    style: FontStyle
+}
 
-    /**
-     * The font family name.
-     */
-    family: string
+export type BaseFontOptions = {
+    /** Defaults to a slug of the family name. */
+    alias?: string
 
-    /**
-     * Weights to include.
-     *
-     * @default [400]
-     */
-    weights?: FontWeight[]
-
-    /**
-     * Styles to include.
-     *
-     * @default ['normal']
-     */
-    styles?: FontStyle[]
-
-    /**
-     * Subsets to include (for remote providers).
-     *
-     * @default ['latin']
-     */
-    subsets?: string[]
-
-    /**
-     * CSS variable name for this font.
-     * Auto-generated from family name if not provided.
-     *
-     * @example '--font-inter'
-     */
+    /** Defaults to `--font-{alias}`. */
     variable?: string
 
-    /**
-     * Tailwind CSS font family key mapping.
-     *
-     * @example 'sans'
-     */
     tailwind?: string
 
-    /**
-     * Font display strategy.
-     *
-     * @default 'swap'
-     */
+    /** @default [400] */
+    weights?: FontWeight[]
+
+    /** @default ['normal'] */
+    styles?: FontStyle[]
+
+    /** @default ['latin'] */
+    subsets?: string[]
+
+    /** @default 'swap' */
     display?: FontDisplay
 
     /**
-     * Whether to generate fallback font metrics.
+     * - `true`: preload all WOFF2 variants (default)
+     * - `false`: do not preload
+     * - `[{ weight, style }]`: preload only matching variants
      *
      * @default true
      */
-    fallback?: boolean
-}
+    preload?: boolean | PreloadSelector[]
 
-export type FontProviderConfig =
-    | LocalProviderConfig
-    | GoogleProviderConfig
-    | BunnyProviderConfig
-    | FontsourceProviderConfig
-
-export interface LocalProviderConfig {
-    type: 'local'
+    /** @default [] */
+    fallbacks?: string[]
 
     /**
-     * Path(s) to local font files, relative to the project root.
+     * Generate metric-optimized fallback font faces using fontaine.
+     *
+     * @default true
      */
-    src: string|string[]
+    optimizedFallbacks?: boolean
 }
 
-export interface GoogleProviderConfig {
-    type: 'google'
+export type LocalVariantDefinition = {
+    /** Path(s) relative to the project root. */
+    src: string | string[]
+    weight: FontWeight
+    /** @default 'normal' */
+    style?: FontStyle
 }
 
-export interface BunnyProviderConfig {
-    type: 'bunny'
+export type LocalFontOptions = Omit<BaseFontOptions, 'weights' | 'styles' | 'subsets'> & {
+    variants: LocalVariantDefinition[]
 }
 
-export interface FontsourceProviderConfig {
-    type: 'fontsource'
+export type RemoteFontOptions = BaseFontOptions
 
-    /**
-     * The fontsource package name override.
-     * Defaults to the family name slugified.
-     */
+export type FontsourceFontOptions = BaseFontOptions & {
+    /** Defaults to `@fontsource/{family-slug}`. */
     package?: string
 }
 
-export interface ResolvedFontVariant {
+export type FontDefinition = {
+    family: string
+    alias: string
+    provider: FontProviderType
+    variable: string
+    tailwind?: string
+    weights: FontWeight[]
+    styles: FontStyle[]
+    subsets: string[]
+    display: FontDisplay
+    preload: boolean | PreloadSelector[]
+    fallbacks: string[]
+    optimizedFallbacks: boolean
+    /** @internal */
+    _local?: { variants: LocalVariantDefinition[] }
+    /** @internal */
+    _fontsource?: { package?: string }
+}
+
+export type ResolvedFontVariant = {
     weight: FontWeight
     style: FontStyle
     files: ResolvedFontFile[]
 }
 
-export interface ResolvedFontFile {
+export type ResolvedFontFile = {
     source: string
     format: FontFormat
     unicodeRange?: string
 }
 
-export interface ResolvedFontFamily {
+export type ResolvedFontFamily = {
     family: string
+    alias: string
     variable: string
     tailwind?: string
     display: FontDisplay
-    fallback: boolean
+    optimizedFallbacks: boolean
+    fallbacks: string[]
+    preload: boolean | PreloadSelector[]
     provider: FontProviderType
     variants: ResolvedFontVariant[]
 }
 
-export interface FontManifest {
+export type FontManifest = {
     version: 1
     style: {
         file?: string
@@ -137,7 +129,8 @@ export interface FontManifest {
     families: Record<string, FontManifestFamily>
 }
 
-export interface FontManifestPreload {
+export type FontManifestPreload = {
+    alias: string
     family: string
     weight: FontWeight
     style: FontStyle
@@ -148,25 +141,27 @@ export interface FontManifestPreload {
     crossorigin: 'anonymous'
 }
 
-export interface FontManifestFamily {
+export type FontManifestFamily = {
+    family: string
     variable: string
     tailwind?: string
     fallbackFamily?: string
+    fallbacks?: string[]
     variants: Record<string, FontManifestVariant>
 }
 
-export interface FontManifestVariant {
+export type FontManifestVariant = {
     files: FontManifestVariantFile[]
 }
 
-export interface FontManifestVariantFile {
+export type FontManifestVariantFile = {
     file?: string
     url?: string
     format: FontFormat
     unicodeRange?: string
 }
 
-export interface FallbackMetrics {
+export type FallbackMetrics = {
     localFont: string
     ascentOverride: string
     descentOverride: string
@@ -174,7 +169,7 @@ export interface FallbackMetrics {
     sizeAdjust: string
 }
 
-export interface ParsedFontFace {
+export type ParsedFontFace = {
     family: string
     style: FontStyle
     weight: FontWeight
@@ -183,7 +178,7 @@ export interface ParsedFontFace {
     display?: string
 }
 
-export interface ParsedFontSrc {
+export type ParsedFontSrc = {
     url: string
     format: FontFormat
 }

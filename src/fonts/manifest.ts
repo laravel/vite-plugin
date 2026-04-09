@@ -6,10 +6,24 @@ import type {
     FontManifestVariant,
     FontManifestVariantFile,
     ResolvedFontFamily,
+    ResolvedFontVariant,
 } from './types.js'
 
 function variantKey(weight: string|number, style: string): string {
     return `${weight}:${style}`
+}
+
+function shouldPreload(
+    family: ResolvedFontFamily,
+    variant: ResolvedFontVariant,
+): boolean {
+    switch (family.preload) {
+        case false: return false
+        case true: return true
+        default: return family.preload.some(
+            sel => String(sel.weight) === String(variant.weight) && sel.style === variant.style
+        )
+    }
 }
 
 function resolveEntries(
@@ -38,30 +52,46 @@ function resolveEntries(
                 variants[key] = { files }
             }
 
-            for (const f of variant.files) {
-                if (f.format === 'woff2') {
-                    preloads.push({
-                        family: family.family,
-                        weight: variant.weight,
-                        style: variant.style,
-                        [pathKey]: pathMap.get(f.source),
-                        as: 'font',
-                        type: FORMAT_MIME[f.format],
-                        crossorigin: 'anonymous',
-                    } as FontManifestPreload)
+            if (shouldPreload(family, variant)) {
+                for (const f of variant.files) {
+                    if (f.format === 'woff2') {
+                        preloads.push({
+                            alias: family.alias,
+                            family: family.family,
+                            weight: variant.weight,
+                            style: variant.style,
+                            [pathKey]: pathMap.get(f.source),
+                            as: 'font',
+                            type: FORMAT_MIME[f.format],
+                            crossorigin: 'anonymous',
+                        } as FontManifestPreload)
+                    }
                 }
             }
         }
 
-        familyEntries[family.family] = {
+        familyEntries[family.alias] = {
+            family: family.family,
             variable: family.variable,
             tailwind: family.tailwind,
-            fallbackFamily: family.fallback ? `${family.family} fallback` : undefined,
+            fallbackFamily: family.optimizedFallbacks ? `${family.family} fallback` : undefined,
+            fallbacks: family.fallbacks.length > 0 ? family.fallbacks : undefined,
             variants,
         }
     }
 
-    return { preloads, familyEntries }
+    const seen = new Set<string>()
+    const deduped = preloads.filter(p => {
+        const key = p.file ?? p.url ?? ''
+        if (seen.has(key)) {
+            return false
+        }
+        seen.add(key)
+
+        return true
+    })
+
+    return { preloads: deduped, familyEntries }
 }
 
 export function buildManifest(

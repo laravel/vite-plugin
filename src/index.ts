@@ -8,7 +8,7 @@ import colors from 'picocolors'
 import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 import { resolveFontsPlugin } from './fonts/plugin.js'
-import type { FontConfig } from './fonts/types.js'
+import type { FontDefinition } from './fonts/types.js'
 
 interface PluginConfig {
     /**
@@ -96,7 +96,7 @@ interface PluginConfig {
      *
      * @default []
      */
-    fonts?: FontConfig[]
+    fonts?: FontDefinition[]
 }
 
 interface RefreshConfig {

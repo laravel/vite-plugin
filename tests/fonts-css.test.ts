@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { generateFontFace, generateFallbackFontFace, generateCssVariables, generateFontCss, generateFontClasses, generateFontClassForFamily, generateFamilyStyles } from '../src/fonts/css'
-import type { FallbackMetrics } from '../src/fonts/css'
+import type { FallbackMetrics } from '../src/fonts/types'
 import type { ResolvedFontFamily } from '../src/fonts/types'
 
 function makeFamily(overrides?: Partial<ResolvedFontFamily>): ResolvedFontFamily {
     return {
         family: 'Inter',
+        alias: 'inter',
         variable: '--font-inter',
         display: 'swap',
-        fallback: true,
+        optimizedFallbacks: true,
+        fallbacks: [],
+        preload: true,
         provider: 'local',
         variants: [{
             weight: 400,
@@ -125,10 +128,10 @@ describe('fonts css generation', () => {
     })
 
     describe('generateCssVariables', () => {
-        it('generates CSS variables for families', () => {
+        it('generates CSS variables for families with optimized fallbacks', () => {
             const families = [
                 makeFamily(),
-                makeFamily({ family: 'Roboto', variable: '--font-roboto' }),
+                makeFamily({ family: 'Roboto', alias: 'roboto', variable: '--font-roboto' }),
             ]
 
             const css = generateCssVariables(families)
@@ -136,6 +139,49 @@ describe('fonts css generation', () => {
             expect(css).toContain(':root {')
             expect(css).toContain('--font-inter: "Inter", "Inter fallback"')
             expect(css).toContain('--font-roboto: "Roboto", "Roboto fallback"')
+        })
+
+        it('omits optimized fallback when optimizedFallbacks is false', () => {
+            const families = [makeFamily({ optimizedFallbacks: false })]
+            const css = generateCssVariables(families)
+
+            expect(css).toContain('--font-inter: "Inter";')
+            expect(css).not.toContain('fallback')
+        })
+
+        it('includes user-specified fallbacks in CSS variable value', () => {
+            const families = [makeFamily({ fallbacks: ['system-ui', 'sans-serif'] })]
+            const css = generateCssVariables(families)
+
+            expect(css).toContain('--font-inter: "Inter", "Inter fallback", system-ui, sans-serif;')
+        })
+
+        it('includes both optimized fallback and user fallbacks in correct order', () => {
+            const families = [makeFamily({
+                optimizedFallbacks: true,
+                fallbacks: ['system-ui', 'sans-serif'],
+            })]
+            const css = generateCssVariables(families)
+
+            expect(css).toContain('"Inter", "Inter fallback", system-ui, sans-serif')
+        })
+
+        it('includes only user fallbacks when optimizedFallbacks is false', () => {
+            const families = [makeFamily({
+                optimizedFallbacks: false,
+                fallbacks: ['system-ui', 'sans-serif'],
+            })]
+            const css = generateCssVariables(families)
+
+            expect(css).toContain('"Inter", system-ui, sans-serif')
+            expect(css).not.toContain('fallback')
+        })
+
+        it('handles empty fallbacks with optimizedFallbacks false', () => {
+            const families = [makeFamily({ optimizedFallbacks: false, fallbacks: [] })]
+            const css = generateCssVariables(families)
+
+            expect(css).toContain('--font-inter: "Inter";')
         })
     })
 
@@ -159,7 +205,7 @@ describe('fonts css generation', () => {
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
             ])
             const fallbackMap = new Map([
-                ['Inter', {
+                ['inter', {
                     fallbackFamily: 'Inter fallback',
                     metrics: {
                         localFont: 'Arial',
@@ -177,13 +223,13 @@ describe('fonts css generation', () => {
             expect(css).toContain('src: local("Arial")')
         })
 
-        it('skips fallback when family.fallback is false', () => {
-            const families = [makeFamily({ fallback: false })]
+        it('skips fallback when optimizedFallbacks is false', () => {
+            const families = [makeFamily({ optimizedFallbacks: false })]
             const filePathMap = new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
             ])
             const fallbackMap = new Map([
-                ['Inter', {
+                ['inter', {
                     fallbackFamily: 'Inter fallback',
                     metrics: {
                         localFont: 'Arial',
@@ -239,7 +285,7 @@ describe('fonts css generation', () => {
         })
 
         it('references the CSS variable regardless of fallback setting', () => {
-            const family = makeFamily({ fallback: false })
+            const family = makeFamily({ optimizedFallbacks: false })
 
             const css = generateFontClassForFamily(family)
 
@@ -251,7 +297,7 @@ describe('fonts css generation', () => {
         it('generates classes for multiple families', () => {
             const families = [
                 makeFamily(),
-                makeFamily({ family: 'Roboto', variable: '--font-roboto' }),
+                makeFamily({ family: 'Roboto', alias: 'roboto', variable: '--font-roboto' }),
             ]
 
             const css = generateFontClasses(families)
@@ -262,7 +308,7 @@ describe('fonts css generation', () => {
 
         it('handles multi-word family slugs', () => {
             const families = [
-                makeFamily({ family: 'JetBrains Mono', variable: '--font-jetbrains-mono' }),
+                makeFamily({ family: 'JetBrains Mono', alias: 'jetbrains-mono', variable: '--font-jetbrains-mono' }),
             ]
 
             const css = generateFontClasses(families)
@@ -273,10 +319,10 @@ describe('fonts css generation', () => {
     })
 
     describe('generateFamilyStyles', () => {
-        it('includes font class in each family CSS fragment', () => {
+        it('keys output by alias', () => {
             const families = [
                 makeFamily(),
-                makeFamily({ family: 'Roboto', variable: '--font-roboto', variants: [{
+                makeFamily({ family: 'Roboto', alias: 'roboto', variable: '--font-roboto', variants: [{
                     weight: 400,
                     style: 'normal',
                     files: [{ source: '/fonts/roboto-400.woff2', format: 'woff2' }],
@@ -289,10 +335,55 @@ describe('fonts css generation', () => {
 
             const { familyStyles } = generateFamilyStyles(families, filePathMap)
 
-            expect(familyStyles['Inter']).toContain('.font-inter {')
-            expect(familyStyles['Inter']).toContain('font-family: var(--font-inter);')
-            expect(familyStyles['Roboto']).toContain('.font-roboto {')
-            expect(familyStyles['Roboto']).toContain('font-family: var(--font-roboto);')
+            expect(familyStyles['inter']).toContain('.font-inter {')
+            expect(familyStyles['inter']).toContain('font-family: var(--font-inter);')
+            expect(familyStyles['roboto']).toContain('.font-roboto {')
+            expect(familyStyles['roboto']).toContain('font-family: var(--font-roboto);')
+        })
+
+        it('CSS variables still reference actual font-family name', () => {
+            const families = [makeFamily({ alias: 'sans' })]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+            ])
+
+            const { variables } = generateFamilyStyles(families, filePathMap)
+
+            expect(variables).toContain('"Inter"')
+        })
+
+        it('font-face rules still use actual font-family name', () => {
+            const families = [makeFamily({ alias: 'sans' })]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+            ])
+
+            const { familyStyles } = generateFamilyStyles(families, filePathMap)
+
+            expect(familyStyles['sans']).toContain('font-family: "Inter"')
+        })
+
+        it('includes fallback in family CSS when optimizedFallbacks is true', () => {
+            const families = [makeFamily()]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+            ])
+            const fallbackMap = new Map([
+                ['inter', {
+                    fallbackFamily: 'Inter fallback',
+                    metrics: {
+                        localFont: 'Arial',
+                        ascentOverride: '90.00%',
+                        descentOverride: '22.00%',
+                        lineGapOverride: '0.00%',
+                        sizeAdjust: '100.00%',
+                    },
+                }],
+            ])
+
+            const { familyStyles } = generateFamilyStyles(families, filePathMap, fallbackMap)
+
+            expect(familyStyles['inter']).toContain('font-family: "Inter fallback"')
         })
     })
 })

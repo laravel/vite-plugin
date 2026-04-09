@@ -5,9 +5,12 @@ import type { ResolvedFontFamily } from '../src/fonts/types'
 function makeFamily(overrides?: Partial<ResolvedFontFamily>): ResolvedFontFamily {
     return {
         family: 'Inter',
+        alias: 'inter',
         variable: '--font-inter',
         display: 'swap',
-        fallback: true,
+        optimizedFallbacks: true,
+        fallbacks: [],
+        preload: true,
         provider: 'local',
         variants: [{
             weight: 400,

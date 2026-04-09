@@ -2,15 +2,14 @@ import fs from 'fs'
 import path from 'path'
 import { createRequire } from 'module'
 import { parseFontFaceCss } from '../css-parser.js'
-import { familyToVariable, familyToSlug } from '../config.js'
-import type { FontConfig, FontsourceProviderConfig, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant, FontStyle } from '../types.js'
+import { familyToSlug, buildResolvedFamily } from '../config.js'
+import type { FontDefinition, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant, FontStyle } from '../types.js'
 
-export function resolveFontsourceFont(
-    config: FontConfig,
+export function resolveFontsourceVariants(
+    definition: FontDefinition,
     projectRoot: string,
-): ResolvedFontFamily {
-    const provider = config.provider as FontsourceProviderConfig
-    const packageName = provider.package ?? `@fontsource/${familyToSlug(config.family)}`
+): ResolvedFontVariant[] {
+    const packageName = definition._fontsource?.package ?? `@fontsource/${familyToSlug(definition.family)}`
 
     let packageDir: string
     try {
@@ -25,9 +24,9 @@ export function resolveFontsourceFont(
         )
     }
 
-    const weights = config.weights ?? [400]
-    const styles = config.styles ?? ['normal']
-    const subsets = config.subsets ?? ['latin']
+    const weights = definition.weights
+    const styles = definition.styles
+    const subsets = definition.subsets
     const variants: ResolvedFontVariant[] = []
 
     for (const weight of weights) {
@@ -41,7 +40,7 @@ export function resolveFontsourceFont(
                 if (! fs.existsSync(cssFilePath)) {
                     throw new Error(
                         `laravel-vite-plugin: Fontsource CSS file not found: "${cssFileName}" ` +
-                        `in package "${packageName}" for font "${config.family}". ` +
+                        `in package "${packageName}" for font "${definition.family}". ` +
                         `Check that weight ${weight}, style "${style}", and subset "${subset}" are available.`
                     )
                 }
@@ -58,7 +57,7 @@ export function resolveFontsourceFont(
                         if (! fs.existsSync(absolutePath)) {
                             throw new Error(
                                 `laravel-vite-plugin: Font file referenced by Fontsource not found: "${absolutePath}" ` +
-                                `for font "${config.family}".`
+                                `for font "${definition.family}".`
                             )
                         }
 
@@ -82,17 +81,16 @@ export function resolveFontsourceFont(
     if (variants.length === 0) {
         throw new Error(
             `laravel-vite-plugin: No font variants resolved from Fontsource package "${packageName}" ` +
-            `for font "${config.family}".`
+            `for font "${definition.family}".`
         )
     }
 
-    return {
-        family: config.family,
-        variable: config.variable ?? familyToVariable(config.family),
-        tailwind: config.tailwind,
-        display: config.display ?? 'swap',
-        fallback: config.fallback ?? true,
-        provider: 'fontsource',
-        variants,
-    }
+    return variants
+}
+
+export function resolveFontsourceFont(
+    definition: FontDefinition,
+    projectRoot: string,
+): ResolvedFontFamily {
+    return buildResolvedFamily(definition, resolveFontsourceVariants(definition, projectRoot))
 }

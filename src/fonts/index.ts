@@ -1,15 +1,13 @@
-export { local } from './providers/local.js'
-export { google } from './providers/google.js'
-export { bunny } from './providers/bunny.js'
-export { fontsource } from './providers/fontsource.js'
+export { local, google, bunny, fontsource } from './providers/providers.js'
 
 export type {
-    FontConfig,
-    FontProviderConfig,
-    LocalProviderConfig,
-    GoogleProviderConfig,
-    BunnyProviderConfig,
-    FontsourceProviderConfig,
+    FontDefinition,
+    BaseFontOptions,
+    LocalFontOptions,
+    LocalVariantDefinition,
+    RemoteFontOptions,
+    FontsourceFontOptions,
+    PreloadSelector,
     FontProviderType,
     FontFormat,
     FontStyle,

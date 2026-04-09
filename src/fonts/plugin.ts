@@ -1,41 +1,41 @@
 import fs from 'fs'
 import path from 'path'
-import { validateFontsConfig, resolveLocalFonts, familyToSlug } from './config.js'
+import { validateFontsConfig, resolveLocalFont, familyToSlug } from './config.js'
 import { generateFontCss, generateFamilyStyles } from './css.js'
 import { buildManifest, buildDevManifest } from './manifest.js'
 import { resolveCacheDir } from './cache.js'
-import { resolveGoogleFont } from './providers/resolve-google.js'
-import { resolveBunnyFont } from './providers/resolve-bunny.js'
+import { resolveRemoteFont } from './providers/resolve-remote.js'
 import { resolveFontsourceFont } from './providers/resolve-fontsource.js'
 import { generateFallbackMetrics } from './fallback.js'
 import { buildDevUrlMap, createFontMiddleware } from './dev-server.js'
 import type { Plugin, ResolvedConfig } from 'vite'
-import type { FontConfig, ResolvedFontFamily, FallbackMetrics } from './types.js'
+import type { FontDefinition, ResolvedFontFamily, FallbackMetrics } from './types.js'
+
+const REMOTE_CSS_URLS: Record<string, string> = {
+    google: 'https://fonts.googleapis.com/css2',
+    bunny: 'https://fonts.bunny.net/css2',
+}
 
 let exitHandlersBound = false
 
 async function resolveFontFamilies(
-    fonts: FontConfig[],
+    fonts: FontDefinition[],
     projectRoot: string,
     cacheDir: string,
 ): Promise<ResolvedFontFamily[]> {
-    const families: ResolvedFontFamily[] = [
-        ...resolveLocalFonts(fonts, projectRoot),
-    ]
+    const families: ResolvedFontFamily[] = []
 
-    for (const config of fonts) {
-        switch (config.provider.type) {
+    for (const definition of fonts) {
+        switch (definition.provider) {
             case 'google':
-                families.push(await resolveGoogleFont(config, cacheDir))
-
-                break
             case 'bunny':
-                families.push(await resolveBunnyFont(config, cacheDir))
-
+                families.push(await resolveRemoteFont(definition, cacheDir, REMOTE_CSS_URLS[definition.provider]))
                 break
             case 'fontsource':
-                families.push(resolveFontsourceFont(config, projectRoot))
-
+                families.push(resolveFontsourceFont(definition, projectRoot))
+                break
+            case 'local':
+                families.push(resolveLocalFont(definition, projectRoot))
                 break
         }
     }
@@ -49,7 +49,7 @@ async function buildFallbackMap(
     const fallbackMap = new Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>()
 
     for (const family of families) {
-        if (! family.fallback) {
+        if (! family.optimizedFallbacks) {
             continue
         }
 
@@ -60,7 +60,7 @@ async function buildFallbackMap(
 
         const metrics = await generateFallbackMetrics(firstFile.source)
         if (metrics) {
-            fallbackMap.set(family.family, {
+            fallbackMap.set(family.alias, {
                 fallbackFamily: `${family.family} fallback`,
                 metrics,
             })
@@ -98,7 +98,7 @@ function emitFontAssets(
 }
 
 export function resolveFontsPlugin(
-    fonts: FontConfig[]|undefined,
+    fonts: FontDefinition[]|undefined,
     hotFile: string,
     buildDirectory: string,
 ): Plugin[] {
@@ -106,7 +106,7 @@ export function resolveFontsPlugin(
         return []
     }
 
-    validateFontsConfig(fonts)
+    const mergedFonts = validateFontsConfig(fonts)
 
     let resolvedConfig: ResolvedConfig
     let resolvedFamilies: ResolvedFontFamily[] = []
@@ -134,7 +134,7 @@ export function resolveFontsPlugin(
                 return
             }
 
-            resolvedFamilies = await resolveFontFamilies(fonts, resolvedConfig.root, cacheDir)
+            resolvedFamilies = await resolveFontFamilies(mergedFonts, resolvedConfig.root, cacheDir)
 
             if (resolvedFamilies.length === 0) {
                 return

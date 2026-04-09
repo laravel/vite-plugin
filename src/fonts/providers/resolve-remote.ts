@@ -1,7 +1,7 @@
 import { parseFontFaceCss } from '../css-parser.js'
 import { fetchTextAndCache, fetchAndCache, cacheKey } from '../cache.js'
-import { familyToVariable } from '../config.js'
-import type { FontConfig, FontProviderType, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant } from '../types.js'
+import { buildResolvedFamily } from '../config.js'
+import type { FontDefinition, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant } from '../types.js'
 
 const WOFF2_USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -13,10 +13,10 @@ function pickUserAgent(): string {
     return WOFF2_USER_AGENTS[Math.floor(Math.random() * WOFF2_USER_AGENTS.length)]
 }
 
-export function buildCss2Url(baseUrl: string, config: FontConfig): string {
-    const family = config.family.replace(/ /g, '+')
-    const weights = config.weights ?? [400]
-    const styles = config.styles ?? ['normal']
+export function buildCss2Url(baseUrl: string, definition: FontDefinition): string {
+    const family = definition.family.replace(/ /g, '+')
+    const weights = definition.weights
+    const styles = definition.styles
 
     const axes: string[] = []
     const tuples: string[] = []
@@ -45,21 +45,20 @@ export function buildCss2Url(baseUrl: string, config: FontConfig): string {
     const axisStr = axes.join(',')
     const tupleStr = tuples.join(';')
 
-    let url = `${baseUrl}?family=${family}:${axisStr}@${tupleStr}&display=${config.display ?? 'swap'}`
+    let url = `${baseUrl}?family=${family}:${axisStr}@${tupleStr}&display=${definition.display}`
 
-    const subsets = config.subsets ?? ['latin']
+    const subsets = definition.subsets
     url += `&subset=${subsets.join(',')}`
 
     return url
 }
 
-export async function resolveRemoteFont(
-    config: FontConfig,
+export async function resolveRemoteVariants(
+    definition: FontDefinition,
     cacheDir: string,
     baseUrl: string,
-    provider: FontProviderType,
-): Promise<ResolvedFontFamily> {
-    const url = buildCss2Url(baseUrl, config)
+): Promise<ResolvedFontVariant[]> {
+    const url = buildCss2Url(baseUrl, definition)
 
     const css = await fetchTextAndCache(url, cacheDir, {
         'User-Agent': pickUserAgent(),
@@ -69,7 +68,7 @@ export async function resolveRemoteFont(
 
     if (faces.length === 0) {
         throw new Error(
-            `laravel-vite-plugin: ${provider} returned no @font-face rules for "${config.family}". ` +
+            `laravel-vite-plugin: ${definition.provider} returned no @font-face rules for "${definition.family}". ` +
             `Check the family name and requested weights/styles.`
         )
     }
@@ -96,13 +95,15 @@ export async function resolveRemoteFont(
         })
     }
 
-    return {
-        family: config.family,
-        variable: config.variable ?? familyToVariable(config.family),
-        tailwind: config.tailwind,
-        display: config.display ?? 'swap',
-        fallback: config.fallback ?? true,
-        provider,
-        variants,
-    }
+    return variants
+}
+
+export async function resolveRemoteFont(
+    definition: FontDefinition,
+    cacheDir: string,
+    baseUrl: string,
+): Promise<ResolvedFontFamily> {
+    const variants = await resolveRemoteVariants(definition, cacheDir, baseUrl)
+
+    return buildResolvedFamily(definition, variants)
 }
