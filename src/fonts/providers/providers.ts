@@ -16,10 +16,14 @@ export function fontsource(family: string, options?: FontsourceFontOptions): Fon
 }
 
 export function local(family: string, options: LocalFontOptions): FontDefinition {
+    const _local: FontDefinition['_local'] = 'src' in options && options.src !== undefined
+        ? { src: options.src }
+        : { variants: options.variants! }
+
     return buildFontDefinition(family, 'local', options, {
         weights: [],
         styles: [],
         subsets: [],
-        _local: { variants: options.variants },
+        _local,
     })
 }

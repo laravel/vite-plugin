@@ -35,7 +35,7 @@ async function resolveFontFamilies(
                 families.push(resolveFontsourceFont(definition, projectRoot))
                 break
             case 'local':
-                families.push(resolveLocalFont(definition, projectRoot))
+                families.push(await resolveLocalFont(definition, projectRoot))
                 break
         }
     }
@@ -199,7 +199,7 @@ export function resolveFontsPlugin(
 
             server.httpServer?.once('listening', async () => {
                 try {
-                    resolvedFamilies = await resolveFontFamilies(fonts, projectRoot, cacheDir)
+                    resolvedFamilies = await resolveFontFamilies(mergedFonts, projectRoot, cacheDir)
 
                     if (resolvedFamilies.length === 0) {
                         return

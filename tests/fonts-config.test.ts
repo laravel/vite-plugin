@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import laravel from '../src'
 import { local, google, bunny, fontsource } from '../src/fonts/index'
-import { validateFontsConfig, validateFontDefinition, mergeFontDefinitions, familyToVariable, familyToSlug, aliasToVariable, inferFormat, resolveLocalFont } from '../src/fonts/config'
+import { validateFontsConfig, validateFontDefinition, mergeFontDefinitions, familyToVariable, familyToSlug, aliasToVariable, inferFormat, resolveLocalFont, inferWeightFromFilename, inferStyleFromFilename, inferLocalVariantFromFilename, looksLikeVariableFontFilename } from '../src/fonts/config'
 import type { FontDefinition } from '../src/fonts/types'
 import path from 'path'
+import fs from 'fs'
+import os from 'os'
 
 describe('fonts config', () => {
     describe('familyToVariable', () => {
@@ -392,14 +394,14 @@ describe('fonts config', () => {
     describe('resolveLocalFont', () => {
         const projectRoot = path.resolve(__dirname, '..')
 
-        it('resolves a single variant with one source file', () => {
+        it('resolves a single variant with one source file', async () => {
             const def = local('Test Font', {
                 variants: [
                     { src: 'tests/fixtures/fonts/test-font.woff2', weight: 400 },
                 ],
             })
 
-            const resolved = resolveLocalFont(def, projectRoot)
+            const resolved = await resolveLocalFont(def, projectRoot)
 
             expect(resolved.family).toBe('Test Font')
             expect(resolved.alias).toBe('test-font')
@@ -416,7 +418,7 @@ describe('fonts config', () => {
             expect(resolved.variants[0].files[0].format).toBe('woff2')
         })
 
-        it('resolves multiple variants with different weights', () => {
+        it('resolves multiple variants with different weights', async () => {
             const def = local('Test Font', {
                 variants: [
                     { src: 'tests/fixtures/fonts/test-font.woff2', weight: 400 },
@@ -424,48 +426,48 @@ describe('fonts config', () => {
                 ],
             })
 
-            const resolved = resolveLocalFont(def, projectRoot)
+            const resolved = await resolveLocalFont(def, projectRoot)
 
             expect(resolved.variants).toHaveLength(2)
             expect(resolved.variants[0].weight).toBe(400)
             expect(resolved.variants[1].weight).toBe(700)
         })
 
-        it('resolves a variant with multiple source formats', () => {
+        it('resolves a variant with multiple source formats', async () => {
             const def = local('Test Font', {
                 variants: [
                     { src: ['tests/fixtures/fonts/test-font.woff2', 'tests/fixtures/fonts/test-font.ttf'], weight: 400 },
                 ],
             })
 
-            const resolved = resolveLocalFont(def, projectRoot)
+            const resolved = await resolveLocalFont(def, projectRoot)
 
             expect(resolved.variants[0].files).toHaveLength(2)
             expect(resolved.variants[0].files[0].format).toBe('woff2')
             expect(resolved.variants[0].files[1].format).toBe('ttf')
         })
 
-        it('defaults variant style to normal when omitted', () => {
+        it('defaults variant style to normal when omitted', async () => {
             const def = local('Test Font', {
                 variants: [{ src: 'tests/fixtures/fonts/test-font.woff2', weight: 400 }],
             })
 
-            const resolved = resolveLocalFont(def, projectRoot)
+            const resolved = await resolveLocalFont(def, projectRoot)
 
             expect(resolved.variants[0].style).toBe('normal')
         })
 
-        it('uses explicit style from variant definition', () => {
+        it('uses explicit style from variant definition', async () => {
             const def = local('Test Font', {
                 variants: [{ src: 'tests/fixtures/fonts/test-font.woff2', weight: 400, style: 'italic' }],
             })
 
-            const resolved = resolveLocalFont(def, projectRoot)
+            const resolved = await resolveLocalFont(def, projectRoot)
 
             expect(resolved.variants[0].style).toBe('italic')
         })
 
-        it('does NOT create cartesian product -- variant count matches input', () => {
+        it('does NOT create cartesian product -- variant count matches input', async () => {
             const def = local('Test Font', {
                 variants: [
                     { src: 'tests/fixtures/fonts/test-font.woff2', weight: 400 },
@@ -474,12 +476,12 @@ describe('fonts config', () => {
                 ],
             })
 
-            const resolved = resolveLocalFont(def, projectRoot)
+            const resolved = await resolveLocalFont(def, projectRoot)
 
             expect(resolved.variants).toHaveLength(3)
         })
 
-        it('preserves alias, variable, tailwind from FontDefinition', () => {
+        it('preserves alias, variable, tailwind from FontDefinition', async () => {
             const def = local('Test Font', {
                 alias: 'body',
                 variable: '--font-body',
@@ -487,20 +489,413 @@ describe('fonts config', () => {
                 variants: [{ src: 'tests/fixtures/fonts/test-font.woff2', weight: 400 }],
             })
 
-            const resolved = resolveLocalFont(def, projectRoot)
+            const resolved = await resolveLocalFont(def, projectRoot)
 
             expect(resolved.alias).toBe('body')
             expect(resolved.variable).toBe('--font-body')
             expect(resolved.tailwind).toBe('sans')
         })
 
-        it('throws for missing local font file', () => {
+        it('throws for missing local font file', async () => {
             const def = local('Missing', {
                 variants: [{ src: 'fonts/does-not-exist.woff2', weight: 400 }],
             })
 
-            expect(() => resolveLocalFont(def, projectRoot))
-                .toThrowError('Local font file not found')
+            await expect(resolveLocalFont(def, projectRoot))
+                .rejects.toThrowError('Local font file not found')
+        })
+    })
+
+    describe('local() API shape', () => {
+        it('accepts shorthand src', () => {
+            const def = local('Inter', { src: 'fonts/inter' })
+            expect(def.provider).toBe('local')
+            expect(def._local).toEqual({ src: 'fonts/inter' })
+        })
+
+        it('accepts explicit variants', () => {
+            const def = local('Inter', {
+                variants: [{ src: 'fonts/Inter-Regular.woff2', weight: 400 }],
+            })
+            expect(def._local).toEqual({ variants: [{ src: 'fonts/Inter-Regular.woff2', weight: 400 }] })
+        })
+
+        it('allows variants with omitted weight', () => {
+            const def = local('Inter', {
+                variants: [{ src: 'fonts/Inter-Regular.woff2' }],
+            })
+            expect(def._local).toEqual({ variants: [{ src: 'fonts/Inter-Regular.woff2' }] })
+        })
+
+        it('rejects when neither src nor variants is provided via validation', () => {
+            const def: FontDefinition = {
+                family: 'Test',
+                alias: 'test',
+                provider: 'local',
+                variable: '--font-test',
+                weights: [],
+                styles: [],
+                subsets: [],
+                display: 'swap',
+                preload: true,
+                fallbacks: [],
+                optimizedFallbacks: true,
+                _local: undefined,
+            }
+            expect(() => validateFontDefinition(def)).toThrowError('must specify either "src" or "variants"')
+        })
+
+        it('rejects empty src string via validation', () => {
+            const def: FontDefinition = {
+                family: 'Test',
+                alias: 'test',
+                provider: 'local',
+                variable: '--font-test',
+                weights: [],
+                styles: [],
+                subsets: [],
+                display: 'swap',
+                preload: true,
+                fallbacks: [],
+                optimizedFallbacks: true,
+                _local: { src: '  ' },
+            }
+            expect(() => validateFontDefinition(def)).toThrowError('invalid or empty "src"')
+        })
+    })
+
+    describe('inferWeightFromFilename', () => {
+        it('infers Regular as 400', () => {
+            expect(inferWeightFromFilename('Inter-Regular.woff2')).toBe(400)
+        })
+
+        it('infers Bold as 700', () => {
+            expect(inferWeightFromFilename('Inter-Bold.woff2')).toBe(700)
+        })
+
+        it('infers Light as 300', () => {
+            expect(inferWeightFromFilename('Inter-Light.woff2')).toBe(300)
+        })
+
+        it('infers Thin as 100', () => {
+            expect(inferWeightFromFilename('Inter-Thin.woff2')).toBe(100)
+        })
+
+        it('infers ExtraLight as 200', () => {
+            expect(inferWeightFromFilename('Inter-ExtraLight.woff2')).toBe(200)
+        })
+
+        it('infers UltraLight as 200', () => {
+            expect(inferWeightFromFilename('Inter-UltraLight.woff2')).toBe(200)
+        })
+
+        it('infers Medium as 500', () => {
+            expect(inferWeightFromFilename('Inter-Medium.woff2')).toBe(500)
+        })
+
+        it('infers SemiBold as 600', () => {
+            expect(inferWeightFromFilename('Inter-SemiBold.woff2')).toBe(600)
+        })
+
+        it('infers DemiBold as 600', () => {
+            expect(inferWeightFromFilename('Inter-DemiBold.woff2')).toBe(600)
+        })
+
+        it('infers ExtraBold as 800', () => {
+            expect(inferWeightFromFilename('Inter-ExtraBold.woff2')).toBe(800)
+        })
+
+        it('infers UltraBold as 800', () => {
+            expect(inferWeightFromFilename('Inter-UltraBold.woff2')).toBe(800)
+        })
+
+        it('infers Black as 900', () => {
+            expect(inferWeightFromFilename('Inter-Black.woff2')).toBe(900)
+        })
+
+        it('infers Heavy as 900', () => {
+            expect(inferWeightFromFilename('Inter-Heavy.woff2')).toBe(900)
+        })
+
+        it('infers Hairline as 100', () => {
+            expect(inferWeightFromFilename('Inter-Hairline.woff2')).toBe(100)
+        })
+
+        it('infers numeric weight 500', () => {
+            expect(inferWeightFromFilename('Inter-500.woff2')).toBe(500)
+        })
+
+        it('infers numeric weight 100', () => {
+            expect(inferWeightFromFilename('Inter-100.woff2')).toBe(100)
+        })
+
+        it('defaults to 400 when no weight token', () => {
+            expect(inferWeightFromFilename('Inter.woff2')).toBe(400)
+        })
+
+        it('extracts weight from SemiBoldItalic combined token', () => {
+            expect(inferWeightFromFilename('Inter-SemiBoldItalic.woff2')).toBe(600)
+        })
+
+        it('extracts weight from LightItalic combined token', () => {
+            expect(inferWeightFromFilename('Inter-LightItalic.woff2')).toBe(300)
+        })
+
+        it('uses last match — MyBoldFont-Regular.woff2 resolves to Regular', () => {
+            expect(inferWeightFromFilename('MyBoldFont-Regular.woff2')).toBe(400)
+        })
+
+        it('handles underscore separators', () => {
+            expect(inferWeightFromFilename('Inter_Bold.woff2')).toBe(700)
+        })
+
+        it('handles camelCase boundaries', () => {
+            expect(inferWeightFromFilename('InterBold.woff2')).toBe(700)
+        })
+
+        it('is case-insensitive', () => {
+            expect(inferWeightFromFilename('Inter-bold.woff2')).toBe(700)
+            expect(inferWeightFromFilename('Inter-BOLD.woff2')).toBe(700)
+        })
+    })
+
+    describe('inferStyleFromFilename', () => {
+        it('infers Italic as italic', () => {
+            expect(inferStyleFromFilename('Inter-Italic.woff2')).toBe('italic')
+        })
+
+        it('infers It as italic', () => {
+            expect(inferStyleFromFilename('Inter-It.woff2')).toBe('italic')
+        })
+
+        it('infers Oblique as oblique', () => {
+            expect(inferStyleFromFilename('Inter-Oblique.woff2')).toBe('oblique')
+        })
+
+        it('defaults to normal when no style token', () => {
+            expect(inferStyleFromFilename('Inter-Regular.woff2')).toBe('normal')
+        })
+
+        it('infers italic from SemiBoldItalic combined token', () => {
+            expect(inferStyleFromFilename('Inter-SemiBoldItalic.woff2')).toBe('italic')
+        })
+
+        it('infers italic from LightItalic combined token', () => {
+            expect(inferStyleFromFilename('Inter-LightItalic.woff2')).toBe('italic')
+        })
+
+        it('is case-insensitive', () => {
+            expect(inferStyleFromFilename('Inter-italic.woff2')).toBe('italic')
+        })
+    })
+
+    describe('inferLocalVariantFromFilename', () => {
+        it('returns both weight and style', () => {
+            expect(inferLocalVariantFromFilename('Inter-SemiBoldItalic.woff2')).toEqual({
+                weight: 600,
+                style: 'italic',
+            })
+        })
+
+        it('defaults to 400 normal for plain filename', () => {
+            expect(inferLocalVariantFromFilename('Inter.woff2')).toEqual({
+                weight: 400,
+                style: 'normal',
+            })
+        })
+    })
+
+    describe('looksLikeVariableFontFilename', () => {
+        it('detects [wght] axis notation', () => {
+            expect(looksLikeVariableFontFilename('Inter[wght].woff2')).toBe(true)
+        })
+
+        it('detects [wght,ital] axis notation', () => {
+            expect(looksLikeVariableFontFilename('Inter[wght,ital].woff2')).toBe(true)
+        })
+
+        it('returns false for normal filenames', () => {
+            expect(looksLikeVariableFontFilename('Inter-Regular.woff2')).toBe(false)
+        })
+    })
+
+    describe('resolveLocalFont with inferred weight', () => {
+        const projectRoot = path.resolve(__dirname, '..')
+
+        it('infers weight from filename when omitted in explicit variant', async () => {
+            const def = local('Test Font', {
+                variants: [{ src: 'tests/fixtures/fonts/test-font.woff2' }],
+            })
+
+            const resolved = await resolveLocalFont(def, projectRoot)
+            expect(resolved.variants[0].weight).toBe(400)
+            expect(resolved.variants[0].style).toBe('normal')
+        })
+
+        it('explicit weight overrides inferred value', async () => {
+            const def = local('Test Font', {
+                variants: [{ src: 'tests/fixtures/fonts/test-font.woff2', weight: 700 }],
+            })
+
+            const resolved = await resolveLocalFont(def, projectRoot)
+            expect(resolved.variants[0].weight).toBe(700)
+        })
+
+        it('explicit style overrides inferred value', async () => {
+            const def = local('Test Font', {
+                variants: [{ src: 'tests/fixtures/fonts/test-font.woff2', style: 'italic' }],
+            })
+
+            const resolved = await resolveLocalFont(def, projectRoot)
+            expect(resolved.variants[0].style).toBe('italic')
+        })
+    })
+
+    describe('resolveLocalFont shorthand', () => {
+        const projectRoot = path.resolve(__dirname, '..')
+        const fixtureFont = path.resolve(__dirname, 'fixtures/fonts/test-font.woff2')
+        const fixtureTtf = path.resolve(__dirname, 'fixtures/fonts/test-font.ttf')
+        let tmpDir: string
+
+        function createTmpDir(): string {
+            const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-font-test-'))
+            return dir
+        }
+
+        function copyFixture(dest: string, source: string = fixtureFont): void {
+            const dir = path.dirname(dest)
+            if (! fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true })
+            }
+            fs.copyFileSync(source, dest)
+        }
+
+        function cleanup(dir: string): void {
+            fs.rmSync(dir, { recursive: true, force: true })
+        }
+
+        it('single-file shorthand creates one resolved variant', async () => {
+            tmpDir = createTmpDir()
+            const fontFile = path.join(tmpDir, 'Inter-Bold.woff2')
+            copyFixture(fontFile)
+
+            const def = local('Inter', { src: fontFile })
+            const resolved = await resolveLocalFont(def, projectRoot)
+
+            expect(resolved.variants).toHaveLength(1)
+            expect(resolved.variants[0].weight).toBe(700)
+            expect(resolved.variants[0].style).toBe('normal')
+            expect(resolved.variants[0].files).toHaveLength(1)
+            expect(resolved.variants[0].files[0].format).toBe('woff2')
+            cleanup(tmpDir)
+        })
+
+        it('directory shorthand discovers files recursively', async () => {
+            tmpDir = createTmpDir()
+            const fontsDir = path.join(tmpDir, 'inter')
+            copyFixture(path.join(fontsDir, 'Inter-Regular.woff2'))
+            copyFixture(path.join(fontsDir, 'Inter-Bold.woff2'))
+            copyFixture(path.join(fontsDir, 'sub', 'Inter-Light.woff2'))
+
+            const def = local('Inter', { src: fontsDir })
+            const resolved = await resolveLocalFont(def, projectRoot)
+
+            expect(resolved.variants).toHaveLength(3)
+            expect(resolved.variants[0].weight).toBe(300)
+            expect(resolved.variants[1].weight).toBe(400)
+            expect(resolved.variants[2].weight).toBe(700)
+            cleanup(tmpDir)
+        })
+
+        it('glob shorthand filters results', async () => {
+            tmpDir = createTmpDir()
+            const fontsDir = path.join(tmpDir, 'inter')
+            copyFixture(path.join(fontsDir, 'Inter-Regular.woff2'))
+            copyFixture(path.join(fontsDir, 'Inter-Bold.ttf'), fixtureTtf)
+
+            const def = local('Inter', { src: path.join(fontsDir, '*.woff2') })
+            const resolved = await resolveLocalFont(def, projectRoot)
+
+            expect(resolved.variants).toHaveLength(1)
+            expect(resolved.variants[0].weight).toBe(400)
+            expect(resolved.variants[0].files[0].format).toBe('woff2')
+            cleanup(tmpDir)
+        })
+
+        it('groups same weight/style files into one multi-format variant', async () => {
+            tmpDir = createTmpDir()
+            const fontsDir = path.join(tmpDir, 'inter')
+            copyFixture(path.join(fontsDir, 'Inter-Regular.woff2'))
+            copyFixture(path.join(fontsDir, 'Inter-Regular.ttf'), fixtureTtf)
+
+            const def = local('Inter', { src: fontsDir })
+            const resolved = await resolveLocalFont(def, projectRoot)
+
+            expect(resolved.variants).toHaveLength(1)
+            expect(resolved.variants[0].weight).toBe(400)
+            expect(resolved.variants[0].files).toHaveLength(2)
+            expect(resolved.variants[0].files[0].format).toBe('woff2')
+            expect(resolved.variants[0].files[1].format).toBe('ttf')
+            cleanup(tmpDir)
+        })
+
+        it('output is sorted deterministically by weight then style', async () => {
+            tmpDir = createTmpDir()
+            const fontsDir = path.join(tmpDir, 'inter')
+            copyFixture(path.join(fontsDir, 'Inter-BoldItalic.woff2'))
+            copyFixture(path.join(fontsDir, 'Inter-Bold.woff2'))
+            copyFixture(path.join(fontsDir, 'Inter-Regular.woff2'))
+            copyFixture(path.join(fontsDir, 'Inter-LightItalic.woff2'))
+
+            const def = local('Inter', { src: fontsDir })
+            const resolved = await resolveLocalFont(def, projectRoot)
+
+            expect(resolved.variants).toHaveLength(4)
+            expect(resolved.variants[0]).toMatchObject({ weight: 300, style: 'italic' })
+            expect(resolved.variants[1]).toMatchObject({ weight: 400, style: 'normal' })
+            expect(resolved.variants[2]).toMatchObject({ weight: 700, style: 'italic' })
+            expect(resolved.variants[3]).toMatchObject({ weight: 700, style: 'normal' })
+            cleanup(tmpDir)
+        })
+
+        it('throws for shorthand path that does not exist', async () => {
+            const def = local('Inter', { src: '/does/not/exist/fonts' })
+            await expect(resolveLocalFont(def, projectRoot))
+                .rejects.toThrowError('does not exist')
+        })
+
+        it('throws for glob with zero matches', async () => {
+            tmpDir = createTmpDir()
+            const fontsDir = path.join(tmpDir, 'empty')
+            fs.mkdirSync(fontsDir, { recursive: true })
+
+            const def = local('Inter', { src: path.join(fontsDir, '*.woff2') })
+            await expect(resolveLocalFont(def, projectRoot))
+                .rejects.toThrowError('matched no supported font files')
+            cleanup(tmpDir)
+        })
+
+        it('throws for directory with no supported font files', async () => {
+            tmpDir = createTmpDir()
+            const fontsDir = path.join(tmpDir, 'nope')
+            fs.mkdirSync(fontsDir, { recursive: true })
+            fs.writeFileSync(path.join(fontsDir, 'readme.txt'), 'not a font')
+
+            const def = local('Inter', { src: fontsDir })
+            await expect(resolveLocalFont(def, projectRoot))
+                .rejects.toThrowError('contains no supported font files')
+            cleanup(tmpDir)
+        })
+
+        it('throws for variable font filename in shorthand', async () => {
+            tmpDir = createTmpDir()
+            const fontsDir = path.join(tmpDir, 'inter')
+            copyFixture(path.join(fontsDir, 'Inter[wght].woff2'))
+
+            const def = local('Inter', { src: fontsDir })
+            await expect(resolveLocalFont(def, projectRoot))
+                .rejects.toThrowError('Variable fonts require explicit "variants"')
+            cleanup(tmpDir)
         })
     })
 

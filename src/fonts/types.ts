@@ -57,14 +57,27 @@ export type BaseFontOptions = {
 export type LocalVariantDefinition = {
     /** Path(s) relative to the project root. */
     src: string | string[]
-    weight: FontWeight
-    /** @default 'normal' */
+    /** When omitted, inferred from filename. Defaults to 400 if no token found. */
+    weight?: FontWeight
+    /** @default 'normal' — inferred from filename when omitted. */
     style?: FontStyle
 }
 
-export type LocalFontOptions = Omit<BaseFontOptions, 'weights' | 'styles' | 'subsets'> & {
-    variants: LocalVariantDefinition[]
-}
+export type LocalFontOptions = Omit<BaseFontOptions, 'weights' | 'styles' | 'subsets'> & (
+    | {
+        /** Explicit list of font variants. Mutually exclusive with `src`. */
+        variants: LocalVariantDefinition[]
+        src?: never
+    }
+    | {
+        /**
+         * Shorthand: a file path, directory, or glob pattern.
+         * Mutually exclusive with `variants`.
+         */
+        src: string
+        variants?: never
+    }
+)
 
 export type RemoteFontOptions = BaseFontOptions
 
@@ -87,7 +100,7 @@ export type FontDefinition = {
     fallbacks: string[]
     optimizedFallbacks: boolean
     /** @internal */
-    _local?: { variants: LocalVariantDefinition[] }
+    _local?: { variants: LocalVariantDefinition[] } | { src: string }
     /** @internal */
     _fontsource?: { package?: string }
 }

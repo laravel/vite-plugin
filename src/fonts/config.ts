@@ -1,10 +1,14 @@
 import path from 'path'
 import fs from 'fs'
+import { glob } from 'tinyglobby'
 import type {
     BaseFontOptions,
     FontDefinition,
     FontFormat,
     FontProviderType,
+    FontStyle,
+    FontWeight,
+    LocalVariantDefinition,
     ResolvedFontFamily,
     ResolvedFontFile,
     ResolvedFontVariant,
@@ -19,6 +23,204 @@ const FORMAT_MAP: Record<string, FontFormat> = {
 }
 
 const SUPPORTED_EXTENSIONS = Object.keys(FORMAT_MAP)
+
+const SUPPORTED_GLOB = `*.{${Object.values(FORMAT_MAP).map((_, i) => Object.keys(FORMAT_MAP)[i].slice(1)).join(',')}}`
+
+const DEFAULT_WEIGHT = 400
+const DEFAULT_STYLE: FontStyle = 'normal'
+
+const WEIGHT_PATTERNS: [string, number][] = [
+    ['extrabold', 800],
+    ['ultrabold', 800],
+    ['semibold', 600],
+    ['demibold', 600],
+    ['extralight', 200],
+    ['ultralight', 200],
+    ['hairline', 100],
+    ['thin', 100],
+    ['light', 300],
+    ['regular', 400],
+    ['normal', 400],
+    ['medium', 500],
+    ['black', 900],
+    ['heavy', 900],
+    ['bold', 700],
+]
+
+const FORMAT_PREFERENCE: FontFormat[] = ['woff2', 'woff', 'ttf', 'otf', 'eot']
+
+function splitStem(stem: string): string[] {
+    return stem.split(/[-_]/).filter(Boolean)
+}
+
+function stripStyleSuffix(segment: string): string {
+    return segment.replace(/(?:italic|it|oblique)$/i, '')
+}
+
+export function inferWeightFromFilename(filePath: string): FontWeight {
+    const stem = path.basename(filePath, path.extname(filePath))
+    const segments = splitStem(stem)
+
+    for (let i = segments.length - 1; i >= 0; i--) {
+        const raw = segments[i]
+        const stripped = stripStyleSuffix(raw)
+        const candidate = stripped || raw
+        const lc = candidate.toLowerCase()
+
+        for (const [pattern, weight] of WEIGHT_PATTERNS) {
+            if (lc === pattern) {
+                return weight
+            }
+        }
+
+        for (const [pattern, weight] of WEIGHT_PATTERNS) {
+            if (lc.length > pattern.length && lc.endsWith(pattern)) {
+                return weight
+            }
+        }
+
+        const numMatch = candidate.match(/(?:^|[^\d])([1-9]00)$/)
+        if (numMatch) {
+            return parseInt(numMatch[1], 10)
+        }
+    }
+
+    return DEFAULT_WEIGHT
+}
+
+export function inferStyleFromFilename(filePath: string): FontStyle {
+    const stem = path.basename(filePath, path.extname(filePath))
+    const segments = splitStem(stem)
+
+    for (let i = segments.length - 1; i >= 0; i--) {
+        const seg = segments[i]
+        const lc = seg.toLowerCase()
+
+        switch (true) {
+            case lc === 'italic' || lc === 'it':
+            case /italic$/i.test(seg):
+            case /it$/i.test(seg) && seg.length > 2:
+                return 'italic'
+            case lc === 'oblique':
+            case /oblique$/i.test(seg):
+                return 'oblique'
+        }
+    }
+
+    return DEFAULT_STYLE
+}
+
+export function inferLocalVariantFromFilename(filePath: string): { weight: FontWeight, style: FontStyle } {
+    return {
+        weight: inferWeightFromFilename(filePath),
+        style: inferStyleFromFilename(filePath),
+    }
+}
+
+export function looksLikeVariableFontFilename(filePath: string): boolean {
+    const stem = path.basename(filePath, path.extname(filePath))
+    return /\[.+\]/.test(stem)
+}
+
+async function discoverFromGlob(family: string, src: string, projectRoot: string): Promise<string[]> {
+    const files = await glob(src, { cwd: projectRoot, absolute: true })
+    const supported = files.filter(f => SUPPORTED_EXTENSIONS.includes(path.extname(f).toLowerCase()))
+
+    if (supported.length === 0) {
+        throw new Error(
+            `laravel-vite-plugin: Local font "${family}" shorthand src "${src}" matched no supported font files.`
+        )
+    }
+
+    return supported
+}
+
+async function discoverFromDirectory(family: string, src: string, absoluteSrc: string): Promise<string[]> {
+    const files = await glob(`**/${SUPPORTED_GLOB}`, { cwd: absoluteSrc, absolute: true })
+
+    if (files.length === 0) {
+        throw new Error(
+            `laravel-vite-plugin: Local font "${family}" directory "${src}" contains no supported font files.`
+        )
+    }
+
+    return files
+}
+
+async function discoverFontFiles(family: string, src: string, projectRoot: string): Promise<string[]> {
+    const absoluteSrc = path.isAbsolute(src) ? src : path.resolve(projectRoot, src)
+
+    if (/[*?{]/.test(src)) {
+        return discoverFromGlob(family, src, projectRoot)
+    }
+
+    if (fs.existsSync(absoluteSrc) && fs.statSync(absoluteSrc).isDirectory()) {
+        return discoverFromDirectory(family, src, absoluteSrc)
+    }
+
+    if (fs.existsSync(absoluteSrc) && fs.statSync(absoluteSrc).isFile()) {
+        return [absoluteSrc]
+    }
+
+    throw new Error(
+        `laravel-vite-plugin: Local font "${family}" shorthand src "${src}" ` +
+        `does not exist (resolved to "${absoluteSrc}").`
+    )
+}
+
+function rejectVariableFontFiles(family: string, files: string[]): void {
+    for (const file of files) {
+        if (looksLikeVariableFontFilename(file)) {
+            throw new Error(
+                `laravel-vite-plugin: Local font "${family}" shorthand discovered a variable font file "${path.basename(file)}". ` +
+                `Variable fonts require explicit "variants" with a weight range instead of shorthand "src".`
+            )
+        }
+    }
+}
+
+function groupFilesByVariant(files: string[]): ResolvedFontVariant[] {
+    const groups = new Map<string, { weight: FontWeight, style: FontStyle, files: ResolvedFontFile[] }>()
+
+    for (const file of files) {
+        const { weight, style } = inferLocalVariantFromFilename(file)
+        const key = `${weight}:${style}`
+
+        if (! groups.has(key)) {
+            groups.set(key, { weight, style, files: [] })
+        }
+
+        groups.get(key)!.files.push({
+            source: file,
+            format: inferFormat(file),
+        })
+    }
+
+    for (const group of groups.values()) {
+        group.files.sort((a, b) =>
+            FORMAT_PREFERENCE.indexOf(a.format) - FORMAT_PREFERENCE.indexOf(b.format)
+        )
+    }
+
+    return Array.from(groups.values()).sort((a, b) => {
+        const wA = typeof a.weight === 'number' ? a.weight : parseInt(String(a.weight), 10)
+        const wB = typeof b.weight === 'number' ? b.weight : parseInt(String(b.weight), 10)
+        if (wA !== wB) return wA - wB
+        return a.style.localeCompare(b.style)
+    })
+}
+
+export async function resolveLocalShorthandVariants(
+    definition: FontDefinition,
+    localConfig: { src: string },
+    projectRoot: string,
+): Promise<ResolvedFontVariant[]> {
+    const discoveredFiles = await discoverFontFiles(definition.family, localConfig.src, projectRoot)
+    discoveredFiles.sort()
+    rejectVariableFontFiles(definition.family, discoveredFiles)
+
+    return groupFilesByVariant(discoveredFiles)
+}
 
 export function familyToVariable(family: string): string {
     return '--font-' + family.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -102,21 +304,46 @@ export function validateFontDefinition(definition: FontDefinition): void {
         throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid variable name.`)
     }
 
-    if (definition.provider === 'local') {
-        const variants = definition._local?.variants
-        if (! variants || variants.length === 0) {
+    if (definition.provider !== 'local') {
+        return
+    }
+
+    const localConfig = definition._local
+    if (! localConfig) {
+        throw new Error(
+            `laravel-vite-plugin: Local font "${definition.family}" must specify either "src" or "variants".`
+        )
+    }
+
+    if ('src' in localConfig && 'variants' in localConfig) {
+        throw new Error(
+            `laravel-vite-plugin: Local font "${definition.family}" cannot specify both "src" and "variants".`
+        )
+    }
+
+    if ('src' in localConfig) {
+        if (typeof localConfig.src !== 'string' || localConfig.src.trim() === '') {
             throw new Error(
-                `laravel-vite-plugin: Local font "${definition.family}" must specify at least one variant.`
+                `laravel-vite-plugin: Local font "${definition.family}" has an invalid or empty "src".`
             )
         }
 
-        for (const v of variants) {
-            const sources = Array.isArray(v.src) ? v.src : [v.src]
-            if (sources.length === 0 || sources.some(s => typeof s !== 'string' || s.trim() === '')) {
-                throw new Error(
-                    `laravel-vite-plugin: Local font "${definition.family}" has a variant with an invalid or empty src.`
-                )
-            }
+        return
+    }
+
+    const variants = localConfig.variants
+    if (! variants || variants.length === 0) {
+        throw new Error(
+            `laravel-vite-plugin: Local font "${definition.family}" must specify at least one variant.`
+        )
+    }
+
+    for (const v of variants) {
+        const sources = Array.isArray(v.src) ? v.src : [v.src]
+        if (sources.length === 0 || sources.some(s => typeof s !== 'string' || s.trim() === '')) {
+            throw new Error(
+                `laravel-vite-plugin: Local font "${definition.family}" has a variant with an invalid or empty src.`
+            )
         }
     }
 }
@@ -131,7 +358,9 @@ export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] 
         if (! existing) {
             const clone = { ...font }
             if (font._local) {
-                clone._local = { variants: [...font._local.variants] }
+                clone._local = 'variants' in font._local
+                    ? { variants: [...font._local.variants] }
+                    : { ...font._local }
             }
             byAlias.set(font.alias, clone)
             result.push(clone)
@@ -199,7 +428,9 @@ export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] 
         }
 
         if (existing._local && font._local) {
-            existing._local.variants.push(...font._local.variants)
+            if ('variants' in existing._local && 'variants' in font._local) {
+                existing._local.variants.push(...font._local.variants)
+            }
         }
     }
 
@@ -234,8 +465,7 @@ export function validateFontsConfig(fonts: FontDefinition[]): FontDefinition[] {
     return merged
 }
 
-export function resolveLocalVariants(definition: FontDefinition, projectRoot: string): ResolvedFontVariant[] {
-    const localConfig = definition._local!
+export function resolveLocalExplicitVariants(definition: FontDefinition, localConfig: { variants: LocalVariantDefinition[] }, projectRoot: string): ResolvedFontVariant[] {
     const variants: ResolvedFontVariant[] = []
 
     for (const v of localConfig.variants) {
@@ -258,9 +488,12 @@ export function resolveLocalVariants(definition: FontDefinition, projectRoot: st
             })
         }
 
+        const firstSrc = Array.isArray(v.src) ? v.src[0] : v.src
+        const inferred = inferLocalVariantFromFilename(firstSrc)
+
         variants.push({
-            weight: v.weight,
-            style: v.style ?? 'normal',
+            weight: v.weight ?? inferred.weight,
+            style: v.style ?? inferred.style,
             files,
         })
     }
@@ -268,6 +501,14 @@ export function resolveLocalVariants(definition: FontDefinition, projectRoot: st
     return variants
 }
 
-export function resolveLocalFont(definition: FontDefinition, projectRoot: string): ResolvedFontFamily {
-    return buildResolvedFamily(definition, resolveLocalVariants(definition, projectRoot))
+export async function resolveLocalVariants(definition: FontDefinition, projectRoot: string): Promise<ResolvedFontVariant[]> {
+    const localConfig = definition._local!
+
+    return 'variants' in localConfig
+        ? resolveLocalExplicitVariants(definition, localConfig, projectRoot)
+        : resolveLocalShorthandVariants(definition, localConfig, projectRoot)
+}
+
+export async function resolveLocalFont(definition: FontDefinition, projectRoot: string): Promise<ResolvedFontFamily> {
+    return buildResolvedFamily(definition, await resolveLocalVariants(definition, projectRoot))
 }
