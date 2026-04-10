@@ -31,12 +31,15 @@ async function resolveFontFamilies(
             case 'google':
             case 'bunny':
                 families.push(await resolveRemoteFont(definition, cacheDir, REMOTE_CSS_URLS[definition.provider]))
+
                 break
             case 'fontsource':
                 families.push(resolveFontsourceFont(definition, projectRoot))
+
                 break
             case 'local':
                 families.push(await resolveLocalFont(definition, projectRoot))
+
                 break
         }
     }

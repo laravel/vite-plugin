@@ -125,6 +125,7 @@ export function inferLocalVariantFromFilename(filePath: string): { weight: FontW
 
 export function looksLikeVariableFontFilename(filePath: string): boolean {
     const stem = path.basename(filePath, path.extname(filePath))
+
     return /\[.+\]/.test(stem)
 }
 
@@ -212,6 +213,7 @@ function groupFilesByVariant(files: string[]): ResolvedFontVariant[] {
         const wA = typeof a.weight === 'number' ? a.weight : parseInt(String(a.weight), 10)
         const wB = typeof b.weight === 'number' ? b.weight : parseInt(String(b.weight), 10)
         if (wA !== wB) return wA - wB
+
         return a.style.localeCompare(b.style)
     })
 }

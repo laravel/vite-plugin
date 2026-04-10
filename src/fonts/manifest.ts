@@ -17,13 +17,17 @@ function shouldPreload(
     family: ResolvedFontFamily,
     variant: ResolvedFontVariant,
 ): boolean {
-    switch (family.preload) {
-        case false: return false
-        case true: return true
-        default: return family.preload.some(
-            sel => String(sel.weight) === String(variant.weight) && sel.style === variant.style
-        )
+    if (family.preload === false) {
+        return false
     }
+
+    if (family.preload === true) {
+        return true
+    }
+
+    return family.preload.some(
+        sel => String(sel.weight) === String(variant.weight) && sel.style === variant.style
+    )
 }
 
 function resolveEntries(
