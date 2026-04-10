@@ -16,7 +16,8 @@ const REMOTE_CSS_URLS: Record<string, string> = {
     bunny: 'https://fonts.bunny.net/css2',
 }
 
-let exitHandlersBound = false
+const activeManifestPaths = new Set<string>()
+let cleanupBound = false
 
 async function resolveFontFamilies(
     fonts: FontDefinition[],
@@ -228,19 +229,22 @@ export function resolveFontsPlugin(
                 }
             })
 
-            if (! exitHandlersBound) {
-                const clean = () => {
-                    if (fs.existsSync(hotManifestPath)) {
-                        fs.rmSync(hotManifestPath)
+            activeManifestPaths.add(hotManifestPath)
+
+            if (! cleanupBound) {
+                process.on('exit', () => {
+                    for (const p of activeManifestPaths) {
+                        try {
+                            if (fs.existsSync(p)) {
+                                fs.rmSync(p)
+                            }
+                        } catch {
+                            // Best-effort cleanup
+                        }
                     }
-                }
+                })
 
-                process.on('exit', clean)
-                process.on('SIGINT', () => process.exit())
-                process.on('SIGTERM', () => process.exit())
-                process.on('SIGHUP', () => process.exit())
-
-                exitHandlersBound = true
+                cleanupBound = true
             }
         },
     }]

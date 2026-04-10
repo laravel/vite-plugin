@@ -35,6 +35,18 @@ export function writeCache(cacheDir: string, key: string, data: Buffer|string): 
     fs.writeFileSync(filePath, data)
 }
 
+async function fetchOrThrow(url: string, headers?: Record<string, string>): Promise<Response> {
+    const response = await fetch(url, { headers })
+
+    if (! response.ok) {
+        throw new Error(
+            `laravel-vite-plugin: Failed to fetch "${url}": ${response.status} ${response.statusText}`
+        )
+    }
+
+    return response
+}
+
 export async function fetchAndCache(
     url: string,
     cacheDir: string,
@@ -47,14 +59,7 @@ export async function fetchAndCache(
         return cached
     }
 
-    const response = await fetch(url, { headers })
-
-    if (! response.ok) {
-        throw new Error(
-            `laravel-vite-plugin: Failed to fetch "${url}": ${response.status} ${response.statusText}`
-        )
-    }
-
+    const response = await fetchOrThrow(url, headers)
     const buffer = Buffer.from(await response.arrayBuffer())
     writeCache(cacheDir, key, buffer)
 
@@ -73,14 +78,7 @@ export async function fetchTextAndCache(
         return cached
     }
 
-    const response = await fetch(url, { headers })
-
-    if (! response.ok) {
-        throw new Error(
-            `laravel-vite-plugin: Failed to fetch "${url}": ${response.status} ${response.statusText}`
-        )
-    }
-
+    const response = await fetchOrThrow(url, headers)
     const text = await response.text()
     writeCache(cacheDir, key, text)
 

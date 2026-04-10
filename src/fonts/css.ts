@@ -21,24 +21,27 @@ export function generateFontFace(
     const rules: string[] = []
 
     for (const variant of family.variants) {
-        if (variant.files.some(f => f.unicodeRange)) {
-            for (const file of variant.files) {
-                if (file.unicodeRange) {
-                    const fileSrc = `url("${filePathMap.get(file.source) ?? file.source}") format("${file.format}")`
-                    rules.push([
-                        '@font-face {',
-                        `  font-family: "${family.family}";`,
-                        `  font-style: ${variant.style};`,
-                        `  font-weight: ${formatWeight(variant.weight)};`,
-                        `  font-display: ${family.display};`,
-                        `  src: ${fileSrc};`,
-                        `  unicode-range: ${file.unicodeRange};`,
-                        '}',
-                    ].join('\n'))
-                }
-            }
-        } else {
-            const src = generateSrc(variant.files, filePathMap)
+        const rangedFiles = variant.files.filter(f => f.unicodeRange)
+        const nonRangedFiles = variant.files.filter(f => ! f.unicodeRange)
+
+        for (const file of rangedFiles) {
+            const fileSrc = `url("${filePathMap.get(file.source) ?? file.source}") format("${file.format}")`
+
+            rules.push([
+                '@font-face {',
+                `  font-family: "${family.family}";`,
+                `  font-style: ${variant.style};`,
+                `  font-weight: ${formatWeight(variant.weight)};`,
+                `  font-display: ${family.display};`,
+                `  src: ${fileSrc};`,
+                `  unicode-range: ${file.unicodeRange};`,
+                '}',
+            ].join('\n'))
+        }
+
+        if (nonRangedFiles.length > 0) {
+            const src = generateSrc(nonRangedFiles, filePathMap)
+
             rules.push([
                 '@font-face {',
                 `  font-family: "${family.family}";`,
@@ -99,6 +102,21 @@ export function generateCssVariables(families: ResolvedFontFamily[]): string {
     return `:root {\n${vars.join('\n')}\n}`
 }
 
+function buildFamilyCss(
+    family: ResolvedFontFamily,
+    filePathMap: Map<string, string>,
+    fallbackMap?: Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>,
+): string {
+    let css = generateFontFace(family, filePathMap)
+
+    if (family.optimizedFallbacks && fallbackMap?.has(family.alias)) {
+        const fb = fallbackMap.get(family.alias)!
+        css += '\n\n' + generateFallbackFontFace(family.family, fb.fallbackFamily, fb.metrics)
+    }
+
+    return css
+}
+
 export function generateFamilyStyles(
     families: ResolvedFontFamily[],
     filePathMap: Map<string, string>,
@@ -107,16 +125,8 @@ export function generateFamilyStyles(
     const familyStyles: Record<string, string> = {}
 
     for (const family of families) {
-        let css = generateFontFace(family, filePathMap)
-
-        if (family.optimizedFallbacks && fallbackMap?.has(family.alias)) {
-            const fb = fallbackMap.get(family.alias)!
-            css += '\n\n' + generateFallbackFontFace(family.family, fb.fallbackFamily, fb.metrics)
-        }
-
-        css += '\n\n' + generateFontClassForFamily(family)
-
-        familyStyles[family.alias] = css
+        familyStyles[family.alias] = buildFamilyCss(family, filePathMap, fallbackMap)
+            + '\n\n' + generateFontClassForFamily(family)
     }
 
     return {
@@ -130,16 +140,7 @@ export function generateFontCss(
     filePathMap: Map<string, string>,
     fallbackMap?: Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>,
 ): string {
-    const parts: string[] = []
-
-    for (const family of families) {
-        parts.push(generateFontFace(family, filePathMap))
-
-        if (family.optimizedFallbacks && fallbackMap?.has(family.alias)) {
-            const fb = fallbackMap.get(family.alias)!
-            parts.push(generateFallbackFontFace(family.family, fb.fallbackFamily, fb.metrics))
-        }
-    }
+    const parts: string[] = families.map(f => buildFamilyCss(f, filePathMap, fallbackMap))
 
     parts.push(generateCssVariables(families))
     parts.push(generateFontClasses(families))

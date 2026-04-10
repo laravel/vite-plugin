@@ -96,14 +96,20 @@ export function inferStyleFromFilename(filePath: string): FontStyle {
         const seg = segments[i]
         const lc = seg.toLowerCase()
 
-        switch (true) {
-            case lc === 'italic' || lc === 'it':
-            case /italic$/i.test(seg):
-            case /it$/i.test(seg) && seg.length > 2:
+        if (lc === 'italic' || lc === 'it' || /italic$/i.test(seg)) {
+            return 'italic'
+        }
+
+        if (lc.endsWith('it') && lc.length > 2) {
+            const prefix = lc.slice(0, -2)
+
+            if (WEIGHT_PATTERNS.some(([pattern]) => prefix === pattern || prefix.endsWith(pattern))) {
                 return 'italic'
-            case lc === 'oblique':
-            case /oblique$/i.test(seg):
-                return 'oblique'
+            }
+        }
+
+        if (lc === 'oblique' || /oblique$/i.test(seg)) {
+            return 'oblique'
         }
     }
 
@@ -300,8 +306,16 @@ export function validateFontDefinition(definition: FontDefinition): void {
         throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid or empty alias.`)
     }
 
-    if (definition.variable !== undefined && typeof definition.variable !== 'string') {
-        throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid variable name.`)
+    if (definition.variable !== undefined) {
+        if (typeof definition.variable !== 'string' || definition.variable.trim() === '') {
+            throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid or empty variable name.`)
+        }
+
+        if (! definition.variable.startsWith('--')) {
+            throw new Error(
+                `laravel-vite-plugin: Font "${definition.family}" variable "${definition.variable}" must start with "--".`
+            )
+        }
     }
 
     if (definition.provider !== 'local') {
@@ -430,6 +444,11 @@ export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] 
         if (existing._local && font._local) {
             if ('variants' in existing._local && 'variants' in font._local) {
                 existing._local.variants.push(...font._local.variants)
+            } else {
+                throw new Error(
+                    `laravel-vite-plugin: Cannot merge font definitions for alias "${font.alias}": ` +
+                    `incompatible local font shapes (one uses "src" and the other uses "variants").`
+                )
             }
         }
     }
@@ -487,6 +506,10 @@ export function resolveLocalExplicitVariants(definition: FontDefinition, localCo
                 format: inferFormat(absolutePath),
             })
         }
+
+        files.sort((a, b) =>
+            FORMAT_PREFERENCE.indexOf(a.format) - FORMAT_PREFERENCE.indexOf(b.format)
+        )
 
         const firstSrc = Array.isArray(v.src) ? v.src[0] : v.src
         const inferred = inferLocalVariantFromFilename(firstSrc)

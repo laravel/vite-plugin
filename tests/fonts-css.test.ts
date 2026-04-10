@@ -67,6 +67,32 @@ describe('fonts css generation', () => {
             expect(css).toContain('unicode-range: U+0100-024F')
         })
 
+        it('emits both ranged and non-ranged files when a variant mixes them', () => {
+            const family = makeFamily({
+                variants: [{
+                    weight: 400,
+                    style: 'normal',
+                    files: [
+                        { source: '/fonts/inter-latin.woff2', format: 'woff2', unicodeRange: 'U+0000-00FF' },
+                        { source: '/fonts/inter-fallback.ttf', format: 'ttf' },
+                    ],
+                }],
+            })
+
+            const filePathMap = new Map([
+                ['/fonts/inter-latin.woff2', 'assets/inter-latin.woff2'],
+                ['/fonts/inter-fallback.ttf', 'assets/inter-fallback.ttf'],
+            ])
+
+            const css = generateFontFace(family, filePathMap)
+
+            expect(css.match(/@font-face/g)).toHaveLength(2)
+            expect(css).toContain('unicode-range: U+0000-00FF')
+            expect(css).toContain('assets/inter-latin.woff2')
+            expect(css).toContain('assets/inter-fallback.ttf')
+            expect(css).not.toContain('unicode-range: undefined')
+        })
+
         it('generates multiple variants', () => {
             const family = makeFamily({
                 variants: [

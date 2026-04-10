@@ -250,6 +250,27 @@ describe('fonts config', () => {
             expect(() => validateFontDefinition(def)).toThrowError('invalid or empty src')
         })
 
+        it('rejects empty variable name', () => {
+            const def = google('Inter')
+            def.variable = ''
+
+            expect(() => validateFontDefinition(def)).toThrowError('invalid or empty variable name')
+        })
+
+        it('rejects variable name without -- prefix', () => {
+            const def = google('Inter')
+            def.variable = 'font-body'
+
+            expect(() => validateFontDefinition(def)).toThrowError('must start with "--"')
+        })
+
+        it('accepts valid variable name with -- prefix', () => {
+            const def = google('Inter')
+            def.variable = '--font-body'
+
+            expect(() => validateFontDefinition(def)).not.toThrow()
+        })
+
         it('accepts valid google definition', () => {
             expect(() => validateFontDefinition(google('Inter'))).not.toThrow()
         })
@@ -367,6 +388,16 @@ describe('fonts config', () => {
             ])).toThrowError('preload mismatch')
         })
 
+        it('rejects merge when local font shapes are incompatible', () => {
+            expect(() => mergeFontDefinitions([
+                local('Inter', { alias: 'sans', src: 'fonts/inter' }),
+                local('Inter', {
+                    alias: 'sans',
+                    variants: [{ src: 'fonts/Inter-Bold.woff2', weight: 700 }],
+                }),
+            ])).toThrowError('incompatible local font shapes')
+        })
+
         it('passes through definitions with unique aliases unchanged', () => {
             const fonts = [
                 google('Inter', { alias: 'sans' }),
@@ -437,6 +468,20 @@ describe('fonts config', () => {
             const def = local('Test Font', {
                 variants: [
                     { src: ['tests/fixtures/fonts/test-font.woff2', 'tests/fixtures/fonts/test-font.ttf'], weight: 400 },
+                ],
+            })
+
+            const resolved = await resolveLocalFont(def, projectRoot)
+
+            expect(resolved.variants[0].files).toHaveLength(2)
+            expect(resolved.variants[0].files[0].format).toBe('woff2')
+            expect(resolved.variants[0].files[1].format).toBe('ttf')
+        })
+
+        it('normalizes explicit variant source format priority', async () => {
+            const def = local('Test Font', {
+                variants: [
+                    { src: ['tests/fixtures/fonts/test-font.ttf', 'tests/fixtures/fonts/test-font.woff2'], weight: 400 },
                 ],
             })
 
@@ -686,6 +731,18 @@ describe('fonts config', () => {
 
         it('is case-insensitive', () => {
             expect(inferStyleFromFilename('Inter-italic.woff2')).toBe('italic')
+        })
+
+        it('does not falsely detect italic from filenames ending in "it"', () => {
+            expect(inferStyleFromFilename('Split.woff2')).toBe('normal')
+            expect(inferStyleFromFilename('Outfit.woff2')).toBe('normal')
+            expect(inferStyleFromFilename('Transit.woff2')).toBe('normal')
+        })
+
+        it('still detects italic from weight-prefixed "it" suffix', () => {
+            expect(inferStyleFromFilename('Inter-BoldIt.woff2')).toBe('italic')
+            expect(inferStyleFromFilename('Inter-LightIt.woff2')).toBe('italic')
+            expect(inferStyleFromFilename('Inter-MediumIt.woff2')).toBe('italic')
         })
     })
 
