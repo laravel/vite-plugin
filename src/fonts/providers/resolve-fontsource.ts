@@ -5,33 +5,12 @@ import { parseFontFaceCss } from '../css-parser.js'
 import { familyToSlug, buildResolvedFamily } from '../config.js'
 import type { FontDefinition, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant, FontStyle } from '../types.js'
 
-export function resolveFontsourceVariants(
-    definition: FontDefinition,
-    projectRoot: string,
-): ResolvedFontVariant[] {
-    const packageName = definition._fontsource?.package ?? `@fontsource/${familyToSlug(definition.family)}`
+function buildCssFilePaths(definition: FontDefinition, packageDir: string, packageName: string): string[] {
+    const paths: string[] = []
 
-    let packageDir: string
-    try {
-        const require = createRequire(path.join(projectRoot, 'package.json'))
-        packageDir = path.dirname(
-            require.resolve(`${packageName}/package.json`)
-        )
-    } catch {
-        throw new Error(
-            `laravel-vite-plugin: Fontsource package "${packageName}" not found. ` +
-            `Install it with: npm install ${packageName}`
-        )
-    }
-
-    const weights = definition.weights
-    const styles = definition.styles
-    const subsets = definition.subsets
-    const variants: ResolvedFontVariant[] = []
-
-    for (const weight of weights) {
-        for (const style of styles) {
-            for (const subset of subsets) {
+    for (const weight of definition.weights) {
+        for (const style of definition.styles) {
+            for (const subset of definition.subsets) {
                 const cssFileName = style === 'italic'
                     ? `${subset}-${weight}-italic.css`
                     : `${subset}-${weight}.css`
@@ -45,36 +24,56 @@ export function resolveFontsourceVariants(
                     )
                 }
 
-                const cssContent = fs.readFileSync(cssFilePath, 'utf-8')
-                const faces = parseFontFaceCss(cssContent)
-
-                for (const face of faces) {
-                    const files: ResolvedFontFile[] = []
-
-                    for (const src of face.src) {
-                        const absolutePath = path.resolve(path.dirname(cssFilePath), src.url)
-
-                        if (! fs.existsSync(absolutePath)) {
-                            throw new Error(
-                                `laravel-vite-plugin: Font file referenced by Fontsource not found: "${absolutePath}" ` +
-                                `for font "${definition.family}".`
-                            )
-                        }
-
-                        files.push({
-                            source: absolutePath,
-                            format: src.format,
-                            unicodeRange: face.unicodeRange,
-                        })
-                    }
-
-                    variants.push({
-                        weight: face.weight,
-                        style: face.style as FontStyle,
-                        files,
-                    })
-                }
+                paths.push(cssFilePath)
             }
+        }
+    }
+
+    return paths
+}
+
+export function resolveFontsourceVariants(
+    definition: FontDefinition,
+    projectRoot: string,
+): ResolvedFontVariant[] {
+    const packageName = definition._fontsource?.package ?? `@fontsource/${familyToSlug(definition.family)}`
+
+    let packageDir: string
+
+    try {
+        const require = createRequire(path.join(projectRoot, 'package.json'))
+
+        packageDir = path.dirname(
+            require.resolve(`${packageName}/package.json`)
+        )
+    } catch {
+        throw new Error(
+            `laravel-vite-plugin: Fontsource package "${packageName}" not found. ` +
+            `Install it with: npm install ${packageName}`
+        )
+    }
+
+    const variants: ResolvedFontVariant[] = []
+    const cssFilePaths = buildCssFilePaths(definition, packageDir, packageName)
+
+    for (const cssFilePath of cssFilePaths) {
+        const faces = parseFontFaceCss(fs.readFileSync(cssFilePath, 'utf-8'))
+
+        for (const face of faces) {
+            const files: ResolvedFontFile[] = face.src.map(src => {
+                const absolutePath = path.resolve(path.dirname(cssFilePath), src.url)
+
+                if (! fs.existsSync(absolutePath)) {
+                    throw new Error(
+                        `laravel-vite-plugin: Font file referenced by Fontsource not found: "${absolutePath}" ` +
+                        `for font "${definition.family}".`
+                    )
+                }
+
+                return { source: absolutePath, format: src.format, unicodeRange: face.unicodeRange }
+            })
+
+            variants.push({ weight: face.weight, style: face.style as FontStyle, files })
         }
     }
 
