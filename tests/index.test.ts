@@ -527,6 +527,61 @@ describe('laravel-vite-plugin', () => {
         expect(resolvedConfig.server.cors).toBe(true)
     })
 
+    it('ignores Laravel directories in the dev server watcher by default', () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        const ignored = config.server.watch.ignored as (file: string) => boolean
+        const root = process.cwd()
+
+        expect(typeof ignored).toBe('function')
+        expect(ignored(path.join(root, 'vendor', 'laravel', 'framework', 'foo.php'))).toBe(true)
+        expect(ignored(path.join(root, 'storage', 'framework', 'views', 'cache.php'))).toBe(true)
+        expect(ignored(path.join(root, 'bootstrap', 'app.php'))).toBe(true)
+        expect(ignored(path.join(root, 'database', 'migrations', '2024.php'))).toBe(true)
+        expect(ignored(path.join(root, 'tests', 'Feature', 'ExampleTest.php'))).toBe(true)
+
+        // public/vendor must remain watched — `/vendor/**` style globs would misfire here.
+        expect(ignored(path.join(root, 'public', 'vendor', 'asset.js'))).toBe(false)
+        expect(ignored(path.join(root, 'resources', 'views', 'welcome.blade.php'))).toBe(false)
+        expect(ignored(path.join(root, 'storagerelated', 'foo.php'))).toBe(false)
+    })
+
+    it('does not set the watch ignored matcher during build', () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        const config = plugin.config({}, { command: 'build', mode: 'production' })
+
+        expect(config.server?.watch).toBeUndefined()
+    })
+
+    it("respects the user's server.watch.ignored config", () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        const userIgnored = ['**/my-custom-dir/**']
+        const config = plugin.config({
+            server: { watch: { ignored: userIgnored } },
+        }, { command: 'serve', mode: 'development' })
+
+        // When the user configured ignored explicitly, the plugin should not override it.
+        expect(config.server.watch?.ignored).toBeUndefined()
+    })
+
+    it('keeps refresh directories watched even if they overlap ignored defaults', () => {
+        const plugin = laravel({
+            input: 'resources/js/app.ts',
+            refresh: ['storage/framework/views/**'],
+        })[0]
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        const ignored = config.server.watch.ignored as (file: string) => boolean
+        const root = process.cwd()
+
+        expect(ignored(path.join(root, 'storage', 'framework', 'views', 'cache.php'))).toBe(false)
+        // Other defaults remain ignored.
+        expect(ignored(path.join(root, 'vendor', 'laravel', 'framework', 'foo.php'))).toBe(true)
+    })
+
     it('does not include assets plugin when no assets are configured', () => {
         const plugins = laravel('resources/js/app.ts')
 
