@@ -58,7 +58,6 @@ export function generateFontFace(
 }
 
 export function generateFallbackFontFace(
-    family: string,
     fallbackFamily: string,
     metrics: FallbackMetrics,
 ): string {
@@ -84,22 +83,34 @@ export function generateFontClasses(families: ResolvedFontFamily[]): string {
         .join('\n\n')
 }
 
+function familyVariableDeclaration(family: ResolvedFontFamily): string {
+    const parts = [`"${family.family}"`]
+
+    if (family.optimizedFallbacks) {
+        parts.push(`"${family.family} fallback"`)
+    }
+
+    if (family.fallbacks.length > 0) {
+        parts.push(...family.fallbacks)
+    }
+
+    return `${family.variable}: ${parts.join(', ')};`
+}
+
 export function generateCssVariables(families: ResolvedFontFamily[]): string {
-    const vars = families.map(f => {
-        const parts = [`"${f.family}"`]
+    const lines = families.map(f => `  ${familyVariableDeclaration(f)}`)
 
-        if (f.optimizedFallbacks) {
-            parts.push(`"${f.family} fallback"`)
-        }
+    return `:root {\n${lines.join('\n')}\n}`
+}
 
-        if (f.fallbacks.length > 0) {
-            parts.push(...f.fallbacks)
-        }
+export function generateCssVariablesMap(families: ResolvedFontFamily[]): Record<string, string> {
+    const map: Record<string, string> = {}
 
-        return `  ${f.variable}: ${parts.join(', ')};`
-    })
+    for (const family of families) {
+        map[family.alias] = familyVariableDeclaration(family)
+    }
 
-    return `:root {\n${vars.join('\n')}\n}`
+    return map
 }
 
 function buildFamilyCss(
@@ -111,7 +122,7 @@ function buildFamilyCss(
 
     if (family.optimizedFallbacks && fallbackMap?.has(family.alias)) {
         const fb = fallbackMap.get(family.alias)!
-        css += '\n\n' + generateFallbackFontFace(family.family, fb.fallbackFamily, fb.metrics)
+        css += '\n\n' + generateFallbackFontFace(fb.fallbackFamily, fb.metrics)
     }
 
     return css
@@ -121,7 +132,7 @@ export function generateFamilyStyles(
     families: ResolvedFontFamily[],
     filePathMap: Map<string, string>,
     fallbackMap?: Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>,
-): { familyStyles: Record<string, string>, variables: string } {
+): { familyStyles: Record<string, string>, variables: Record<string, string> } {
     const familyStyles: Record<string, string> = {}
 
     for (const family of families) {
@@ -131,7 +142,7 @@ export function generateFamilyStyles(
 
     return {
         familyStyles,
-        variables: generateCssVariables(families),
+        variables: generateCssVariablesMap(families),
     }
 }
 

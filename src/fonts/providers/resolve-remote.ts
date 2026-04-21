@@ -3,15 +3,8 @@ import { fetchTextAndCache, fetchAndCache, cacheKey } from '../cache.js'
 import { buildResolvedFamily } from '../config.js'
 import type { FontDefinition, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant } from '../types.js'
 
-const WOFF2_USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-]
-
-function pickUserAgent(): string {
-    return WOFF2_USER_AGENTS[Math.floor(Math.random() * WOFF2_USER_AGENTS.length)]
-}
+const WOFF2_USER_AGENT =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 export function buildCss2Url(baseUrl: string, definition: FontDefinition): string {
     const family = definition.family.replace(/ /g, '+')
@@ -61,7 +54,7 @@ export async function resolveRemoteVariants(
     const url = buildCss2Url(baseUrl, definition)
 
     const css = await fetchTextAndCache(url, cacheDir, {
-        'User-Agent': pickUserAgent(),
+        'User-Agent': WOFF2_USER_AGENT,
     })
 
     const faces = parseFontFaceCss(css)

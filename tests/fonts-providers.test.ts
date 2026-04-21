@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 import { parseFontFaceCss } from '../src/fonts/css-parser'
-import { buildCss2Url } from '../src/fonts/providers/resolve-remote'
+import { buildCss2Url, resolveRemoteVariants } from '../src/fonts/providers/resolve-remote'
+import * as resolveRemoteModule from '../src/fonts/providers/resolve-remote'
+import * as cache from '../src/fonts/cache'
 import { google } from '../src/fonts/index'
 
 const GOOGLE_INTER_CSS = fs.readFileSync(
@@ -161,6 +164,47 @@ describe('fonts providers', () => {
 
             const faces = parseFontFaceCss(css)
             expect(faces[0].src[0].format).toBe('otf')
+        })
+    })
+
+    describe('remote fetcher User-Agent', () => {
+        let cacheDir: string
+        let fetchTextSpy: ReturnType<typeof vi.spyOn>
+        let fetchBinarySpy: ReturnType<typeof vi.spyOn>
+
+        beforeEach(() => {
+            cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-ua-test-'))
+            fetchTextSpy = vi.spyOn(cache, 'fetchTextAndCache').mockResolvedValue(GOOGLE_INTER_CSS)
+            fetchBinarySpy = vi.spyOn(cache, 'fetchAndCache').mockResolvedValue(Buffer.from('font-bytes'))
+        })
+
+        afterEach(() => {
+            vi.restoreAllMocks()
+            fs.rmSync(cacheDir, { recursive: true, force: true })
+        })
+
+        it('sends the same deterministic Chrome User-Agent on every call', async () => {
+            const def = google('Inter')
+
+            for (let i = 0; i < 5; i++) {
+                await resolveRemoteVariants(def, cacheDir, 'https://fonts.googleapis.com/css2')
+            }
+
+            expect(fetchTextSpy).toHaveBeenCalledTimes(5)
+
+            const agents = fetchTextSpy.mock.calls.map(([, , headers]) => (headers as Record<string, string>)['User-Agent'])
+            const unique = new Set(agents)
+
+            expect(unique.size).toBe(1)
+            expect([...unique][0]).toMatch(/^Mozilla\/5\.0 .*Chrome\//)
+            expect(fetchBinarySpy).toHaveBeenCalled()
+        })
+
+        it('no longer exports the multi-UA array or pickUserAgent helper', () => {
+            const mod = resolveRemoteModule as unknown as Record<string, unknown>
+
+            expect(mod.WOFF2_USER_AGENTS).toBeUndefined()
+            expect(mod.pickUserAgent).toBeUndefined()
         })
     })
 })

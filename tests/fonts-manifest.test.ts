@@ -32,7 +32,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'assets/inter-400-abc123.woff2'],
             ])
             const familyStyles = { 'inter': '@font-face { font-family: "Inter"; }' }
-            const variables = ':root { --font-inter: "Inter"; }'
+            const variables = { 'inter': '--font-inter: "Inter";' }
 
             const manifest = buildManifest(families, 'assets/fonts-abc123.css', filePathMap, familyStyles, variables)
 
@@ -40,7 +40,7 @@ describe('fonts manifest', () => {
             expect(manifest.style.file).toBe('assets/fonts-abc123.css')
             expect(manifest.style.inline).toBeUndefined()
             expect(manifest.style.familyStyles).toEqual(familyStyles)
-            expect(manifest.style.variables).toBe(variables)
+            expect(manifest.style.variables).toEqual(variables)
         })
 
         it('keys families by alias', () => {
@@ -49,7 +49,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'assets/inter-400-abc123.woff2'],
             ])
 
-            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, '')
+            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, {})
 
             expect(manifest.families['sans']).toBeDefined()
             expect(manifest.families['Inter']).toBeUndefined()
@@ -61,7 +61,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'assets/inter-400-abc123.woff2'],
             ])
 
-            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, '')
+            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, {})
 
             expect(manifest.families['sans'].family).toBe('Inter')
         })
@@ -72,7 +72,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'assets/inter-400-abc123.woff2'],
             ])
 
-            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, '')
+            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, {})
 
             expect(manifest.preloads).toHaveLength(1)
             expect(manifest.preloads[0]).toEqual({
@@ -98,7 +98,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'assets/fonts.css', new Map([
                 ['/fonts/inter.ttf', 'assets/inter.ttf'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(0)
         })
@@ -117,7 +117,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-700.woff2', 'assets/inter-700.woff2'],
             ])
 
-            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, '')
+            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, {})
             const interFamily = manifest.families['inter']
 
             expect(interFamily.family).toBe('Inter')
@@ -150,7 +150,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-cyrillic.woff2', 'assets/inter-cyrillic.woff2'],
             ])
 
-            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, '')
+            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, {})
 
             const variant = manifest.families['inter'].variants['400:normal']
             expect(variant.files).toHaveLength(2)
@@ -173,7 +173,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'assets/fonts.css', new Map([
                 ['/fonts/inter-latin.woff2', 'assets/inter-latin.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.families['inter'].variants['400:normal'].files[0].unicodeRange).toBe('U+0000-00FF')
         })
@@ -198,7 +198,7 @@ describe('fonts manifest', () => {
                 ['/fonts/roboto-400.woff2', 'assets/roboto-400.woff2'],
             ])
 
-            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, '')
+            const manifest = buildManifest(families, 'assets/fonts.css', filePathMap, {}, {})
 
             expect(Object.keys(manifest.families)).toEqual(['inter', 'roboto'])
             expect(manifest.preloads).toHaveLength(2)
@@ -209,7 +209,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'assets/fonts.css', new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.families['inter'].fallbackFamily).toBeUndefined()
         })
@@ -219,7 +219,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'assets/fonts.css', new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.families['inter'].fallbacks).toEqual(['system-ui', 'sans-serif'])
         })
@@ -229,7 +229,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'assets/fonts.css', new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.families['inter'].fallbacks).toBeUndefined()
         })
@@ -242,7 +242,7 @@ describe('fonts manifest', () => {
             const familyStyles = {
                 'inter': '@font-face { font-family: "Inter"; }\n\n.font-inter {\n  font-family: var(--font-inter);\n}',
             }
-            const variables = ':root { --font-inter: "Inter"; }'
+            const variables = { 'inter': '--font-inter: "Inter";' }
 
             const manifest = buildManifest(families, 'assets/fonts-abc123.css', filePathMap, familyStyles, variables)
 
@@ -258,7 +258,7 @@ describe('fonts manifest', () => {
             ])
 
             const familyStyles = { 'inter': '@font-face { font-family: "Inter"; }' }
-            const variables = ':root { --font-inter: "Inter"; }'
+            const variables = { 'inter': '--font-inter: "Inter";' }
 
             const manifest = buildDevManifest(families, '@font-face { ... }', urlMap, familyStyles, variables)
 
@@ -266,7 +266,7 @@ describe('fonts manifest', () => {
             expect(manifest.style.inline).toBe('@font-face { ... }')
             expect(manifest.style.file).toBeUndefined()
             expect(manifest.style.familyStyles).toEqual(familyStyles)
-            expect(manifest.style.variables).toBe(variables)
+            expect(manifest.style.variables).toEqual(variables)
         })
 
         it('uses URLs instead of file paths in preloads', () => {
@@ -275,7 +275,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2'],
             ])
 
-            const manifest = buildDevManifest(families, 'css', urlMap, {}, '')
+            const manifest = buildDevManifest(families, 'css', urlMap, {}, {})
 
             expect(manifest.preloads[0].url).toBe('http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2')
             expect(manifest.preloads[0].file).toBeUndefined()
@@ -287,7 +287,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2'],
             ])
 
-            const manifest = buildDevManifest(families, 'css', urlMap, {}, '')
+            const manifest = buildDevManifest(families, 'css', urlMap, {}, {})
 
             expect(manifest.preloads[0].alias).toBe('sans')
             expect(manifest.preloads[0].family).toBe('Inter')
@@ -314,7 +314,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-cyrillic.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/cyrillic.woff2'],
             ])
 
-            const manifest = buildDevManifest(families, 'css', urlMap, {}, '')
+            const manifest = buildDevManifest(families, 'css', urlMap, {}, {})
 
             const variant = manifest.families['inter'].variants['400:normal']
             expect(variant.files).toHaveLength(2)
@@ -330,7 +330,7 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2'],
             ])
 
-            const manifest = buildDevManifest(families, 'css', urlMap, {}, '')
+            const manifest = buildDevManifest(families, 'css', urlMap, {}, {})
 
             expect(manifest.families['inter'].variants['400:normal'].files[0].url)
                 .toBe('http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2')
@@ -345,7 +345,7 @@ describe('fonts manifest', () => {
             const familyStyles = {
                 'inter': '@font-face { font-family: "Inter"; }\n\n.font-inter {\n  font-family: var(--font-inter);\n}',
             }
-            const variables = ':root { --font-inter: "Inter"; }'
+            const variables = { 'inter': '--font-inter: "Inter";' }
 
             const manifest = buildDevManifest(families, '@font-face { ... }', urlMap, familyStyles, variables)
 
@@ -366,7 +366,7 @@ describe('fonts manifest', () => {
             const manifest = buildManifest(families, 'fonts.css', new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
                 ['/fonts/inter-700.woff2', 'assets/inter-700.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(2)
         })
@@ -376,7 +376,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'fonts.css', new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(0)
         })
@@ -393,7 +393,7 @@ describe('fonts manifest', () => {
             const manifest = buildManifest(families, 'fonts.css', new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
                 ['/fonts/inter-700.woff2', 'assets/inter-700.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(1)
             expect(manifest.preloads[0].weight).toBe(400)
@@ -418,7 +418,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'fonts.css', new Map([
                 ['/fonts/inter-latin.woff2', 'assets/inter-latin.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(1)
         })
@@ -442,7 +442,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildDevManifest(families, 'css', new Map([
                 ['/fonts/inter-latin.woff2', 'http://localhost:5173/__laravel_vite_plugin__/fonts/abc123.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(1)
         })
@@ -454,7 +454,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'fonts.css', new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(0)
         })
@@ -476,10 +476,51 @@ describe('fonts manifest', () => {
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
                 ['/fonts/inter-700.woff2', 'assets/inter-700.woff2'],
                 ['/fonts/inter-400i.woff2', 'assets/inter-400i.woff2'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(2)
             expect(manifest.preloads.map(p => p.weight)).toEqual([400, 700])
+        })
+
+        it('structured variables: two aliases produce an object keyed by alias', () => {
+            const families = [
+                makeFamily({ alias: 'sans', variable: '--font-sans' }),
+                makeFamily({
+                    family: 'JetBrains Mono',
+                    alias: 'mono',
+                    variable: '--font-mono',
+                    fallbacks: ['monospace'],
+                    optimizedFallbacks: false,
+                    variants: [{
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source: '/fonts/jbm-400.woff2', format: 'woff2' }],
+                    }],
+                }),
+            ]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+                ['/fonts/jbm-400.woff2', 'assets/jbm-400.woff2'],
+            ])
+            const variables = {
+                'sans': '--font-sans: "Inter", "Inter fallback";',
+                'mono': '--font-mono: "JetBrains Mono", monospace;',
+            }
+
+            const manifest = buildManifest(families, 'fonts.css', filePathMap, {}, variables)
+
+            expect(typeof manifest.style.variables).toBe('object')
+            expect(manifest.style.variables).toEqual(variables)
+            expect(manifest.style.variables).not.toContain(':root')
+        })
+
+        it('structured variables: empty aliases set produces an empty object, never a string or null', () => {
+            const families = [makeFamily()]
+            const manifest = buildManifest(families, 'fonts.css', new Map(), {}, {})
+
+            expect(manifest.style.variables).toEqual({})
+            expect(typeof manifest.style.variables).toBe('object')
+            expect(manifest.style.variables).not.toBeNull()
         })
 
         it('non-woff2 files are never preloaded even when preload is true', () => {
@@ -494,7 +535,7 @@ describe('fonts manifest', () => {
 
             const manifest = buildManifest(families, 'fonts.css', new Map([
                 ['/fonts/inter.ttf', 'assets/inter.ttf'],
-            ]), {}, '')
+            ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(0)
         })

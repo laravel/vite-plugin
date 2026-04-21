@@ -103,7 +103,7 @@ export function buildManifest(
     cssFile: string,
     filePathMap: Map<string, string>,
     familyStyles: Record<string, string>,
-    variables: string,
+    variables: Record<string, string>,
 ): FontManifest {
     const { preloads, familyEntries } = resolveEntries(families, filePathMap, 'file')
 
@@ -120,7 +120,7 @@ export function buildDevManifest(
     inlineCss: string,
     urlMap: Map<string, string>,
     familyStyles: Record<string, string>,
-    variables: string,
+    variables: Record<string, string>,
 ): FontManifest {
     const { preloads, familyEntries } = resolveEntries(families, urlMap, 'url')
 

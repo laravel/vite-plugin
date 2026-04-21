@@ -136,7 +136,7 @@ export type FontManifest = {
         file?: string
         inline?: string
         familyStyles: Record<string, string>
-        variables: string
+        variables: Record<string, string>
     }
     preloads: FontManifestPreload[]
     families: Record<string, FontManifestFamily>
@@ -180,6 +180,17 @@ export type FallbackMetrics = {
     descentOverride: string
     lineGapOverride: string
     sizeAdjust: string
+}
+
+export type FallbackCategory = 'sans-serif' | 'serif' | 'monospace'
+
+export type FallbackEntry = {
+    localFont: string
+    ascent: number
+    descent: number
+    lineGap: number
+    unitsPerEm: number
+    xWidthAvg: number
 }
 
 export type ParsedFontFace = {

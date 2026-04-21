@@ -1,4 +1,44 @@
-import type { FallbackMetrics } from './types.js'
+import type { FallbackCategory, FallbackEntry, FallbackMetrics } from './types.js'
+
+// Canonical OS/2 metrics for the three system fonts Fontaine uses. Values sourced
+// from the capsize-css font metrics collection.
+const FALLBACK_METRICS: Record<FallbackCategory, FallbackEntry> = {
+    'sans-serif': {
+        localFont: 'Arial',
+        ascent: 1854,
+        descent: -434,
+        lineGap: 67,
+        unitsPerEm: 2048,
+        xWidthAvg: 904,
+    },
+    serif: {
+        localFont: 'Times New Roman',
+        ascent: 1825,
+        descent: -443,
+        lineGap: 87,
+        unitsPerEm: 2048,
+        xWidthAvg: 832,
+    },
+    monospace: {
+        localFont: 'Courier New',
+        ascent: 1705,
+        descent: -615,
+        lineGap: 0,
+        unitsPerEm: 2048,
+        xWidthAvg: 1229,
+    },
+}
+
+function resolveFallbackCategory(category: unknown): FallbackCategory {
+    switch (category) {
+        case 'serif':
+            return 'serif'
+        case 'monospace':
+            return 'monospace'
+        default:
+            return 'sans-serif'
+    }
+}
 
 export async function generateFallbackMetrics(
     fontSource: string,
@@ -12,23 +52,24 @@ export async function generateFallbackMetrics(
             return undefined
         }
 
-        const fallbackFont = metrics.category === 'serif' ? 'Times New Roman' : 'Arial'
-
-        const { ascent, descent, lineGap, unitsPerEm } = metrics
+        const { ascent, descent, lineGap, unitsPerEm, xWidthAvg, category } = metrics
         if (ascent == null || descent == null || lineGap == null || unitsPerEm == null) {
             return undefined
         }
 
-        const sizeAdjust = 1
-        const ascentOverride = ascent / (unitsPerEm * sizeAdjust)
-        const descentOverride = Math.abs(descent) / (unitsPerEm * sizeAdjust)
-        const lineGapOverride = lineGap / (unitsPerEm * sizeAdjust)
+        const fallback = FALLBACK_METRICS[resolveFallbackCategory(category)]
+
+        const sizeAdjust = xWidthAvg
+            ? (xWidthAvg / unitsPerEm) / (fallback.xWidthAvg / fallback.unitsPerEm)
+            : 1
+
+        const adjustedEm = unitsPerEm * sizeAdjust
 
         return {
-            localFont: fallbackFont,
-            ascentOverride: `${(ascentOverride * 100).toFixed(2)}%`,
-            descentOverride: `${(descentOverride * 100).toFixed(2)}%`,
-            lineGapOverride: `${(lineGapOverride * 100).toFixed(2)}%`,
+            localFont: fallback.localFont,
+            ascentOverride: `${(ascent / adjustedEm * 100).toFixed(2)}%`,
+            descentOverride: `${(Math.abs(descent) / adjustedEm * 100).toFixed(2)}%`,
+            lineGapOverride: `${(lineGap / adjustedEm * 100).toFixed(2)}%`,
             sizeAdjust: `${(sizeAdjust * 100).toFixed(2)}%`,
         }
     } catch {

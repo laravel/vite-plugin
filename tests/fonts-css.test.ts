@@ -133,7 +133,7 @@ describe('fonts css generation', () => {
     })
 
     describe('generateFallbackFontFace', () => {
-        it('generates fallback metrics', () => {
+        it('generates fallback metrics without requiring the real family name', () => {
             const metrics: FallbackMetrics = {
                 localFont: 'Arial',
                 ascentOverride: '90.00%',
@@ -142,14 +142,18 @@ describe('fonts css generation', () => {
                 sizeAdjust: '100.00%',
             }
 
-            const css = generateFallbackFontFace('Inter', 'Inter fallback', metrics)
+            const css = generateFallbackFontFace('Inter fallback', metrics)
 
-            expect(css).toContain('font-family: "Inter fallback"')
-            expect(css).toContain('src: local("Arial")')
-            expect(css).toContain('ascent-override: 90.00%')
-            expect(css).toContain('descent-override: 22.00%')
-            expect(css).toContain('line-gap-override: 0.00%')
-            expect(css).toContain('size-adjust: 100.00%')
+            expect(css).toBe([
+                '@font-face {',
+                '  font-family: "Inter fallback";',
+                '  src: local("Arial");',
+                '  ascent-override: 90.00%;',
+                '  descent-override: 22.00%;',
+                '  line-gap-override: 0.00%;',
+                '  size-adjust: 100.00%;',
+                '}',
+            ].join('\n'))
         })
     })
 
@@ -367,7 +371,7 @@ describe('fonts css generation', () => {
             expect(familyStyles['roboto']).toContain('font-family: var(--font-roboto);')
         })
 
-        it('CSS variables still reference actual font-family name', () => {
+        it('CSS variables are a per-alias map (not a monolithic :root string)', () => {
             const families = [makeFamily({ alias: 'sans' })]
             const filePathMap = new Map([
                 ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
@@ -375,7 +379,39 @@ describe('fonts css generation', () => {
 
             const { variables } = generateFamilyStyles(families, filePathMap)
 
-            expect(variables).toContain('"Inter"')
+            expect(typeof variables).toBe('object')
+            expect(variables['sans']).toBeDefined()
+            expect(variables['sans']).toContain('--font-inter')
+            expect(variables['sans']).toContain('"Inter"')
+            expect(variables['sans']).not.toContain(':root')
+            expect(variables['sans']?.trim().endsWith(';')).toBe(true)
+        })
+
+        it('CSS variables map ends each declaration with a trailing semicolon, no leading whitespace', () => {
+            const families = [
+                makeFamily({ alias: 'sans' }),
+                makeFamily({
+                    family: 'JetBrains Mono',
+                    alias: 'mono',
+                    variable: '--font-mono',
+                    optimizedFallbacks: false,
+                    fallbacks: ['monospace'],
+                    variants: [{
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source: '/fonts/jbm-400.woff2', format: 'woff2' }],
+                    }],
+                }),
+            ]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+                ['/fonts/jbm-400.woff2', 'assets/jbm-400.woff2'],
+            ])
+
+            const { variables } = generateFamilyStyles(families, filePathMap)
+
+            expect(variables['sans']).toBe('--font-inter: "Inter", "Inter fallback";')
+            expect(variables['mono']).toBe('--font-mono: "JetBrains Mono", monospace;')
         })
 
         it('font-face rules still use actual font-family name', () => {
@@ -410,6 +446,50 @@ describe('fonts css generation', () => {
             const { familyStyles } = generateFamilyStyles(families, filePathMap, fallbackMap)
 
             expect(familyStyles['inter']).toContain('font-family: "Inter fallback"')
+        })
+
+        it('produces byte-identical output for a fixed fixture (refactor regression guard)', () => {
+            const families = [makeFamily()]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+            ])
+            const fallbackMap = new Map([
+                ['inter', {
+                    fallbackFamily: 'Inter fallback',
+                    metrics: {
+                        localFont: 'Arial',
+                        ascentOverride: '90.00%',
+                        descentOverride: '22.00%',
+                        lineGapOverride: '0.00%',
+                        sizeAdjust: '100.00%',
+                    },
+                }],
+            ])
+
+            const { familyStyles } = generateFamilyStyles(families, filePathMap, fallbackMap)
+
+            expect(familyStyles['inter']).toBe([
+                '@font-face {',
+                '  font-family: "Inter";',
+                '  font-style: normal;',
+                '  font-weight: 400;',
+                '  font-display: swap;',
+                '  src: url("assets/inter-400.woff2") format("woff2");',
+                '}',
+                '',
+                '@font-face {',
+                '  font-family: "Inter fallback";',
+                '  src: local("Arial");',
+                '  ascent-override: 90.00%;',
+                '  descent-override: 22.00%;',
+                '  line-gap-override: 0.00%;',
+                '  size-adjust: 100.00%;',
+                '}',
+                '',
+                '.font-inter {',
+                '  font-family: var(--font-inter);',
+                '}',
+            ].join('\n'))
         })
     })
 })

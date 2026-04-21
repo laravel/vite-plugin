@@ -72,12 +72,25 @@ export function createFontMiddleware(): {
         }
 
         const mime = FORMAT_MIME[entry.format] ?? 'application/octet-stream'
-        const data = fs.readFileSync(entry.source)
 
         res.setHeader('Content-Type', mime)
         res.setHeader('Access-Control-Allow-Origin', '*')
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-        res.end(data)
+        res.setHeader('Cache-Control', 'no-store')
+
+        const stream = fs.createReadStream(entry.source)
+
+        stream.on('error', (err) => {
+            if (! res.headersSent) {
+                res.statusCode = 500
+            }
+            res.destroy(err)
+        })
+
+        res.on('close', () => {
+            stream.destroy()
+        })
+
+        stream.pipe(res)
     }
 
     return { middleware, update }

@@ -16,9 +16,6 @@ const REMOTE_CSS_URLS: Record<string, string> = {
     bunny: 'https://fonts.bunny.net/css2',
 }
 
-const activeManifestPaths = new Set<string>()
-let cleanupBound = false
-
 async function resolveFontFamilies(
     fonts: FontDefinition[],
     projectRoot: string,
@@ -101,6 +98,25 @@ function emitFontAssets(
     return fileRefMap
 }
 
+/** @internal Exported for tests; not part of the public plugin API. */
+export function assertFileRefsResolved(
+    families: ResolvedFontFamily[],
+    fileRefMap: Map<string, string>,
+): void {
+    for (const family of families) {
+        for (const variant of family.variants) {
+            for (const file of variant.files) {
+                if (! fileRefMap.has(file.source)) {
+                    throw new Error(
+                        `laravel-vite-plugin: Missing emitted asset for font "${family.family}" ` +
+                        `(source "${file.source}").`
+                    )
+                }
+            }
+        }
+    }
+}
+
 export function resolveFontsPlugin(
     fonts: FontDefinition[]|undefined,
     hotFile: string,
@@ -116,7 +132,6 @@ export function resolveFontsPlugin(
     let resolvedFamilies: ResolvedFontFamily[] = []
     let cacheDir: string
     let hotManifestPath: string
-    let fontsCssRef: string
     let fontsFileRefMap: Map<string, string>
     let fontsFallbackMap: Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>
 
@@ -146,25 +161,14 @@ export function resolveFontsPlugin(
 
             fontsFileRefMap = emitFontAssets(resolvedFamilies, (opts) => this.emitFile(opts))
             fontsFallbackMap = await buildFallbackMap(resolvedFamilies)
-
-            const placeholderPathMap = new Map<string, string>()
-            for (const [source, ref] of fontsFileRefMap) {
-                placeholderPathMap.set(source, `__FONT_REF_${ref}__`)
-            }
-
-            const css = generateFontCss(resolvedFamilies, placeholderPathMap, fontsFallbackMap)
-
-            fontsCssRef = this.emitFile({
-                type: 'asset',
-                name: 'fonts.css',
-                source: css,
-            })
         },
 
-        generateBundle(_, bundle) {
-            if (resolvedConfig.command !== 'build' || resolvedFamilies.length === 0 || ! fontsCssRef) {
+        generateBundle() {
+            if (resolvedConfig.command !== 'build' || resolvedFamilies.length === 0) {
                 return
             }
+
+            assertFileRefsResolved(resolvedFamilies, fontsFileRefMap)
 
             const relativeFilePathMap = new Map<string, string>()
             const absoluteFilePathMap = new Map<string, string>()
@@ -174,18 +178,16 @@ export function resolveFontsPlugin(
                 absoluteFilePathMap.set(source, `/${buildDirectory}/${fileName}`)
             }
 
-            const cssFileName = this.getFileName(fontsCssRef)
             const finalCss = generateFontCss(resolvedFamilies, absoluteFilePathMap, fontsFallbackMap)
             const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, absoluteFilePathMap, fontsFallbackMap)
 
-            for (const [key, chunk] of Object.entries(bundle)) {
-                if (key === cssFileName && chunk.type === 'asset') {
-                    chunk.source = finalCss
+            const cssRef = this.emitFile({
+                type: 'asset',
+                name: 'fonts.css',
+                source: finalCss,
+            })
 
-                    break
-                }
-            }
-
+            const cssFileName = this.getFileName(cssRef)
             const manifest = buildManifest(resolvedFamilies, cssFileName, relativeFilePathMap, familyStyles, variables)
 
             this.emitFile({
@@ -232,23 +234,23 @@ export function resolveFontsPlugin(
                 }
             })
 
-            activeManifestPaths.add(hotManifestPath)
-
-            if (! cleanupBound) {
-                process.on('exit', () => {
-                    for (const p of activeManifestPaths) {
-                        try {
-                            if (fs.existsSync(p)) {
-                                fs.rmSync(p)
-                            }
-                        } catch {
-                            // Best-effort cleanup
-                        }
-                    }
-                })
-
-                cleanupBound = true
+            const onExit = (): void => {
+                try {
+                    fs.rmSync(hotManifestPath, { force: true })
+                } catch {
+                    // Best-effort cleanup
+                }
             }
+
+            // Always register so the hot manifest is cleaned up on process
+            // exit. In middleware mode there's no teardown signal, so this
+            // listener lives for the rest of the Node process.
+            process.on('exit', onExit)
+
+            server.httpServer?.once('close', () => {
+                onExit()
+                process.removeListener('exit', onExit)
+            })
         },
     }]
 }
