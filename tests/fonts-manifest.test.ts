@@ -105,7 +105,6 @@ describe('fonts manifest', () => {
 
         it('builds family entries with variants', () => {
             const families = [makeFamily({
-                tailwind: 'sans',
                 variants: [
                     { weight: 400, style: 'normal', files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }] },
                     { weight: 700, style: 'normal', files: [{ source: '/fonts/inter-700.woff2', format: 'woff2' }] },
@@ -122,11 +121,22 @@ describe('fonts manifest', () => {
 
             expect(interFamily.family).toBe('Inter')
             expect(interFamily.variable).toBe('--font-inter')
-            expect(interFamily.tailwind).toBe('sans')
+            expect('tailwind' in interFamily).toBe(false)
             expect(interFamily.fallbackFamily).toBe('Inter fallback')
             expect(interFamily.variants['400:normal']).toBeDefined()
             expect(interFamily.variants['700:normal']).toBeDefined()
             expect(interFamily.variants['400:normal'].files[0].file).toBe('assets/inter-400.woff2')
+        })
+
+        it('does not emit a tailwind field on manifest family entries even if the resolved family smuggles one', () => {
+            const smuggled = makeFamily() as ResolvedFontFamily & Record<string, unknown>
+            smuggled.tailwind = 'sans'
+
+            const manifest = buildManifest([smuggled], 'assets/fonts.css', new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+            ]), {}, {})
+
+            expect('tailwind' in manifest.families['inter']).toBe(false)
         })
 
         it('merges files for variants sharing the same weight and style', () => {
@@ -457,6 +467,121 @@ describe('fonts manifest', () => {
             ]), {}, {})
 
             expect(manifest.preloads).toHaveLength(0)
+        })
+
+        it('preload selector with omitted style matches the normal variant by default', () => {
+            const families = [makeFamily({
+                preload: [{ weight: 400 }],
+                variants: [
+                    { weight: 400, style: 'normal', files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }] },
+                    { weight: 400, style: 'italic', files: [{ source: '/fonts/inter-400i.woff2', format: 'woff2' }] },
+                ],
+            })]
+
+            const manifest = buildManifest(families, 'fonts.css', new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+                ['/fonts/inter-400i.woff2', 'assets/inter-400i.woff2'],
+            ]), {}, {})
+
+            expect(manifest.preloads).toHaveLength(1)
+            expect(manifest.preloads[0].weight).toBe(400)
+            expect(manifest.preloads[0].style).toBe('normal')
+        })
+
+        it('preload selector with omitted style does not match italic-only families', () => {
+            const families = [makeFamily({
+                preload: [{ weight: 400 }],
+                variants: [
+                    { weight: 400, style: 'italic', files: [{ source: '/fonts/inter-400i.woff2', format: 'woff2' }] },
+                ],
+            })]
+
+            const manifest = buildManifest(families, 'fonts.css', new Map([
+                ['/fonts/inter-400i.woff2', 'assets/inter-400i.woff2'],
+            ]), {}, {})
+
+            expect(manifest.preloads).toHaveLength(0)
+        })
+
+        it('preload selector with omitted style still rejects mismatched weights', () => {
+            const families = [makeFamily({
+                preload: [{ weight: 700 }],
+                variants: [
+                    { weight: 400, style: 'normal', files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }] },
+                ],
+            })]
+
+            const manifest = buildManifest(families, 'fonts.css', new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+            ]), {}, {})
+
+            expect(manifest.preloads).toHaveLength(0)
+        })
+
+        it('preload selector with explicit style keeps original behavior', () => {
+            const families = [makeFamily({
+                preload: [{ weight: 400, style: 'italic' }],
+                variants: [
+                    { weight: 400, style: 'normal', files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }] },
+                    { weight: 400, style: 'italic', files: [{ source: '/fonts/inter-400i.woff2', format: 'woff2' }] },
+                ],
+            })]
+
+            const manifest = buildManifest(families, 'fonts.css', new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+                ['/fonts/inter-400i.woff2', 'assets/inter-400i.woff2'],
+            ]), {}, {})
+
+            expect(manifest.preloads).toHaveLength(1)
+            expect(manifest.preloads[0].style).toBe('italic')
+        })
+
+        it('emits preloads in the same order the variants appear in the resolved family', () => {
+            const families = [makeFamily({
+                variants: [
+                    { weight: 400, style: 'normal', files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }] },
+                    { weight: 400, style: 'italic', files: [{ source: '/fonts/inter-400i.woff2', format: 'woff2' }] },
+                    { weight: 700, style: 'normal', files: [{ source: '/fonts/inter-700.woff2', format: 'woff2' }] },
+                ],
+            })]
+
+            const manifest = buildManifest(families, 'fonts.css', new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+                ['/fonts/inter-400i.woff2', 'assets/inter-400i.woff2'],
+                ['/fonts/inter-700.woff2', 'assets/inter-700.woff2'],
+            ]), {}, {})
+
+            expect(manifest.preloads.map(p => `${p.weight}:${p.style}`)).toEqual([
+                '400:normal',
+                '400:italic',
+                '700:normal',
+            ])
+        })
+
+        it('keeps mixed ranged/non-ranged files emitting the same set of preload entries', () => {
+            const families = [makeFamily({
+                variants: [{
+                    weight: 400,
+                    style: 'normal',
+                    files: [
+                        { source: '/fonts/inter-latin.woff2', format: 'woff2', unicodeRange: 'U+0000-00FF' },
+                        { source: '/fonts/inter-cyrillic.woff2', format: 'woff2', unicodeRange: 'U+0400-045F' },
+                        { source: '/fonts/inter-full.woff2', format: 'woff2' },
+                    ],
+                }],
+            })]
+
+            const manifest = buildManifest(families, 'fonts.css', new Map([
+                ['/fonts/inter-latin.woff2', 'assets/inter-latin.woff2'],
+                ['/fonts/inter-cyrillic.woff2', 'assets/inter-cyrillic.woff2'],
+                ['/fonts/inter-full.woff2', 'assets/inter-full.woff2'],
+            ]), {}, {})
+
+            expect(manifest.preloads.map(p => p.file)).toEqual([
+                'assets/inter-latin.woff2',
+                'assets/inter-cyrillic.woff2',
+                'assets/inter-full.woff2',
+            ])
         })
 
         it('preload selector with multiple entries includes all matches', () => {

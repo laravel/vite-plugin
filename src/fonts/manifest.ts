@@ -26,7 +26,7 @@ function shouldPreload(
     }
 
     return family.preload.some(
-        sel => String(sel.weight) === String(variant.weight) && sel.style === variant.style
+        sel => String(sel.weight) === String(variant.weight) && (sel.style ?? 'normal') === variant.style
     )
 }
 
@@ -77,7 +77,6 @@ function resolveEntries(
         familyEntries[family.alias] = {
             family: family.family,
             variable: family.variable,
-            tailwind: family.tailwind,
             fallbackFamily: family.optimizedFallbacks ? `${family.family} fallback` : undefined,
             fallbacks: family.fallbacks.length > 0 ? family.fallbacks : undefined,
             variants,

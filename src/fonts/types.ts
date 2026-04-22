@@ -10,7 +10,8 @@ export type FontDisplay = 'auto' | 'block' | 'swap' | 'fallback' | 'optional'
 
 export type PreloadSelector = {
     weight: FontWeight
-    style: FontStyle
+    /** @default 'normal' */
+    style?: FontStyle
 }
 
 export type BaseFontOptions = {
@@ -19,8 +20,6 @@ export type BaseFontOptions = {
 
     /** Defaults to `--font-{alias}`. */
     variable?: string
-
-    tailwind?: string
 
     /** @default [400] */
     weights?: FontWeight[]
@@ -91,7 +90,6 @@ export type FontDefinition = {
     alias: string
     provider: FontProviderType
     variable: string
-    tailwind?: string
     weights: FontWeight[]
     styles: FontStyle[]
     subsets: string[]
@@ -121,7 +119,6 @@ export type ResolvedFontFamily = {
     family: string
     alias: string
     variable: string
-    tailwind?: string
     display: FontDisplay
     optimizedFallbacks: boolean
     fallbacks: string[]
@@ -157,7 +154,6 @@ export type FontManifestPreload = {
 export type FontManifestFamily = {
     family: string
     variable: string
-    tailwind?: string
     fallbackFamily?: string
     fallbacks?: string[]
     variants: Record<string, FontManifestVariant>

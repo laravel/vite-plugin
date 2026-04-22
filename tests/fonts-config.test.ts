@@ -108,7 +108,6 @@ describe('fonts config', () => {
             const def = google('Inter', {
                 alias: 'sans',
                 variable: '--font-body',
-                tailwind: 'sans',
                 weights: [400, 700],
                 styles: ['normal', 'italic'],
                 subsets: ['latin', 'cyrillic'],
@@ -119,7 +118,6 @@ describe('fonts config', () => {
             })
             expect(def.alias).toBe('sans')
             expect(def.variable).toBe('--font-body')
-            expect(def.tailwind).toBe('sans')
             expect(def.weights).toEqual([400, 700])
             expect(def.styles).toEqual(['normal', 'italic'])
             expect(def.subsets).toEqual(['latin', 'cyrillic'])
@@ -127,6 +125,20 @@ describe('fonts config', () => {
             expect(def.preload).toEqual([{ weight: 400, style: 'normal' }])
             expect(def.fallbacks).toEqual(['system-ui', 'sans-serif'])
             expect(def.optimizedFallbacks).toBe(false)
+        })
+
+        it('does not carry a tailwind field on the returned definition', () => {
+            const def = google('Inter', { alias: 'sans' })
+
+            expect('tailwind' in def).toBe(false)
+        })
+
+        it('ignores a legacy tailwind option passed via a loose caller without emitting it', () => {
+            const loose = { alias: 'sans', tailwind: 'sans' } as unknown as Parameters<typeof google>[1]
+            const def = google('Inter', loose) as Record<string, unknown>
+
+            expect('tailwind' in def).toBe(false)
+            expect(def.tailwind).toBeUndefined()
         })
 
         it('bunny() returns a FontDefinition with bunny provider', () => {
@@ -298,9 +310,9 @@ describe('fonts config', () => {
             ])).toThrowError('Duplicate CSS variable "--font-inter"')
         })
 
-        it('allows explicit variable and tailwind mappings', () => {
+        it('allows explicit variable mappings', () => {
             expect(() => validateFontsConfig([
-                google('Inter', { variable: '--font-body', tailwind: 'sans' }),
+                google('Inter', { variable: '--font-body' }),
             ])).not.toThrow()
         })
     })
@@ -526,11 +538,10 @@ describe('fonts config', () => {
             expect(resolved.variants).toHaveLength(3)
         })
 
-        it('preserves alias, variable, tailwind from FontDefinition', async () => {
+        it('preserves alias and variable from FontDefinition', async () => {
             const def = local('Test Font', {
                 alias: 'body',
                 variable: '--font-body',
-                tailwind: 'sans',
                 variants: [{ src: 'tests/fixtures/fonts/test-font.woff2', weight: 400 }],
             })
 
@@ -538,7 +549,7 @@ describe('fonts config', () => {
 
             expect(resolved.alias).toBe('body')
             expect(resolved.variable).toBe('--font-body')
-            expect(resolved.tailwind).toBe('sans')
+            expect('tailwind' in resolved).toBe(false)
         })
 
         it('throws for missing local font file', async () => {

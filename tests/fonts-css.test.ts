@@ -287,6 +287,49 @@ describe('fonts css generation', () => {
             expect(css).toContain('.font-inter {')
             expect(css).toContain('font-family: var(--font-inter);')
         })
+
+        it('uses 2-space indentation inside every block so rendered output stays readable', () => {
+            const families = [makeFamily({
+                variants: [
+                    { weight: 400, style: 'normal', files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }] },
+                    { weight: 700, style: 'normal', files: [{ source: '/fonts/inter-700.woff2', format: 'woff2' }] },
+                ],
+            })]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+                ['/fonts/inter-700.woff2', 'assets/inter-700.woff2'],
+            ])
+
+            const css = generateFontCss(families, filePathMap)
+
+            const indentedPropertyLines = css
+                .split('\n')
+                .filter(line => /:\s/.test(line) && line.includes(';'))
+
+            expect(indentedPropertyLines.length).toBeGreaterThan(0)
+            for (const line of indentedPropertyLines) {
+                expect(line.startsWith('  ')).toBe(true)
+                expect(line.startsWith('    ')).toBe(false)
+                expect(line.startsWith('\t')).toBe(false)
+            }
+        })
+
+        it('separates blocks by exactly one blank line (no triple newlines in generated CSS)', () => {
+            const families = [makeFamily({
+                variants: [
+                    { weight: 400, style: 'normal', files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }] },
+                    { weight: 700, style: 'normal', files: [{ source: '/fonts/inter-700.woff2', format: 'woff2' }] },
+                ],
+            })]
+            const filePathMap = new Map([
+                ['/fonts/inter-400.woff2', 'assets/inter-400.woff2'],
+                ['/fonts/inter-700.woff2', 'assets/inter-700.woff2'],
+            ])
+
+            const css = generateFontCss(families, filePathMap)
+
+            expect(css).not.toMatch(/\n\n\n/)
+        })
     })
 
     describe('generateFontClassForFamily', () => {
