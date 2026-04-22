@@ -255,7 +255,7 @@ export function buildFontDefinition(
         alias,
         provider,
         variable: options?.variable ?? aliasToVariable(alias),
-        weights: options?.weights ?? [400],
+        weights: options?.weights ? [...options.weights] : [400],
         styles: options?.styles ?? ['normal'],
         subsets: options?.subsets ?? ['latin'],
         display: options?.display ?? 'swap',

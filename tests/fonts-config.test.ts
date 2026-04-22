@@ -1009,4 +1009,51 @@ describe('fonts config', () => {
             expect(plugins.find(p => p.name === 'laravel:fonts')).toBeDefined()
         })
     })
+
+    describe('preload typesafety runtime regressions', () => {
+        it('round-trips a weighted preload config unchanged', () => {
+            const def = google('Inter', {
+                weights: [400, 700],
+                preload: [
+                    { weight: 400, style: 'normal' },
+                    { weight: 700, style: 'italic' },
+                ],
+            })
+
+            expect(def.weights).toEqual([400, 700])
+            expect(def.preload).toEqual([
+                { weight: 400, style: 'normal' },
+                { weight: 700, style: 'italic' },
+            ])
+        })
+
+        it('accepts a preload selector without an explicit style', () => {
+            const def = google('Inter', {
+                weights: [400, 700],
+                preload: [{ weight: 400 }, { weight: 700 }],
+            })
+
+            expect(def.preload).toEqual([{ weight: 400 }, { weight: 700 }])
+        })
+
+        it('copies the weights array so the FontDefinition owns a mutable list', () => {
+            const sourceWeights = [400, 700] as const
+            const def = google('Inter', { weights: sourceWeights })
+
+            expect(def.weights).toEqual([400, 700])
+            expect(def.weights).not.toBe(sourceWeights)
+
+            def.weights.push(500)
+            expect(sourceWeights).toEqual([400, 700])
+        })
+
+        it('keeps preload permissive when weights are omitted', () => {
+            const def = google('Inter', {
+                preload: [{ weight: 400 }, { weight: 999 }],
+            })
+
+            expect(def.weights).toEqual([400])
+            expect(def.preload).toEqual([{ weight: 400 }, { weight: 999 }])
+        })
+    })
 })

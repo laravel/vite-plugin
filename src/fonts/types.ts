@@ -8,13 +8,13 @@ export type FontWeight = number | string
 
 export type FontDisplay = 'auto' | 'block' | 'swap' | 'fallback' | 'optional'
 
-export type PreloadSelector = {
-    weight: FontWeight
+export type PreloadSelector<W extends FontWeight = FontWeight> = {
+    weight: W
     /** @default 'normal' */
     style?: FontStyle
 }
 
-export type BaseFontOptions = {
+export type BaseFontOptions<W extends FontWeight = FontWeight> = {
     /** Defaults to a slug of the family name. */
     alias?: string
 
@@ -22,7 +22,7 @@ export type BaseFontOptions = {
     variable?: string
 
     /** @default [400] */
-    weights?: FontWeight[]
+    weights?: readonly W[]
 
     /** @default ['normal'] */
     styles?: FontStyle[]
@@ -36,11 +36,13 @@ export type BaseFontOptions = {
     /**
      * - `true`: preload all WOFF2 variants (default)
      * - `false`: do not preload
-     * - `[{ weight, style }]`: preload only matching variants
+     * - `[{ weight, style }]`: preload only matching variants.
+     *   When `weights` is a literal tuple, preload weights are type-narrowed
+     *   to its members.
      *
      * @default true
      */
-    preload?: boolean | PreloadSelector[]
+    preload?: boolean | PreloadSelector<NoInfer<W>>[]
 
     /** @default [] */
     fallbacks?: string[]
@@ -78,9 +80,9 @@ export type LocalFontOptions = Omit<BaseFontOptions, 'weights' | 'styles' | 'sub
     }
 )
 
-export type RemoteFontOptions = BaseFontOptions
+export type RemoteFontOptions<W extends FontWeight = FontWeight> = BaseFontOptions<W>
 
-export type FontsourceFontOptions = BaseFontOptions & {
+export type FontsourceFontOptions<W extends FontWeight = FontWeight> = BaseFontOptions<W> & {
     /** Defaults to `@fontsource/{family-slug}`. */
     package?: string
 }

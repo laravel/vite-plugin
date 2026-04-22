@@ -1,15 +1,24 @@
 import { buildFontDefinition } from '../config.js'
-import type { FontDefinition, RemoteFontOptions, FontsourceFontOptions, LocalFontOptions } from '../types.js'
+import type { FontDefinition, FontWeight, RemoteFontOptions, FontsourceFontOptions, LocalFontOptions } from '../types.js'
 
-export function google(family: string, options?: RemoteFontOptions): FontDefinition {
+export function google<const W extends FontWeight = FontWeight>(
+    family: string,
+    options?: RemoteFontOptions<W>,
+): FontDefinition {
     return buildFontDefinition(family, 'google', options)
 }
 
-export function bunny(family: string, options?: RemoteFontOptions): FontDefinition {
+export function bunny<const W extends FontWeight = FontWeight>(
+    family: string,
+    options?: RemoteFontOptions<W>,
+): FontDefinition {
     return buildFontDefinition(family, 'bunny', options)
 }
 
-export function fontsource(family: string, options?: FontsourceFontOptions): FontDefinition {
+export function fontsource<const W extends FontWeight = FontWeight>(
+    family: string,
+    options?: FontsourceFontOptions<W>,
+): FontDefinition {
     return buildFontDefinition(family, 'fontsource', options, {
         _fontsource: { package: options?.package },
     })
