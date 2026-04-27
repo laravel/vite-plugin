@@ -1,3 +1,8 @@
+export type FormatConfig = {
+    extension: string
+    type: FontFormat
+}
+
 export type FontProviderType = 'local' | 'google' | 'bunny' | 'fontsource'
 
 export type FontFormat = 'woff2' | 'woff' | 'ttf' | 'otf' | 'eot'

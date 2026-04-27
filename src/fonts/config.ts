@@ -1,5 +1,5 @@
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 import { glob } from 'tinyglobby'
 import type {
     BaseFontOptions,
@@ -8,21 +8,44 @@ import type {
     FontProviderType,
     FontStyle,
     FontWeight,
+    FormatConfig,
     LocalVariantDefinition,
     ResolvedFontFamily,
     ResolvedFontFile,
     ResolvedFontVariant,
 } from './types.js'
 
-const FORMAT_MAP: Record<string, FontFormat> = {
-    '.woff2': 'woff2',
-    '.woff': 'woff',
-    '.ttf': 'ttf',
-    '.otf': 'otf',
-    '.eot': 'eot',
-}
+// Formats, in order of preference
+const FORMATS: FormatConfig[] = [
+    {
+        type: 'woff2',
+        extension: '.woff2',
+    },
+    {
+        type: 'woff',
+        extension: '.woff',
+    },
+    {
+        type: 'ttf',
+        extension: '.ttf',
+    },
+    {
+        type: 'otf',
+        extension: '.otf',
+    },
+    {
+        type: 'eot',
+        extension: '.eot',
+    }
+]
 
-const SUPPORTED_EXTENSIONS = Object.keys(FORMAT_MAP)
+const FORMAT_PREFERENCE: FontFormat[] = FORMATS.map(f => f.type)
+
+const FORMAT_MAP: Record<string, FontFormat> = Object.fromEntries(
+    FORMATS.map(f => [f.extension, f.type])
+)
+
+const SUPPORTED_EXTENSIONS = FORMATS.map(f => f.extension)
 const SUPPORTED_GLOB = `*.{${SUPPORTED_EXTENSIONS.map((ext) => ext.slice(1)).join(",")}}`;
 const DEFAULT_WEIGHT = 400
 const DEFAULT_STYLE: FontStyle = 'normal'
@@ -44,8 +67,6 @@ const WEIGHT_PATTERNS: [string, number][] = [
     ['heavy', 900],
     ['bold', 700],
 ]
-
-const FORMAT_PREFERENCE: FontFormat[] = ['woff2', 'woff', 'ttf', 'otf', 'eot']
 
 function splitStem(stem: string): string[] {
     return stem.split(/[-_]/).filter(Boolean)
@@ -78,6 +99,7 @@ export function inferWeightFromFilename(filePath: string): FontWeight {
         }
 
         const numMatch = candidate.match(/(?:^|[^\d])([1-9]00)$/)
+        
         if (numMatch) {
             return parseInt(numMatch[1], 10)
         }
