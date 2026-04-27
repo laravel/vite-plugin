@@ -321,19 +321,29 @@ export function inferFormat(filePath: string): FontFormat {
     return format
 }
 
-export function validateFontDefinition(definition: FontDefinition): void {
-    if (! definition.family || typeof definition.family !== 'string' || definition.family.trim() === '') {
-        throw new Error('laravel-vite-plugin: Font family name must be a non-empty string.')
+function throwIfEmptyString(value?: string, message: string) {
+    if (typeof value !== 'string' || value.trim() === '') {
+        throw new Error(message)
     }
 
-    if (! definition.alias || typeof definition.alias !== 'string' || definition.alias.trim() === '') {
-        throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid or empty alias.`)
-    }
+}
+
+export function validateFontDefinition(definition: FontDefinition): void {
+    throwIfEmptyString(
+        definition.family,
+        'laravel-vite-plugin: Font family name must be a non-empty string.',
+    )
+
+    throwIfEmptyString(
+        definition.alias,
+        `laravel-vite-plugin: Font "${definition.family}" has an invalid or empty alias.`,
+    )
 
     if (definition.variable !== undefined) {
-        if (typeof definition.variable !== 'string' || definition.variable.trim() === '') {
-            throw new Error(`laravel-vite-plugin: Font "${definition.family}" has an invalid or empty variable name.`)
-        }
+        throwIfEmptyString(
+            definition.variable,
+            `laravel-vite-plugin: Font "${definition.family}" has an invalid or empty variable name.`,
+        )
 
         if (! definition.variable.startsWith('--')) {
             throw new Error(
