@@ -58,11 +58,13 @@ async function buildFallbackMap(
         }
 
         const firstFile = family.variants[0]?.files[0]
+
         if (! firstFile) {
             continue
         }
 
         const metrics = await generateFallbackMetrics(firstFile.source)
+
         if (metrics) {
             fallbackMap.set(family.alias, {
                 fallbackFamily: `${family.family} fallback`,
@@ -91,8 +93,8 @@ function emitFontAssets(
                 const slug = familyToSlug(family.family)
                 const ext = file.format === 'woff2' ? '.woff2' : `.${file.format}`
                 const name = `${slug}-${variant.weight}-${variant.style}${ext}`
-
                 const ref = emitFile({ type: 'asset', name, source })
+
                 fileRefMap.set(file.source, ref)
             }
         }
@@ -175,6 +177,7 @@ export function resolveFontsPlugin(
 
             const relativeFilePathMap = new Map<string, string>()
             const absoluteFilePathMap = new Map<string, string>()
+
             for (const [source, ref] of fontsFileRefMap) {
                 const fileName = this.getFileName(ref)
                 relativeFilePathMap.set(source, fileName)
@@ -202,8 +205,8 @@ export function resolveFontsPlugin(
 
         configureServer(server) {
             const projectRoot = resolvedConfig.root
-
             const fontMiddleware = createFontMiddleware()
+
             server.middlewares.use(fontMiddleware.middleware)
 
             server.httpServer?.once('listening', async () => {
@@ -227,6 +230,7 @@ export function resolveFontsPlugin(
                     const manifest = buildDevManifest(resolvedFamilies, css, urlMap, familyStyles, variables)
 
                     const hotManifestDir = path.dirname(hotManifestPath)
+
                     if (! fs.existsSync(hotManifestDir)) {
                         fs.mkdirSync(hotManifestDir, { recursive: true })
                     }
