@@ -11,32 +11,23 @@ export function buildCss2Url(baseUrl: string, definition: FontDefinition): strin
     const weights = definition.weights
     const styles = definition.styles
 
-    const axes: string[] = []
-    const tuples: string[] = []
-
     const hasItalic = styles.includes('italic')
-
-    if (hasItalic) {
-        axes.push('ital')
-    }
-
-    axes.push('wght')
+    const axes = hasItalic ? ['ital', 'wght'] : ['wght']
+    const tuples = new Set<string>()
 
     for (const weight of weights) {
         for (const style of styles) {
             if (hasItalic) {
                 const ital = style === 'italic' ? '1' : '0'
-                tuples.push(`${ital},${weight}`)
+                tuples.add(`${ital},${weight}`)
             } else {
-                tuples.push(`${weight}`)
+                tuples.add(`${weight}`)
             }
         }
     }
 
-    tuples.sort()
-
     const axisStr = axes.join(',')
-    const tupleStr = tuples.join(';')
+    const tupleStr = [...tuples].sort().join(';')
 
     let url = `${baseUrl}?family=${family}:${axisStr}@${tupleStr}&display=${definition.display}`
 

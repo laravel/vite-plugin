@@ -54,6 +54,38 @@ describe('fonts providers', () => {
 
             expect(url).toContain('family=Open+Sans')
         })
+
+        it('dedupes repeated weights', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Inter', {
+                weights: [400, 400, 700],
+            }))
+
+            const tuples = url.match(/wght@([^&]+)/)![1].split(';')
+
+            expect(tuples).toEqual(['400', '700'])
+        })
+
+        it('dedupes repeated styles', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Inter', {
+                weights: [400],
+                styles: ['normal', 'normal'],
+            }))
+
+            const tuples = url.match(/wght@([^&]+)/)![1].split(';')
+
+            expect(tuples).toEqual(['400'])
+        })
+
+        it('dedupes the italic+weight matrix', () => {
+            const url = buildCss2Url('https://fonts.googleapis.com/css2', google('Inter', {
+                weights: [400, 400, 700],
+                styles: ['normal', 'italic', 'normal'],
+            }))
+
+            const tuples = url.match(/ital,wght@([^&]+)/)![1].split(';')
+
+            expect(tuples).toEqual(['0,400', '0,700', '1,400', '1,700'])
+        })
     })
 
     describe('css parser', () => {
