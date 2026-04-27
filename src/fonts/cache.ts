@@ -78,7 +78,7 @@ export async function fetchTextAndCache(
 
     const response = await fetchOrThrow(url, headers)
     const text = await response.text()
-    
+
     writeCache(cacheDir, key, text)
 
     return text

@@ -99,7 +99,7 @@ export function inferWeightFromFilename(filePath: string): FontWeight {
         }
 
         const numMatch = candidate.match(/(?:^|[^\d])([1-9]00)$/)
-        
+
         if (numMatch) {
             return parseInt(numMatch[1], 10)
         }
