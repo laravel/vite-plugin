@@ -4,6 +4,12 @@ export type FontFormat = 'woff2' | 'woff' | 'ttf' | 'otf' | 'eot'
 
 export type FontStyle = 'normal' | 'italic' | 'oblique'
 
+/**
+ * Subset of FontStyle supported by remote providers (Google, Bunny, Fontsource).
+ * The CSS2 / Fontsource APIs do not expose `oblique`.
+ */
+export type RemoteFontStyle = 'normal' | 'italic'
+
 export type FontWeight = number | string
 
 export type FontDisplay = 'auto' | 'block' | 'swap' | 'fallback' | 'optional'
@@ -80,12 +86,19 @@ export type LocalFontOptions = Omit<BaseFontOptions, 'weights' | 'styles' | 'sub
     }
 )
 
-export type RemoteFontOptions<W extends FontWeight = FontWeight> = BaseFontOptions<W>
+export type RemoteFontOptions<W extends FontWeight = FontWeight> =
+    Omit<BaseFontOptions<W>, 'styles'> & {
+        /** @default ['normal'] */
+        styles?: RemoteFontStyle[]
+    }
 
-export type FontsourceFontOptions<W extends FontWeight = FontWeight> = BaseFontOptions<W> & {
-    /** Defaults to `@fontsource/{family-slug}`. */
-    package?: string
-}
+export type FontsourceFontOptions<W extends FontWeight = FontWeight> =
+    Omit<BaseFontOptions<W>, 'styles'> & {
+        /** @default ['normal'] */
+        styles?: RemoteFontStyle[]
+        /** Defaults to `@fontsource/{family-slug}`. */
+        package?: string
+    }
 
 export type FontDefinition = {
     family: string

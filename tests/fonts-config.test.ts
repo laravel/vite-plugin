@@ -286,6 +286,52 @@ describe('fonts config', () => {
         it('accepts valid google definition', () => {
             expect(() => validateFontDefinition(google('Inter'))).not.toThrow()
         })
+
+        it('rejects oblique style for google provider', () => {
+            const def = google('Inter')
+            def.styles = ['normal', 'oblique']
+
+            expect(() => validateFontDefinition(def)).toThrowError(
+                /provider "google".*does not support the "oblique" style/
+            )
+        })
+
+        it('rejects oblique style for bunny provider', () => {
+            const def = bunny('Inter')
+            def.styles = ['oblique']
+
+            expect(() => validateFontDefinition(def)).toThrowError(
+                /provider "bunny".*does not support the "oblique" style/
+            )
+        })
+
+        it('rejects oblique style for fontsource provider', () => {
+            const def = fontsource('Inter')
+            def.styles = ['oblique']
+
+            expect(() => validateFontDefinition(def)).toThrowError(
+                /provider "fontsource".*does not support the "oblique" style/
+            )
+        })
+
+        it('accepts oblique style for local provider', () => {
+            const def: FontDefinition = {
+                family: 'Test',
+                alias: 'test',
+                provider: 'local',
+                variable: '--font-test',
+                weights: [400],
+                styles: ['oblique'],
+                subsets: [],
+                display: 'swap',
+                preload: true,
+                fallbacks: [],
+                optimizedFallbacks: true,
+                _local: { variants: [{ src: 'fonts/test.woff2', weight: 400, style: 'oblique' }] },
+            }
+
+            expect(() => validateFontDefinition(def)).not.toThrow()
+        })
     })
 
     describe('validateFontsConfig', () => {

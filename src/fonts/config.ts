@@ -319,6 +319,14 @@ export function validateFontDefinition(definition: FontDefinition): void {
     }
 
     if (definition.provider !== 'local') {
+        if (definition.styles.includes('oblique')) {
+            throw new Error(
+                `laravel-vite-plugin: Font "${definition.family}" uses provider "${definition.provider}", ` +
+                `which does not support the "oblique" style. ` +
+                `Use "italic" instead, or load the family with the local() provider.`
+            )
+        }
+
         return
     }
 

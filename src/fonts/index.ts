@@ -11,6 +11,7 @@ export type {
     FontProviderType,
     FontFormat,
     FontStyle,
+    RemoteFontStyle,
     FontWeight,
     FontDisplay,
     FontManifest,
