@@ -94,9 +94,11 @@ function familyVariableDeclaration(family: ResolvedFontFamily): string {
 }
 
 export function generateCssVariables(families: ResolvedFontFamily[]): string {
-    const lines = families.map(f => `  ${familyVariableDeclaration(f)}`)
+    const lines = families
+        .map((f) => `  ${familyVariableDeclaration(f)}`)
+        .join("\n");
 
-    return `:root {\n${lines.join('\n')}\n}`
+    return [':root {', lines, '}'].join('\n')
 }
 
 export function generateCssVariablesMap(families: ResolvedFontFamily[]): Record<string, string> {
