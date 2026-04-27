@@ -82,9 +82,11 @@ function resolveEntries(
     const seen = new Set<string>()
     const deduped = preloads.filter(p => {
         const key = p.file ?? p.url ?? ''
+
         if (seen.has(key)) {
             return false
         }
+        
         seen.add(key)
 
         return true
