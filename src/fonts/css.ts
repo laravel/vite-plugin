@@ -1,8 +1,4 @@
-import type { ResolvedFontFamily, ResolvedFontFile, FontWeight, FallbackMetrics } from './types.js'
-
-function formatWeight(weight: FontWeight): string {
-    return String(weight)
-}
+import type { ResolvedFontFamily, ResolvedFontFile, FallbackMetrics } from './types.js'
 
 function generateSrc(files: ResolvedFontFile[], filePathMap: Map<string, string>): string {
     return files
@@ -31,7 +27,7 @@ export function generateFontFace(
                 '@font-face {',
                 `  font-family: "${family.family}";`,
                 `  font-style: ${variant.style};`,
-                `  font-weight: ${formatWeight(variant.weight)};`,
+                `  font-weight: ${String(variant.weight)};`,
                 `  font-display: ${family.display};`,
                 `  src: ${fileSrc};`,
                 `  unicode-range: ${file.unicodeRange};`,
@@ -46,7 +42,7 @@ export function generateFontFace(
                 '@font-face {',
                 `  font-family: "${family.family}";`,
                 `  font-style: ${variant.style};`,
-                `  font-weight: ${formatWeight(variant.weight)};`,
+                `  font-weight: ${String(variant.weight)};`,
                 `  font-display: ${family.display};`,
                 `  src: ${src};`,
                 '}',
