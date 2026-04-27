@@ -22,7 +22,7 @@ export type PreloadSelector<W extends FontWeight = FontWeight> = {
 
 export type BaseFontOptions<W extends FontWeight = FontWeight> = {
     /** 
-     * Use to reference font using `@font` Blade directive or programatically. 
+     * Used to reference font using `@font` Blade directive or programatically. 
      * Defaults to a slug of the family name. 
      */
     alias?: string
