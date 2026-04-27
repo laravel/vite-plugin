@@ -32,13 +32,7 @@ const FALLBACK_METRICS: Record<FallbackCategory, FallbackEntry> = {
 function resolveFallbackCategory(category: unknown): FallbackCategory {
     const validCategories: FallbackCategory[] = ['sans-serif', 'serif', 'monospace']
 
-    for (const validCategory of validCategories) {
-        if (category === validCategory) {
-            return validCategory
-        }
-    }
-
-    return 'sans-serif';
+    return validCategories.includes(category as FallbackCategory) ? category as FallbackCategory : 'sans-serif';
 }
 
 export async function generateFallbackMetrics(
@@ -54,6 +48,7 @@ export async function generateFallbackMetrics(
         }
 
         const { ascent, descent, lineGap, unitsPerEm, xWidthAvg, category } = metrics
+
         if (ascent == null || descent == null || lineGap == null || unitsPerEm == null) {
             return undefined
         }
