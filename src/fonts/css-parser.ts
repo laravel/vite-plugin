@@ -5,6 +5,7 @@ export function parseFontFaceCss(css: string): ParsedFontFace[] {
     const ruleRegex = /@font-face\s*\{([^}]+)\}/g
 
     let match
+
     while ((match = ruleRegex.exec(css)) !== null) {
         const block = match[1]
         const face = parseFontFaceBlock(block)
@@ -57,6 +58,7 @@ function parseSrcDescriptor(src: string): ParsedFontSrc[] {
     const urlRegex = /url\(["']?([^"')]+)["']?\)\s*format\(["']?([^"')]+)["']?\)/g
 
     let match
+
     while ((match = urlRegex.exec(src)) !== null) {
         const url = match[1]
         const format = normalizeFormat(match[2])
@@ -68,6 +70,7 @@ function parseSrcDescriptor(src: string): ParsedFontSrc[] {
 
     if (results.length === 0) {
         const simpleUrlRegex = /url\(["']?([^"')]+)["']?\)/g
+
         while ((match = simpleUrlRegex.exec(src)) !== null) {
             const url = match[1]
             const format = inferFormatFromUrl(url)
