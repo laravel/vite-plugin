@@ -86,16 +86,15 @@ export function inferWeightFromFilename(filePath: string): FontWeight {
         const candidate = stripped || raw
         const lc = candidate.toLowerCase()
 
-        for (const [pattern, weight] of WEIGHT_PATTERNS) {
-            if (lc === pattern) {
-                return weight
-            }
-        }
+        const match =
+            WEIGHT_PATTERNS.find(([pattern]) => lc === pattern) ??
+            WEIGHT_PATTERNS.find(
+                ([pattern]) =>
+                    lc.length > pattern.length && lc.endsWith(pattern),
+            );
 
-        for (const [pattern, weight] of WEIGHT_PATTERNS) {
-            if (lc.length > pattern.length && lc.endsWith(pattern)) {
-                return weight
-            }
+        if (match) {
+            return match[1];
         }
 
         const numMatch = candidate.match(/(?:^|[^\d])([1-9]00)$/)
@@ -116,7 +115,7 @@ export function inferStyleFromFilename(filePath: string): FontStyle {
         const seg = segments[i]
         const lc = seg.toLowerCase()
 
-        if (lc === 'italic' || lc === 'it' || /italic$/i.test(seg)) {
+        if (['it', 'italic'].includes(lc) || /italic$/i.test(seg)) {
             return 'italic'
         }
 
@@ -232,7 +231,10 @@ function groupFilesByVariant(files: string[]): ResolvedFontVariant[] {
     return Array.from(groups.values()).sort((a, b) => {
         const wA = typeof a.weight === 'number' ? a.weight : parseInt(String(a.weight), 10)
         const wB = typeof b.weight === 'number' ? b.weight : parseInt(String(b.weight), 10)
-        if (wA !== wB) return wA - wB
+
+        if (wA !== wB) {
+            return wA - wB
+        }
 
         return a.style.localeCompare(b.style)
     })
@@ -244,7 +246,9 @@ export async function resolveLocalShorthandVariants(
     projectRoot: string,
 ): Promise<ResolvedFontVariant[]> {
     const discoveredFiles = await discoverFontFiles(definition.family, localConfig.src, projectRoot)
+
     discoveredFiles.sort()
+
     rejectVariableFontFiles(definition.family, discoveredFiles)
 
     return groupFilesByVariant(discoveredFiles)
@@ -351,6 +355,7 @@ export function validateFontDefinition(definition: FontDefinition): void {
     }
 
     const localConfig = definition._local
+
     if (! localConfig) {
         throw new Error(
             `laravel-vite-plugin: Local font "${definition.family}" must specify either "src" or "variants".`
@@ -374,6 +379,7 @@ export function validateFontDefinition(definition: FontDefinition): void {
     }
 
     const variants = localConfig.variants
+
     if (! variants || variants.length === 0) {
         throw new Error(
             `laravel-vite-plugin: Local font "${definition.family}" must specify at least one variant.`
@@ -382,6 +388,7 @@ export function validateFontDefinition(definition: FontDefinition): void {
 
     for (const v of variants) {
         const sources = Array.isArray(v.src) ? v.src : [v.src]
+
         if (sources.length === 0 || sources.some(s => typeof s !== 'string' || s.trim() === '')) {
             throw new Error(
                 `laravel-vite-plugin: Local font "${definition.family}" has a variant with an invalid or empty src.`
@@ -399,11 +406,13 @@ export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] 
 
         if (! existing) {
             const clone = { ...font }
+
             if (font._local) {
                 clone._local = 'variants' in font._local
                     ? { variants: [...font._local.variants] }
                     : { ...font._local }
             }
+
             byAlias.set(font.alias, clone)
             result.push(clone)
 
