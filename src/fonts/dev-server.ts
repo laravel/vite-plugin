@@ -18,6 +18,7 @@ export function buildDevUrlMap(
                 if (! urlMap.has(file.source)) {
                     const hash = cacheKey(file.source)
                     const ext = file.format === 'woff2' ? '.woff2' : `.${file.format}`
+
                     urlMap.set(file.source, `${devServerUrl}${FONT_ROUTE_PREFIX}/${hash}${ext}`)
                 }
             }
@@ -40,6 +41,7 @@ export function createFontMiddleware(): {
             for (const variant of family.variants) {
                 for (const file of variant.files) {
                     const hash = cacheKey(file.source)
+
                     newLookup.set(hash, { source: file.source, format: file.format })
                 }
             }
@@ -83,6 +85,7 @@ export function createFontMiddleware(): {
             if (! res.headersSent) {
                 res.statusCode = 500
             }
+
             res.destroy(err)
         })
 
