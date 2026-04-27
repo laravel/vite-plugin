@@ -24,12 +24,15 @@ async function resolveFontFamilies(
     const families: ResolvedFontFamily[] = []
 
     for (const definition of fonts) {
-        switch (definition.provider) {
-            case 'google':
-            case 'bunny':
-                families.push(await resolveRemoteFont(definition, cacheDir, REMOTE_CSS_URLS[definition.provider]))
+        const remoteUrl = REMOTE_CSS_URLS[definition.provider]
 
-                break
+        if (remoteUrl) {
+            families.push(await resolveRemoteFont(definition, cacheDir, REMOTE_CSS_URLS[definition.provider]))
+
+            return families
+        }
+
+        switch (definition.provider) {
             case 'fontsource':
                 families.push(resolveFontsourceFont(definition, projectRoot))
 
