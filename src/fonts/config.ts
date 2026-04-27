@@ -321,7 +321,7 @@ export function inferFormat(filePath: string): FontFormat {
     return format
 }
 
-function throwIfEmptyString(value?: string, message: string) {
+function throwIfEmptyString(value: string | undefined, message: string) {
     if (typeof value !== 'string' || value.trim() === '') {
         throw new Error(message)
     }
