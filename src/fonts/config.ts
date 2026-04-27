@@ -16,7 +16,7 @@ import type {
 } from './types.js'
 
 // Formats, in order of preference
-const FORMATS: FormatConfig[] = [
+export const FORMATS: FormatConfig[] = [
     {
         type: 'woff2',
         extension: '.woff2',
