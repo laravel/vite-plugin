@@ -24,7 +24,7 @@ const FORMAT_MAP: Record<string, FontFormat> = {
 
 const SUPPORTED_EXTENSIONS = Object.keys(FORMAT_MAP)
 
-const SUPPORTED_GLOB = `*.{${Object.keys(FORMAT_MAP).map(ext => ext.slice(1)).join(',')}}`
+const SUPPORTED_GLOB = `*.{${SUPPORTED_EXTENSIONS.map((ext) => ext.slice(1)).join(",")}}`;
 
 const DEFAULT_WEIGHT = 400
 const DEFAULT_STYLE: FontStyle = 'normal'
