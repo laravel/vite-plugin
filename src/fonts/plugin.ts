@@ -27,7 +27,9 @@ async function resolveFontFamilies(
         const remoteUrl = REMOTE_CSS_URLS[definition.provider]
 
         if (remoteUrl) {
-            families.push(await resolveRemoteFont(definition, cacheDir, REMOTE_CSS_URLS[definition.provider]))
+            families.push(
+                await resolveRemoteFont(definition, cacheDir, remoteUrl),
+            );
         }
 
         switch (definition.provider) {
