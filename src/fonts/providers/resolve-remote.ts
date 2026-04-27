@@ -19,6 +19,7 @@ export function buildCss2Url(baseUrl: string, definition: FontDefinition): strin
         for (const style of styles) {
             if (hasItalic) {
                 const ital = style === 'italic' ? '1' : '0'
+
                 tuples.add(`${ital},${weight}`)
             } else {
                 tuples.add(`${weight}`)
@@ -29,12 +30,7 @@ export function buildCss2Url(baseUrl: string, definition: FontDefinition): strin
     const axisStr = axes.join(',')
     const tupleStr = [...tuples].sort().join(';')
 
-    let url = `${baseUrl}?family=${family}:${axisStr}@${tupleStr}&display=${definition.display}`
-
-    const subsets = definition.subsets
-    url += `&subset=${subsets.join(',')}`
-
-    return url
+    return `${baseUrl}?family=${family}:${axisStr}@${tupleStr}&display=${definition.display}&subset=${definition.subsets.join(",")}`;
 }
 
 export async function resolveRemoteVariants(
@@ -43,11 +39,9 @@ export async function resolveRemoteVariants(
     baseUrl: string,
 ): Promise<ResolvedFontVariant[]> {
     const url = buildCss2Url(baseUrl, definition)
-
     const css = await fetchTextAndCache(url, cacheDir, {
         'User-Agent': WOFF2_USER_AGENT,
     })
-
     const faces = parseFontFaceCss(css)
 
     if (faces.length === 0) {
