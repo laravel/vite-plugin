@@ -30,14 +30,15 @@ const FALLBACK_METRICS: Record<FallbackCategory, FallbackEntry> = {
 }
 
 function resolveFallbackCategory(category: unknown): FallbackCategory {
-    switch (category) {
-        case 'serif':
-            return 'serif'
-        case 'monospace':
-            return 'monospace'
-        default:
-            return 'sans-serif'
+    const validCategories: FallbackCategory[] = ['sans-serif', 'serif', 'monospace']
+
+    for (const validCategory of validCategories) {
+        if (category === validCategory) {
+            return validCategory
+        }
     }
+
+    return 'sans-serif';
 }
 
 export async function generateFallbackMetrics(
