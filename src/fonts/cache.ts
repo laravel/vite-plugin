@@ -25,14 +25,11 @@ export function readCache(cacheDir: string, key: string): Buffer|undefined {
 }
 
 export function readCacheText(cacheDir: string, key: string): string|undefined {
-    const data = readCache(cacheDir, key)
-
-    return data?.toString('utf-8')
+    return readCache(cacheDir, key)?.toString('utf-8')
 }
 
 export function writeCache(cacheDir: string, key: string, data: Buffer|string): void {
-    const filePath = path.join(cacheDir, key)
-    fs.writeFileSync(filePath, data)
+    fs.writeFileSync(path.join(cacheDir, key), data)
 }
 
 async function fetchOrThrow(url: string, headers?: Record<string, string>): Promise<Response> {
@@ -61,6 +58,7 @@ export async function fetchAndCache(
 
     const response = await fetchOrThrow(url, headers)
     const buffer = Buffer.from(await response.arrayBuffer())
+
     writeCache(cacheDir, key, buffer)
 
     return buffer
@@ -80,6 +78,7 @@ export async function fetchTextAndCache(
 
     const response = await fetchOrThrow(url, headers)
     const text = await response.text()
+    
     writeCache(cacheDir, key, text)
 
     return text
