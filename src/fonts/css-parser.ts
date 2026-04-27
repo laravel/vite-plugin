@@ -1,4 +1,12 @@
+import { FORMATS } from './config.js'
 import type { FontFormat, FontStyle, FontWeight, ParsedFontFace, ParsedFontSrc } from './types.js'
+
+const FORMAT_ALIASES: Record<string, FontFormat> = {
+    truetype: "ttf",
+    opentype: "otf",
+    "embedded-opentype": "eot",
+    ...Object.fromEntries(FORMATS.map((f) => [f.type, f.type])),
+};
 
 export function parseFontFaceCss(css: string): ParsedFontFace[] {
     const results: ParsedFontFace[] = []
@@ -91,18 +99,7 @@ function parseWeight(weight: string): FontWeight {
 }
 
 function normalizeFormat(format: string): FontFormat|null {
-    const map: Record<string, FontFormat> = {
-        'woff2': 'woff2',
-        'woff': 'woff',
-        'ttf': 'ttf',
-        'truetype': 'ttf',
-        'otf': 'otf',
-        'opentype': 'otf',
-        'eot': 'eot',
-        'embedded-opentype': 'eot',
-    }
-
-    return map[format.toLowerCase()] ?? null
+    return FORMAT_ALIASES[format.toLowerCase()] ?? null
 }
 
 function inferFormatFromUrl(url: string): FontFormat|null {
