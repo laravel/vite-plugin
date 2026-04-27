@@ -28,8 +28,6 @@ async function resolveFontFamilies(
 
         if (remoteUrl) {
             families.push(await resolveRemoteFont(definition, cacheDir, REMOTE_CSS_URLS[definition.provider]))
-
-            return families
         }
 
         switch (definition.provider) {
