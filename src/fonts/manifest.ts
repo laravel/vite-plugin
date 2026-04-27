@@ -86,7 +86,7 @@ function resolveEntries(
         if (seen.has(key)) {
             return false
         }
-        
+
         seen.add(key)
 
         return true
