@@ -17,12 +17,8 @@ function shouldPreload(
     family: ResolvedFontFamily,
     variant: ResolvedFontVariant,
 ): boolean {
-    if (family.preload === false) {
-        return false
-    }
-
-    if (family.preload === true) {
-        return true
+    if (family.preload === false || family.preload === true) {
+        return family.preload
     }
 
     return family.preload.some(
