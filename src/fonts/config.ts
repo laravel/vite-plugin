@@ -455,6 +455,7 @@ export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] 
         }
 
         const weightSet = new Set(existing.weights.map(String))
+
         for (const w of font.weights) {
             if (! weightSet.has(String(w))) {
                 existing.weights.push(w)
@@ -463,6 +464,7 @@ export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] 
         }
 
         const styleSet = new Set(existing.styles)
+
         for (const s of font.styles) {
             if (! styleSet.has(s)) {
                 existing.styles.push(s)
@@ -471,6 +473,7 @@ export function mergeFontDefinitions(fonts: FontDefinition[]): FontDefinition[] 
         }
 
         const subsetSet = new Set(existing.subsets)
+
         for (const s of font.subsets) {
             if (! subsetSet.has(s)) {
                 existing.subsets.push(s)
@@ -507,6 +510,7 @@ export function validateFontsConfig(fonts: FontDefinition[]): FontDefinition[] {
                 `Each alias must be unique. Use the "alias" option to disambiguate.`
             )
         }
+
         aliases.add(font.alias)
 
         if (variables.has(font.variable)) {
@@ -515,6 +519,7 @@ export function validateFontsConfig(fonts: FontDefinition[]): FontDefinition[] {
                 `Use the "variable" option to set a unique variable name.`
             )
         }
+
         variables.add(font.variable)
     }
 
