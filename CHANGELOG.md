@@ -1,6 +1,20 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.0.0...3.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.0.3...3.x)
+
+## [v3.0.3](https://github.com/laravel/vite-plugin/compare/v3.0.0...v3.0.3) - 2026-04-29
+
+### What's Changed
+
+* Add font optimization plugin by [@WendellAdriel](https://github.com/WendellAdriel) in https://github.com/laravel/vite-plugin/pull/348
+* Add release script and publish workflow by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/vite-plugin/pull/351
+
+### New Contributors
+
+* [@WendellAdriel](https://github.com/WendellAdriel) made their first contribution in https://github.com/laravel/vite-plugin/pull/348
+* [@joetannenbaum](https://github.com/joetannenbaum) made their first contribution in https://github.com/laravel/vite-plugin/pull/351
+
+**Full Changelog**: https://github.com/laravel/vite-plugin/compare/v3.0.1...v3.0.3
 
 ## [v3.0.0](https://github.com/laravel/vite-plugin/compare/v2.1.0...v3.0.0) - 2026-03-18
 
