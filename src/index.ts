@@ -121,6 +121,21 @@ export const refreshPaths = [
     'routes/**',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
 
+/**
+ * The project-root directories excluded from Vite's dev-mode file watcher by default.
+ *
+ * Watching these directories can trigger unnecessary full page reloads and, on Linux,
+ * contributes to inotify watch exhaustion. They are matched only at the project root,
+ * so sibling directories such as `public/vendor` remain watched.
+ */
+export const watchIgnoredDirectories = [
+    'bootstrap',
+    'database',
+    'storage',
+    'tests',
+    'vendor',
+]
+
 const logger = createLogger('info', {
     prefix: '[laravel-vite-plugin]'
 })
@@ -167,6 +182,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
 
             ensureCommandShouldRunInEnvironment(command, env)
 
+            const watchIgnored = command === 'serve'
+                ? resolveWatchIgnored(pluginConfig, userConfig)
+                : undefined
+
             return {
                 base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
                 publicDir: userConfig.publicDir ?? false,
@@ -202,6 +221,12 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                             ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
                         },
                         https: userConfig.server?.https ?? serverConfig.https,
+                    } : undefined),
+                    ...(watchIgnored ? {
+                        watch: {
+                            ...userConfig.server?.watch,
+                            ignored: watchIgnored,
+                        },
                     } : undefined),
                 },
                 resolve: {
@@ -436,6 +461,87 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
     }
 
     return path.join(config.publicDirectory, config.buildDirectory)
+}
+
+/**
+ * Resolve the file watcher `ignored` option.
+ *
+ * Falls back to the user-provided value when present. Otherwise returns a
+ * matcher that ignores Laravel directories that typically change frequently
+ * during development but should never trigger a page reload — while leaving
+ * any directory the user has configured for refresh fully watched.
+ */
+function resolveWatchIgnored(
+    pluginConfig: Required<PluginConfig>,
+    userConfig: UserConfig,
+): ((file: string) => boolean)|undefined {
+    const userIgnored = userConfig.server?.watch?.ignored
+    if (typeof userIgnored !== 'undefined') {
+        return undefined
+    }
+
+    const root = path.resolve(userConfig.root ?? process.cwd())
+    const refreshTopDirectories = collectRefreshTopDirectories(pluginConfig.refresh)
+    const ignoredDirectories = watchIgnoredDirectories.filter(dir => ! refreshTopDirectories.has(dir))
+
+    if (ignoredDirectories.length === 0) {
+        return undefined
+    }
+
+    return (file: string): boolean => {
+        const absolutePath = path.resolve(file)
+
+        if (absolutePath === root || ! absolutePath.startsWith(root + path.sep)) {
+            return false
+        }
+
+        const relativePath = path.relative(root, absolutePath).split(path.sep).join('/')
+        const topDirectory = relativePath.split('/')[0]
+
+        return ignoredDirectories.includes(topDirectory)
+    }
+}
+
+/**
+ * Collect the top-level directory names that the user is refreshing on, so
+ * they can be excluded from the default watch-ignore list.
+ */
+function collectRefreshTopDirectories(refresh: Required<PluginConfig>['refresh']): Set<string> {
+    const directories = new Set<string>()
+
+    if (typeof refresh === 'boolean') {
+        if (refresh) {
+            for (const p of refreshPaths) {
+                addRefreshTopDirectory(directories, p)
+            }
+        }
+
+        return directories
+    }
+
+    const configs = Array.isArray(refresh) ? refresh : [refresh]
+
+    for (const entry of configs) {
+        if (typeof entry === 'string') {
+            addRefreshTopDirectory(directories, entry)
+            continue
+        }
+
+        for (const p of entry.paths) {
+            addRefreshTopDirectory(directories, p)
+        }
+    }
+
+    return directories
+}
+
+function addRefreshTopDirectory(target: Set<string>, refreshPath: string): void {
+    const normalized = refreshPath.replace(/^(\.?\/)+/, '')
+    const topDirectory = normalized.split(/[/\\]/)[0]
+
+    if (topDirectory && ! topDirectory.includes('*')) {
+        target.add(topDirectory)
+    }
 }
 
 /**
