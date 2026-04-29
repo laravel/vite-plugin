@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.0.3...3.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.1.0...3.x)
+
+## [v3.1.0](https://github.com/laravel/vite-plugin/compare/v3.0.3...v3.1.0) - 2026-04-29
+
+**Full Changelog**: https://github.com/laravel/vite-plugin/compare/v3.0.3...v3.1.0
 
 ## [v3.0.3](https://github.com/laravel/vite-plugin/compare/v3.0.0...v3.0.3) - 2026-04-29
 
