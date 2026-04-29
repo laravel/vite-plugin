@@ -51,6 +51,10 @@ echo "Updating lock file..."
 npm install
 echo ""
 
+echo "Verifying build..."
+npm run build
+echo ""
+
 git add package.json
 git commit -m "$TAG"
 git tag -a "$TAG" -m "$TAG"
