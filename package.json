@@ -63,7 +63,7 @@
     },
     "peerDependencies": {
         "vite": "^8.0.0",
-        "fontaine": "^0.5.0"
+        "fontaine": "^0.8.0"
     },
     "peerDependenciesMeta": {
         "fontaine": {
