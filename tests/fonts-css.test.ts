@@ -43,6 +43,31 @@ describe('fonts css generation', () => {
             expect(css).toContain('url("assets/inter-400-abc123.woff2") format("woff2")')
         })
 
+        it('uses the spec-compliant format keyword for each font format', () => {
+            const cases: [ResolvedFontFamily['variants'][number]['files'][number]['format'], string][] = [
+                ['woff2', 'woff2'],
+                ['woff', 'woff'],
+                ['ttf', 'truetype'],
+                ['otf', 'opentype'],
+                ['eot', 'embedded-opentype'],
+            ]
+
+            for (const [format, keyword] of cases) {
+                const source = `/fonts/inter-400.${format}`
+                const family = makeFamily({
+                    variants: [{
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source, format }],
+                    }],
+                })
+
+                const css = generateFontFace(family, new Map([[source, `assets/inter-400.${format}`]]))
+
+                expect(css).toContain(`url("assets/inter-400.${format}") format("${keyword}")`)
+            }
+        })
+
         it('generates separate rules for unicode-range subsets', () => {
             const family = makeFamily({
                 variants: [{

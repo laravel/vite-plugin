@@ -20,22 +20,27 @@ export const FORMATS: FormatConfig[] = [
     {
         type: 'woff2',
         extension: '.woff2',
+        keyword: 'woff2',
     },
     {
         type: 'woff',
         extension: '.woff',
+        keyword: 'woff',
     },
     {
         type: 'ttf',
         extension: '.ttf',
+        keyword: 'truetype',
     },
     {
         type: 'otf',
         extension: '.otf',
+        keyword: 'opentype',
     },
     {
         type: 'eot',
         extension: '.eot',
+        keyword: 'embedded-opentype',
     }
 ]
 
@@ -44,6 +49,17 @@ const FORMAT_PREFERENCE: FontFormat[] = FORMATS.map(f => f.type)
 const FORMAT_MAP: Record<string, FontFormat> = Object.fromEntries(
     FORMATS.map(f => [f.extension, f.type])
 )
+
+const FORMAT_KEYWORD_MAP: Record<FontFormat, string> = Object.fromEntries(
+    FORMATS.map(f => [f.type, f.keyword])
+) as Record<FontFormat, string>
+
+/**
+ * Resolve the CSS `@font-face` `format(...)` keyword for a font format.
+ */
+export function formatKeyword(format: FontFormat): string {
+    return FORMAT_KEYWORD_MAP[format] ?? format
+}
 
 const SUPPORTED_EXTENSIONS = FORMATS.map(f => f.extension)
 const SUPPORTED_GLOB = `*.{${SUPPORTED_EXTENSIONS.map((ext) => ext.slice(1)).join(",")}}`;
