@@ -22,13 +22,16 @@ type MockContext = {
     refs: Map<string, string>
     counter: number
     bundle: Bundle
+    warnings: string[]
     emitFile: (opts: { type: 'asset', name?: string, fileName?: string, source: string | Buffer }) => string
     getFileName: (ref: string) => string
+    warn: (message: string) => void
 }
 
 function createMockContext(): MockContext {
     const refs = new Map<string, string>()
     const bundle: Bundle = {}
+    const warnings: string[] = []
     let counter = 0
 
     const emitFile: MockContext['emitFile'] = (opts) => {
@@ -54,7 +57,7 @@ function createMockContext(): MockContext {
         return name
     }
 
-    return { refs, counter, bundle, emitFile, getFileName }
+    return { refs, counter, bundle, warnings, emitFile, getFileName, warn: (message) => warnings.push(message) }
 }
 
 function buildAssetFileName(name: string): string {
@@ -214,6 +217,30 @@ describe('fonts plugin single-pass build', () => {
             expect(cssText).not.toMatch(/url\("\.\/assets\//)
 
             expect(manifest.style.familyStyles.test).toMatch(/url\("\.\/assets\/test-[^"]*\.woff2"\)/)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('warns and drops the fallback family when fallback metrics cannot be generated', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-fallback-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: true,
+                fallbacks: ['sans-serif'],
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+
+            expect(ctx.warnings.length).toBeGreaterThan(0)
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifest = JSON.parse(String(findManifestAsset(ctx.bundle).source))
+
+            expect(cssText).toContain('--font-test: "Test", sans-serif;')
+            expect(cssText).not.toContain('Test fallback')
+            expect(manifest.families.test.fallbackFamily).toBeUndefined()
         } finally {
             fs.rmSync(tmpRoot, { recursive: true, force: true })
         }

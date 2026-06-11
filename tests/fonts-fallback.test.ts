@@ -183,4 +183,54 @@ describe('generateFallbackMetrics', () => {
         const sizeAdjust = (realFont.xWidthAvg / realFont.unitsPerEm) / (ARIAL.xWidthAvg / ARIAL.unitsPerEm)
         expect(parseFloat(metrics!.sizeAdjust)).toBeCloseTo(sizeAdjust * 100, 1)
     })
+
+    it('warns when metrics cannot be read from the font', async () => {
+        readMetricsMock.mockResolvedValue(null)
+        const warn = vi.fn()
+
+        const metrics = await generateFallbackMetrics('/fake/unreadable.woff2', warn)
+
+        expect(metrics).toBeUndefined()
+        expect(warn).toHaveBeenCalledTimes(1)
+        expect(warn.mock.calls[0][0]).toContain('/fake/unreadable.woff2')
+    })
+
+    it('warns when required metric fields are missing', async () => {
+        readMetricsMock.mockResolvedValue({ unitsPerEm: 2048, category: 'sans-serif' })
+        const warn = vi.fn()
+
+        const metrics = await generateFallbackMetrics('/fake/partial.woff2', warn)
+
+        expect(metrics).toBeUndefined()
+        expect(warn).toHaveBeenCalledTimes(1)
+        expect(warn.mock.calls[0][0]).toContain('/fake/partial.woff2')
+    })
+
+    it('warns with the underlying error when reading metrics throws', async () => {
+        readMetricsMock.mockRejectedValue(new Error('corrupt font table'))
+        const warn = vi.fn()
+
+        const metrics = await generateFallbackMetrics('/fake/corrupt.woff2', warn)
+
+        expect(metrics).toBeUndefined()
+        expect(warn).toHaveBeenCalledTimes(1)
+        expect(warn.mock.calls[0][0]).toContain('corrupt font table')
+    })
+
+    it('does not warn when metrics generation succeeds', async () => {
+        readMetricsMock.mockResolvedValue({
+            ascent: 1950,
+            descent: -500,
+            lineGap: 0,
+            unitsPerEm: 2048,
+            xWidthAvg: 1100,
+            category: 'sans-serif',
+        })
+        const warn = vi.fn()
+
+        const metrics = await generateFallbackMetrics('/fake/inter.woff2', warn)
+
+        expect(metrics).toBeDefined()
+        expect(warn).not.toHaveBeenCalled()
+    })
 })

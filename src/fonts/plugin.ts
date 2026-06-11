@@ -49,8 +49,17 @@ async function resolveFontFamilies(
 
 async function buildFallbackMap(
     families: ResolvedFontFamily[],
+    warn: (message: string) => void,
 ): Promise<Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>> {
     const fallbackMap = new Map<string, { fallbackFamily: string, metrics: FallbackMetrics }>()
+    const warned = new Set<string>()
+
+    const warnOnce = (message: string): void => {
+        if (! warned.has(message)) {
+            warned.add(message)
+            warn(message)
+        }
+    }
 
     for (const family of families) {
         if (! family.optimizedFallbacks) {
@@ -63,13 +72,22 @@ async function buildFallbackMap(
             continue
         }
 
-        const metrics = await generateFallbackMetrics(firstFile.source)
+        const metrics = await generateFallbackMetrics(firstFile.source, warnOnce)
 
         if (metrics) {
             fallbackMap.set(family.alias, {
                 fallbackFamily: `${family.family} fallback`,
                 metrics,
             })
+        }
+    }
+
+    // Disable optimized fallbacks for families without generated metrics so
+    // the CSS variables and manifest never reference a fallback font face
+    // that was not emitted.
+    for (const family of families) {
+        if (family.optimizedFallbacks && ! fallbackMap.has(family.alias)) {
+            family.optimizedFallbacks = false
         }
     }
 
@@ -182,7 +200,7 @@ export function resolveFontsPlugin(
             }
 
             fontsFileRefMap = emitFontAssets(resolvedFamilies, (opts) => this.emitFile(opts))
-            fontsFallbackMap = await buildFallbackMap(resolvedFamilies)
+            fontsFallbackMap = await buildFallbackMap(resolvedFamilies, (message) => this.warn(message))
         },
 
         generateBundle() {
@@ -242,7 +260,7 @@ export function resolveFontsPlugin(
 
                     fontMiddleware.update(resolvedFamilies)
 
-                    const fallbackMap = await buildFallbackMap(resolvedFamilies)
+                    const fallbackMap = await buildFallbackMap(resolvedFamilies, (message) => server.config.logger.warn(`[laravel:fonts] ${message}`))
                     const urlMap = buildDevUrlMap(resolvedFamilies, devServerUrl)
                     const css = generateFontCss(resolvedFamilies, urlMap, fallbackMap)
                     const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, urlMap, fallbackMap)

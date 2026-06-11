@@ -37,19 +37,33 @@ function resolveFallbackCategory(category: unknown): FallbackCategory {
 
 export async function generateFallbackMetrics(
     fontSource: string,
+    warn: (message: string) => void = () => undefined,
 ): Promise<FallbackMetrics|undefined> {
+    let fontaine
+
     try {
         // @ts-expect-error — fontaine is an optional peer dependency
-        const fontaine = await import('fontaine')
+        fontaine = await import('fontaine')
+    } catch {
+        warn('Optimized font fallbacks require the optional "fontaine" package. Install it, or set "optimizedFallbacks: false" on your fonts to disable the feature.')
+
+        return undefined
+    }
+
+    try {
         const metrics = await fontaine.readMetrics(fontSource)
 
         if (! metrics) {
+            warn(`Unable to read font metrics from [${fontSource}]. Skipping optimized fallback generation for this font.`)
+
             return undefined
         }
 
         const { ascent, descent, lineGap, unitsPerEm, xWidthAvg, category } = metrics
 
         if (ascent == null || descent == null || lineGap == null || unitsPerEm == null) {
+            warn(`Unable to read font metrics from [${fontSource}]. Skipping optimized fallback generation for this font.`)
+
             return undefined
         }
 
@@ -68,7 +82,9 @@ export async function generateFallbackMetrics(
             lineGapOverride: `${(lineGap / adjustedEm * 100).toFixed(2)}%`,
             sizeAdjust: `${(sizeAdjust * 100).toFixed(2)}%`,
         }
-    } catch {
+    } catch (e) {
+        warn(`Unable to generate an optimized font fallback from [${fontSource}]: ${e instanceof Error ? e.message : String(e)}`)
+
         return undefined
     }
 }
