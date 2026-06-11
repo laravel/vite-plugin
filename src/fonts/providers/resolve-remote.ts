@@ -51,9 +51,26 @@ export async function resolveRemoteVariants(
         )
     }
 
+    // The CSS2 APIs return rules for every available subset regardless of the
+    // requested ones, so filter by the subset labels in the response. Rules
+    // without a label are kept to stay compatible with unlabelled responses.
+    const requestedFaces = faces.filter(
+        face => ! face.subset || definition.subsets.includes(face.subset)
+    )
+
+    if (requestedFaces.length === 0) {
+        const available = [...new Set(faces.map(face => face.subset).filter(Boolean))]
+
+        throw new Error(
+            `laravel-vite-plugin: ${definition.provider} returned no @font-face rules matching the requested ` +
+            `subsets [${definition.subsets.join(', ')}] for "${definition.family}". ` +
+            `Available subsets: [${available.join(', ')}].`
+        )
+    }
+
     const variants: ResolvedFontVariant[] = []
 
-    for (const face of faces) {
+    for (const face of requestedFaces) {
         const files: ResolvedFontFile[] = []
 
         for (const src of face.src) {

@@ -10,16 +10,19 @@ const FORMAT_ALIASES: Record<string, FontFormat> = {
 
 export function parseFontFaceCss(css: string): ParsedFontFace[] {
     const results: ParsedFontFace[] = []
-    const ruleRegex = /@font-face\s*\{([^}]+)\}/g
+    // The Google and Bunny CSS APIs label each rule with a subset comment,
+    // e.g. `/* latin-ext */` directly above the @font-face block.
+    const ruleRegex = /(?:\/\*\s*([\w-]+)\s*\*\/\s*)?@font-face\s*\{([^}]+)\}/g
 
     let match
 
     while ((match = ruleRegex.exec(css)) !== null) {
-        const block = match[1]
+        const subset = match[1]
+        const block = match[2]
         const face = parseFontFaceBlock(block)
 
         if (face) {
-            results.push(face)
+            results.push(subset ? { ...face, subset } : face)
         }
     }
 

@@ -197,6 +197,81 @@ describe('fonts providers', () => {
             const faces = parseFontFaceCss(css)
             expect(faces[0].src[0].format).toBe('otf')
         })
+
+        it('captures the subset label from the preceding comment', () => {
+            const faces = parseFontFaceCss(GOOGLE_INTER_CSS)
+
+            expect(faces.map(f => f.subset)).toEqual(['latin', 'latin-ext', 'latin'])
+        })
+
+        it('leaves subset undefined when no comment precedes the rule', () => {
+            const css = `@font-face {
+                font-family: 'Test';
+                src: url(https://example.com/font.woff2) format('woff2');
+            }`
+
+            const faces = parseFontFaceCss(css)
+
+            expect(faces).toHaveLength(1)
+            expect(faces[0].subset).toBeUndefined()
+        })
+    })
+
+    describe('remote subset filtering', () => {
+        let cacheDir: string
+
+        beforeEach(() => {
+            cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-subset-test-'))
+            vi.spyOn(cache, 'fetchTextAndCache').mockResolvedValue(GOOGLE_INTER_CSS)
+            vi.spyOn(cache, 'fetchAndCache').mockResolvedValue(Buffer.from('font-bytes'))
+        })
+
+        afterEach(() => {
+            vi.restoreAllMocks()
+            fs.rmSync(cacheDir, { recursive: true, force: true })
+        })
+
+        it('only keeps the default latin subset', async () => {
+            const variants = await resolveRemoteVariants(google('Inter', {
+                weights: [400, 700],
+            }), cacheDir, 'https://fonts.googleapis.com/css2')
+
+            // The fixture contains latin + latin-ext for 400 and latin for 700.
+            expect(variants).toHaveLength(2)
+            expect(variants.map(v => v.weight).sort()).toEqual([400, 700])
+        })
+
+        it('keeps every requested subset', async () => {
+            const variants = await resolveRemoteVariants(google('Inter', {
+                weights: [400, 700],
+                subsets: ['latin', 'latin-ext'],
+            }), cacheDir, 'https://fonts.googleapis.com/css2')
+
+            expect(variants).toHaveLength(3)
+        })
+
+        it('throws a clear error listing available subsets when none match', async () => {
+            await expect(resolveRemoteVariants(google('Inter', {
+                subsets: ['cyrillic'],
+            }), cacheDir, 'https://fonts.googleapis.com/css2')).rejects.toThrow(
+                /requested subsets \[cyrillic\].*Available subsets: \[latin, latin-ext\]/s,
+            )
+        })
+
+        it('keeps unlabelled rules regardless of requested subsets', async () => {
+            vi.mocked(cache.fetchTextAndCache).mockResolvedValue(`@font-face {
+                font-family: 'Inter';
+                font-style: normal;
+                font-weight: 400;
+                src: url(https://example.com/inter.woff2) format('woff2');
+            }`)
+
+            const variants = await resolveRemoteVariants(google('Inter', {
+                subsets: ['latin'],
+            }), cacheDir, 'https://fonts.googleapis.com/css2')
+
+            expect(variants).toHaveLength(1)
+        })
     })
 
     describe('remote fetcher User-Agent', () => {
