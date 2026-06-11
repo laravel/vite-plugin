@@ -127,7 +127,6 @@ export function assertFileRefsResolved(
 export function resolveFontsPlugin(
     fonts: FontDefinition[]|undefined,
     hotFile: string,
-    buildDirectory: string,
 ): Plugin[] {
     if (! fonts || fonts.length === 0) {
         return []
@@ -179,11 +178,12 @@ export function resolveFontsPlugin(
 
             const relativeFilePathMap = new Map<string, string>()
             const absoluteFilePathMap = new Map<string, string>()
+            const base = resolvedConfig.base.endsWith('/') ? resolvedConfig.base : `${resolvedConfig.base}/`
 
             for (const [source, ref] of fontsFileRefMap) {
                 const fileName = this.getFileName(ref)
                 relativeFilePathMap.set(source, fileName)
-                absoluteFilePathMap.set(source, `/${buildDirectory}/${fileName}`)
+                absoluteFilePathMap.set(source, `${base}${fileName}`)
             }
 
             const finalCss = generateFontCss(resolvedFamilies, absoluteFilePathMap, fontsFallbackMap)
