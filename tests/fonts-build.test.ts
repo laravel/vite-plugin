@@ -128,6 +128,30 @@ describe('fonts plugin single-pass build', () => {
         }
     })
 
+    it('sanitizes variable font weight ranges in emitted asset filenames', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-vf-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: '100 900', style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+
+            const fontAssets = Object.keys(ctx.bundle).filter(name => name.endsWith('.woff2'))
+
+            expect(fontAssets.length).toBe(1)
+            expect(fontAssets[0]).toContain('test-100-900-normal')
+            expect(fontAssets.every(name => ! name.includes(' '))).toBe(true)
+
+            // The @font-face weight itself must keep the space-separated range.
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            expect(cssText).toContain('font-weight: 100 900;')
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
     it('gives distinct hashed URLs to each of multiple families that share a fallback keyword', async () => {
         const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-multi-'))
         try {

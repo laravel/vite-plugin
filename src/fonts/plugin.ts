@@ -92,7 +92,9 @@ function emitFontAssets(
                 const source = fs.readFileSync(file.source)
                 const slug = familyToSlug(family.family)
                 const ext = file.format === 'woff2' ? '.woff2' : `.${file.format}`
-                const name = `${slug}-${variant.weight}-${variant.style}${ext}`
+                // Variable font weight ranges contain a space (e.g. "100 900").
+                const weight = String(variant.weight).replace(/\s+/g, '-')
+                const name = `${slug}-${weight}-${variant.style}${ext}`
                 const ref = emitFile({ type: 'asset', name, source })
 
                 fileRefMap.set(file.source, ref)
