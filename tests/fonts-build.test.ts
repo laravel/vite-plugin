@@ -74,7 +74,7 @@ async function runBuild(
 
     const ctx = createMockContext()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(plugin.configResolved as any).call(ctx, { root: tmpRoot, command: 'build', base })
+    ;(plugin.configResolved as any).call(ctx, { root: tmpRoot, command: 'build', base, build: { assetsDir: 'assets' } })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (plugin.buildStart as any).call(ctx)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -192,6 +192,28 @@ describe('fonts plugin single-pass build', () => {
             const cssText = String(findCssAsset(ctx.bundle).source)
 
             expect(cssText).toMatch(/url\("https:\/\/cdn\.example\.com\/build\/assets\/test-[^"]*\.woff2"\)/)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('uses CSS-relative font URLs when Vite uses a relative base', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-relative-base-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot, './')
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifest = JSON.parse(String(findManifestAsset(ctx.bundle).source))
+
+            expect(cssText).toMatch(/url\("\.\/test-[^"]*\.woff2"\)/)
+            expect(cssText).not.toMatch(/url\("\.\/assets\//)
+
+            expect(manifest.style.familyStyles.test).toMatch(/url\("\.\/assets\/test-[^"]*\.woff2"\)/)
         } finally {
             fs.rmSync(tmpRoot, { recursive: true, force: true })
         }
