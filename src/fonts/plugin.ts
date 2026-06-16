@@ -1,20 +1,22 @@
 import fs from 'fs'
 import path from 'path'
-import { validateFontsConfig, resolveLocalFont, familyToSlug } from './config.js'
-import { generateFontCss, generateFamilyStyles } from './css.js'
-import { buildManifest, buildDevManifest } from './manifest.js'
-import { resolveCacheDir } from './cache.js'
-import { resolveRemoteFont } from './providers/resolve-remote.js'
-import { resolveFontsourceFont } from './providers/resolve-fontsource.js'
-import { generateFallbackMetrics } from './fallback.js'
-import { buildDevUrlMap, createFontMiddleware } from './dev-server.js'
 import type { Plugin, ResolvedConfig } from 'vite'
-import type { FontDefinition, ResolvedFontFamily, FallbackMetrics } from './types.js'
+import { resolveCacheDir } from './cache.js'
+import { familyToSlug, resolveLocalFont, validateFontsConfig } from './config.js'
+import { generateFamilyStyles, generateFontCss } from './css.js'
+import { buildDevUrlMap, createFontMiddleware } from './dev-server.js'
+import { generateFallbackMetrics } from './fallback.js'
+import { buildDevManifest, buildManifest } from './manifest.js'
+import { resolveFontsourceFont } from './providers/resolve-fontsource.js'
+import { resolveRemoteFont } from './providers/resolve-remote.js'
+import type { FallbackMetrics, FontDefinition, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant } from './types.js'
 
 const REMOTE_CSS_URLS: Record<string, string> = {
     google: 'https://fonts.googleapis.com/css2',
     bunny: 'https://fonts.bunny.net/css2',
 }
+
+type SourceWeightMap = Map<string, Map<string, Set<string>>>
 
 async function resolveFontFamilies(
     fonts: FontDefinition[],
@@ -76,11 +78,51 @@ async function buildFallbackMap(
     return fallbackMap
 }
 
+function buildSourceWeightMap(families: ResolvedFontFamily[]): SourceWeightMap {
+    const sourceWeightMap = new Map<string, Map<string, Set<string>>>()
+
+    for (const family of families) {
+        for (const variant of family.variants) {
+            for (const file of variant.files) {
+                if (! sourceWeightMap.has(file.source)) {
+                    sourceWeightMap.set(file.source, new Map())
+                }
+
+                const styleWeights = sourceWeightMap.get(file.source)!
+
+                if (! styleWeights.has(variant.style)) {
+                    styleWeights.set(variant.style, new Set())
+                }
+
+                styleWeights.get(variant.style)!.add(String(variant.weight))
+            }
+        }
+    }
+
+    return sourceWeightMap
+}
+
+function buildFontAssetName(
+    family: ResolvedFontFamily,
+    variant: ResolvedFontVariant,
+    file: ResolvedFontFile,
+    sourceWeightMap: SourceWeightMap,
+): string {
+    const slug = familyToSlug(family.family)
+    const ext = file.format === 'woff2' ? '.woff2' : `.${file.format}`
+    const weight = (sourceWeightMap.get(file.source)?.get(variant.style)?.size ?? 0) > 1
+        ? 'variable'
+        : variant.weight
+
+    return `${slug}-${weight}-${variant.style}${ext}`
+}
+
 function emitFontAssets(
     families: ResolvedFontFamily[],
     emitFile: (opts: { type: 'asset', name: string, source: Buffer }) => string,
 ): Map<string, string> {
     const fileRefMap = new Map<string, string>()
+    const sourceWeightMap = buildSourceWeightMap(families)
 
     for (const family of families) {
         for (const variant of family.variants) {
@@ -90,11 +132,7 @@ function emitFontAssets(
                 }
 
                 const source = fs.readFileSync(file.source)
-                const slug = familyToSlug(family.family)
-                const ext = file.format === 'woff2' ? '.woff2' : `.${file.format}`
-                // Variable font weight ranges contain a space (e.g. "100 900").
-                const weight = String(variant.weight).replace(/\s+/g, '-')
-                const name = `${slug}-${weight}-${variant.style}${ext}`
+                const name = buildFontAssetName(family, variant, file, sourceWeightMap)
                 const ref = emitFile({ type: 'asset', name, source })
 
                 fileRefMap.set(file.source, ref)

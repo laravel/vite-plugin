@@ -1,17 +1,43 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { parseFontFaceCss } from '../src/fonts/css-parser'
 import { buildCss2Url, resolveRemoteVariants } from '../src/fonts/providers/resolve-remote'
+import { resolveFontsourceVariants } from '../src/fonts/providers/resolve-fontsource'
 import * as resolveRemoteModule from '../src/fonts/providers/resolve-remote'
 import * as cache from '../src/fonts/cache'
-import { google } from '../src/fonts/index'
+import { fontsource, google } from '../src/fonts/index'
 
 const GOOGLE_INTER_CSS = fs.readFileSync(
     path.resolve(__dirname, 'fixtures/providers/google-inter.css'),
     'utf-8',
 )
+
+const FAKE_FONTSOURCE_PACKAGE = '@fontsource/test-sans'
+
+function writeFile(filePath: string, contents: string | Buffer): void {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true })
+    fs.writeFileSync(filePath, contents)
+}
+
+function writeFakeFontsourcePackage(projectRoot: string, css: string): void {
+    const packageDir = path.join(projectRoot, 'node_modules/@fontsource/test-sans')
+
+    writeFile(path.join(packageDir, 'package.json'), JSON.stringify({ name: FAKE_FONTSOURCE_PACKAGE }))
+    writeFile(path.join(packageDir, '400.css'), css)
+
+    for (const subset of ['latin', 'latin-ext']) {
+        // Fontsource's subset-specific files omit unicode-range; only the combined file has it.
+        writeFile(path.join(packageDir, `${subset}-400.css`), `@font-face {
+            font-family: 'Test Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: url(./files/test-sans-${subset}-400-normal.woff2) format('woff2');
+        }`)
+        writeFile(path.join(packageDir, `files/test-sans-${subset}-400-normal.woff2`), 'font-bytes')
+    }
+}
 
 describe('fonts providers', () => {
     describe('buildCss2Url', () => {
@@ -274,10 +300,70 @@ describe('fonts providers', () => {
         })
     })
 
+    describe('fontsource resolver', () => {
+        let projectRoot: string
+
+        beforeEach(() => {
+            projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-fontsource-test-'))
+            writeFile(path.join(projectRoot, 'package.json'), JSON.stringify({ private: true }))
+        })
+
+        afterEach(() => {
+            fs.rmSync(projectRoot, { recursive: true, force: true })
+        })
+
+        it('preserves unicode-range when resolving multiple subsets', () => {
+            writeFakeFontsourcePackage(projectRoot, `/* test-sans-latin-ext-400-normal */
+                @font-face {
+                    font-family: 'Test Sans';
+                    font-style: normal;
+                    font-weight: 400;
+                    src: url(./files/test-sans-latin-ext-400-normal.woff2) format('woff2');
+                    unicode-range: U+0100-024F;
+                }
+
+                /* test-sans-latin-400-normal */
+                @font-face {
+                    font-family: 'Test Sans';
+                    font-style: normal;
+                    font-weight: 400;
+                    src: url(./files/test-sans-latin-400-normal.woff2) format('woff2');
+                    unicode-range: U+0000-00FF;
+                }`)
+
+            const variants = resolveFontsourceVariants(fontsource('Test Sans', {
+                package: FAKE_FONTSOURCE_PACKAGE,
+                subsets: ['latin', 'latin-ext'],
+            }), projectRoot)
+
+            const ranges = variants.flatMap(variant => variant.files.map(file => file.unicodeRange))
+
+            expect(variants).toHaveLength(2)
+            expect(ranges).toEqual(expect.arrayContaining(['U+0000-00FF', 'U+0100-024F']))
+            expect(ranges).not.toContain(undefined)
+        })
+
+        it('throws when a requested subset is missing from the combined CSS', () => {
+            writeFakeFontsourcePackage(projectRoot, `/* test-sans-latin-400-normal */
+                @font-face {
+                    font-family: 'Test Sans';
+                    font-style: normal;
+                    font-weight: 400;
+                    src: url(./files/test-sans-latin-400-normal.woff2) format('woff2');
+                    unicode-range: U+0000-00FF;
+                }`)
+
+            expect(() => resolveFontsourceVariants(fontsource('Test Sans', {
+                package: FAKE_FONTSOURCE_PACKAGE,
+                subsets: ['latin', 'latin-ext'],
+            }), projectRoot)).toThrow(/Fontsource subset "latin-ext" not found/)
+        })
+    })
+
     describe('remote fetcher User-Agent', () => {
         let cacheDir: string
-        let fetchTextSpy: ReturnType<typeof vi.spyOn>
-        let fetchBinarySpy: ReturnType<typeof vi.spyOn>
+        let fetchTextSpy: MockInstance<typeof cache.fetchTextAndCache>
+        let fetchBinarySpy: MockInstance<typeof cache.fetchAndCache>
 
         beforeEach(() => {
             cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-ua-test-'))
