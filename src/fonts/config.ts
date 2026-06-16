@@ -58,7 +58,7 @@ const FORMAT_KEYWORD_MAP: Record<FontFormat, string> = Object.fromEntries(
  * Resolve the CSS `@font-face` `format(...)` keyword for a font format.
  */
 export function formatKeyword(format: FontFormat): string {
-    return FORMAT_KEYWORD_MAP[format] ?? format
+    return FORMAT_KEYWORD_MAP[format]
 }
 
 const SUPPORTED_EXTENSIONS = FORMATS.map(f => f.extension)

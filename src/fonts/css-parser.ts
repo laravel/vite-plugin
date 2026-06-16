@@ -1,12 +1,12 @@
 import { FORMATS } from './config.js'
 import type { FontFormat, FontStyle, FontWeight, ParsedFontFace, ParsedFontSrc } from './types.js'
 
-const FORMAT_ALIASES: Record<string, FontFormat> = {
-    truetype: "ttf",
-    opentype: "otf",
-    "embedded-opentype": "eot",
-    ...Object.fromEntries(FORMATS.map((f) => [f.type, f.type])),
-};
+const FORMAT_ALIASES = Object.fromEntries(
+    FORMATS.flatMap((format): [string, FontFormat][] => [
+        [format.type, format.type],
+        [format.keyword, format.type],
+    ]),
+) as Record<string, FontFormat>
 
 export function parseFontFaceCss(css: string): ParsedFontFace[] {
     const results: ParsedFontFace[] = []

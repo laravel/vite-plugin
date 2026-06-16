@@ -92,6 +92,23 @@ describe('fonts css generation', () => {
             expect(css).toContain('unicode-range: U+0100-024F')
         })
 
+        it('uses spec-compliant format keywords for unicode-range files', () => {
+            const family = makeFamily({
+                variants: [{
+                    weight: 400,
+                    style: 'normal',
+                    files: [{ source: '/fonts/inter-latin.otf', format: 'otf', unicodeRange: 'U+0000-00FF' }],
+                }],
+            })
+
+            const css = generateFontFace(family, new Map([
+                ['/fonts/inter-latin.otf', 'assets/inter-latin.otf'],
+            ]))
+
+            expect(css).toContain('url("assets/inter-latin.otf") format("opentype")')
+            expect(css).toContain('unicode-range: U+0000-00FF')
+        })
+
         it('emits both ranged and non-ranged files when a variant mixes them', () => {
             const family = makeFamily({
                 variants: [{
