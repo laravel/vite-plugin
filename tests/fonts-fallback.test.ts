@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { pathToFileURL } from 'url'
 
 vi.mock('fontaine', () => ({
     readMetrics: vi.fn(),
@@ -53,6 +54,21 @@ describe('generateFallbackMetrics', () => {
         expect(parseFloat(metrics!.ascentOverride)).toBeCloseTo((realFont.ascent / adjustedEm) * 100, 1)
         expect(parseFloat(metrics!.descentOverride)).toBeCloseTo((Math.abs(realFont.descent) / adjustedEm) * 100, 1)
         expect(parseFloat(metrics!.lineGapOverride)).toBeCloseTo((realFont.lineGap / adjustedEm) * 100, 1)
+    })
+
+    it('reads local font metrics using a file URL', async () => {
+        readMetricsMock.mockResolvedValue({
+            ascent: 1950,
+            descent: -500,
+            lineGap: 0,
+            unitsPerEm: 2048,
+            xWidthAvg: 1100,
+            category: 'sans-serif',
+        })
+
+        await generateFallbackMetrics('/fake/inter.woff2')
+
+        expect(String(readMetricsMock.mock.calls[0][0])).toBe(pathToFileURL('/fake/inter.woff2').href)
     })
 
     it('computes size-adjust from Times New Roman metrics for serif fonts', async () => {

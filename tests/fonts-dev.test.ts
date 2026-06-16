@@ -6,8 +6,14 @@ import { PassThrough, Readable } from 'stream'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildDevUrlMap, createFontMiddleware } from '../src/fonts/dev-server'
 import { resolveFontsPlugin } from '../src/fonts/plugin'
-import { google } from '../src/fonts/providers/providers'
+import { google, local } from '../src/fonts/providers/providers'
 import type { ResolvedFontFamily } from '../src/fonts/types'
+
+vi.mock('fontaine', () => {
+    throw new Error("Cannot find package 'fontaine'")
+})
+
+const FIXTURE_FONT = path.resolve(__dirname, 'fixtures/fonts/test-font.woff2')
 
 function makeFamily(overrides?: Partial<ResolvedFontFamily>): ResolvedFontFamily {
     return {
@@ -342,6 +348,57 @@ describe('fonts dev server', () => {
             expect(cacheControl.toLowerCase()).not.toContain('immutable')
             expect(cacheControl.toLowerCase()).toMatch(/no-store|no-cache|max-age=\d{1,3}(?!\d)/)
         })
+    })
+})
+
+describe('fonts plugin dev fallback warnings', () => {
+    it('warns and drops the fallback family when dev fallback metrics cannot be generated', async () => {
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-dev-fallback-'))
+        let httpServer: EventEmitter | undefined
+
+        try {
+            const hotFile = path.join(tmpDir, 'hot')
+            const hotManifestPath = path.resolve(path.dirname(hotFile), 'fonts-manifest.dev.json')
+            const [plugin] = resolveFontsPlugin([local('Test', {
+                fallbacks: ['sans-serif'],
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })], hotFile, 'build')
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ;(plugin.configResolved as any)({ root: tmpDir, command: 'serve' })
+
+            const warn = vi.fn()
+            httpServer = new EventEmitter()
+            const server = {
+                config: {
+                    root: tmpDir,
+                    command: 'serve',
+                    server: { port: 5173 },
+                    logger: { error: vi.fn(), warn },
+                },
+                middlewares: { use: vi.fn() },
+                httpServer,
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ;(plugin.configureServer as any)(server)
+
+            const [onListening] = server.httpServer.listeners('listening') as Array<() => Promise<void>>
+            await onListening()
+
+            expect(warn).toHaveBeenCalledTimes(1)
+            expect(warn.mock.calls[0][0]).toContain('[laravel:fonts]')
+            expect(warn.mock.calls[0][0]).toContain('fontaine')
+
+            const manifest = JSON.parse(fs.readFileSync(hotManifestPath, 'utf-8'))
+
+            expect(manifest.style.inline).toContain('--font-test: "Test", sans-serif;')
+            expect(manifest.style.inline).not.toContain('Test fallback')
+            expect(manifest.families.test.fallbackFamily).toBeUndefined()
+        } finally {
+            httpServer?.emit('close')
+            fs.rmSync(tmpDir, { recursive: true, force: true })
+        }
     })
 })
 

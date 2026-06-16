@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'url'
 import type { FallbackCategory, FallbackEntry, FallbackMetrics } from './types.js'
 
 // Canonical OS/2 metrics for the three system fonts Fontaine uses. Values sourced
@@ -35,6 +36,12 @@ function resolveFallbackCategory(category: unknown): FallbackCategory {
     return validCategories.includes(category as FallbackCategory) ? category as FallbackCategory : 'sans-serif';
 }
 
+function resolveMetricsSource(fontSource: string): string | URL {
+    return /^[a-z][a-z\d+.-]*:\/\//i.test(fontSource)
+        ? fontSource
+        : pathToFileURL(fontSource)
+}
+
 export async function generateFallbackMetrics(
     fontSource: string,
     warn: (message: string) => void = () => undefined,
@@ -51,7 +58,7 @@ export async function generateFallbackMetrics(
     }
 
     try {
-        const metrics = await fontaine.readMetrics(fontSource)
+        const metrics = await fontaine.readMetrics(resolveMetricsSource(fontSource))
 
         if (! metrics) {
             warn(`Unable to read font metrics from [${fontSource}]. Skipping optimized fallback generation for this font.`)
