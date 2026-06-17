@@ -197,6 +197,16 @@ describe('fonts providers', () => {
             const faces = parseFontFaceCss(css)
             expect(faces[0].src[0].format).toBe('otf')
         })
+
+        it('normalizes embedded-opentype format to eot', () => {
+            const css = `@font-face {
+                font-family: 'Test';
+                src: url(https://example.com/font.eot) format('embedded-opentype');
+            }`
+
+            const faces = parseFontFaceCss(css)
+            expect(faces[0].src[0].format).toBe('eot')
+        })
     })
 
     describe('remote fetcher User-Agent', () => {
