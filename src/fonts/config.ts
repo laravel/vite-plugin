@@ -5,6 +5,7 @@ import type {
     BaseFontOptions,
     FontDefinition,
     FontFormat,
+    FontFormatKeyword,
     FontProviderType,
     FontStyle,
     FontWeight,
@@ -50,14 +51,11 @@ const FORMAT_MAP: Record<string, FontFormat> = Object.fromEntries(
     FORMATS.map(f => [f.extension, f.type])
 )
 
-const FORMAT_KEYWORD_MAP: Record<FontFormat, string> = Object.fromEntries(
+const FORMAT_KEYWORD_MAP: Record<FontFormat, FontFormatKeyword> = Object.fromEntries(
     FORMATS.map(f => [f.type, f.keyword])
-) as Record<FontFormat, string>
+) as Record<FontFormat, FontFormatKeyword>
 
-/**
- * Resolve the CSS `@font-face` `format(...)` keyword for a font format.
- */
-export function formatKeyword(format: FontFormat): string {
+export function formatKeyword(format: FontFormat): FontFormatKeyword {
     return FORMAT_KEYWORD_MAP[format]
 }
 
