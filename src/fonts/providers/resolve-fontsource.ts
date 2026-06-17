@@ -3,33 +3,48 @@ import path from 'path'
 import { createRequire } from 'module'
 import { parseFontFaceCss } from '../css-parser.js'
 import { familyToSlug, buildResolvedFamily } from '../config.js'
-import type { FontDefinition, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant, FontStyle } from '../types.js'
+import type { FontDefinition, ResolvedFontFamily, ResolvedFontFile, ResolvedFontVariant, FontStyle, ParsedFontFace } from '../types.js'
 
-function buildCssFilePaths(definition: FontDefinition, packageDir: string, packageName: string): string[] {
-    const paths: string[] = []
+type FontsourceCssFile = {
+    fileName: string
+    filePath: string
+    weight: string
+    style: FontStyle
+}
+
+function buildCssFilePaths(definition: FontDefinition, packageDir: string, packageName: string): FontsourceCssFile[] {
+    const paths: FontsourceCssFile[] = []
 
     for (const weight of definition.weights) {
         for (const style of definition.styles) {
-            for (const subset of definition.subsets) {
-                const cssFileName = style === 'italic'
-                    ? `${subset}-${weight}-italic.css`
-                    : `${subset}-${weight}.css`
-                const cssFilePath = path.join(packageDir, cssFileName)
+            const cssFileName = style === 'italic'
+                ? `${weight}-italic.css`
+                : `${weight}.css`
+            const cssFilePath = path.join(packageDir, cssFileName)
 
-                if (! fs.existsSync(cssFilePath)) {
-                    throw new Error(
-                        `laravel-vite-plugin: Fontsource CSS file not found: "${cssFileName}" ` +
-                        `in package "${packageName}" for font "${definition.family}". ` +
-                        `Check that weight ${weight}, style "${style}", and subset "${subset}" are available.`
-                    )
-                }
-
-                paths.push(cssFilePath)
+            if (! fs.existsSync(cssFilePath)) {
+                throw new Error(
+                    `laravel-vite-plugin: Fontsource CSS file not found: "${cssFileName}" ` +
+                    `in package "${packageName}" for font "${definition.family}". ` +
+                    `Check that weight ${weight} and style "${style}" are available.`
+                )
             }
+
+            paths.push({ fileName: cssFileName, filePath: cssFilePath, weight: String(weight), style })
         }
     }
 
     return paths
+}
+
+function matchesFontsourceSubset(face: ParsedFontFace, subset: string): boolean {
+    const suffix = `-${subset}-${String(face.weight)}-${face.style}`
+
+    return face.src.some(src => {
+        const stem = path.basename(src.url).replace(/\.(?:woff2?|ttf|otf|eot)$/i, '')
+
+        return stem.endsWith(suffix)
+    })
 }
 
 export function resolveFontsourceVariants(
@@ -56,12 +71,21 @@ export function resolveFontsourceVariants(
     const variants: ResolvedFontVariant[] = []
     const cssFilePaths = buildCssFilePaths(definition, packageDir, packageName)
 
-    for (const cssFilePath of cssFilePaths) {
-        const faces = parseFontFaceCss(fs.readFileSync(cssFilePath, 'utf-8'))
+    for (const cssFile of cssFilePaths) {
+        const faces = parseFontFaceCss(fs.readFileSync(cssFile.filePath, 'utf-8'))
+        const matchedSubsets = new Set<string>()
 
         for (const face of faces) {
+            const subset = definition.subsets.find(subset => matchesFontsourceSubset(face, subset))
+
+            if (! subset) {
+                continue
+            }
+
+            matchedSubsets.add(subset)
+
             const files: ResolvedFontFile[] = face.src.map(src => {
-                const absolutePath = path.resolve(path.dirname(cssFilePath), src.url)
+                const absolutePath = path.resolve(path.dirname(cssFile.filePath), src.url)
 
                 if (! fs.existsSync(absolutePath)) {
                     throw new Error(
@@ -74,6 +98,16 @@ export function resolveFontsourceVariants(
             })
 
             variants.push({ weight: face.weight, style: face.style as FontStyle, files })
+        }
+
+        for (const subset of definition.subsets) {
+            if (! matchedSubsets.has(subset)) {
+                throw new Error(
+                    `laravel-vite-plugin: Fontsource subset "${subset}" not found in "${cssFile.fileName}" ` +
+                    `in package "${packageName}" for font "${definition.family}". ` +
+                    `Check that weight ${cssFile.weight}, style "${cssFile.style}", and subset "${subset}" are available.`
+                )
+            }
         }
     }
 

@@ -222,6 +222,11 @@ export type ParsedFontFace = {
     src: ParsedFontSrc[]
     unicodeRange?: string
     display?: string
+    /**
+     * The subset label from the CSS comment preceding the rule (e.g. "latin"),
+     * as emitted by the Google and Bunny CSS APIs.
+     */
+    subset?: string
 }
 
 export type ParsedFontSrc = {

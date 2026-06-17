@@ -249,6 +249,29 @@ describe('fonts plugin single-pass build', () => {
             fs.rmSync(tmpRoot, { recursive: true, force: true })
         }
     })
+
+    it('names a source reused across multiple weights as variable', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-variable-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [
+                    { src: FIXTURE_FONT, weight: 400, style: 'normal' },
+                    { src: FIXTURE_FONT, weight: 500, style: 'normal' },
+                ],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifestText = String(findManifestAsset(ctx.bundle).source)
+
+            expect(cssText).toContain('/build/assets/test-variable-normal-abc123.woff2')
+            expect(cssText).not.toContain('/build/assets/test-400-normal-abc123.woff2')
+            expect(manifestText).toContain('assets/test-variable-normal-abc123.woff2')
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
 })
 
 describe('assertFileRefsResolved', () => {
