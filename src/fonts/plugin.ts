@@ -112,7 +112,7 @@ function buildFontAssetName(
     const ext = file.format === 'woff2' ? '.woff2' : `.${file.format}`
     const weight = (sourceWeightMap.get(file.source)?.get(variant.style)?.size ?? 0) > 1
         ? 'variable'
-        : variant.weight
+        : String(variant.weight).replace(/\s+/g, '-')
 
     return `${slug}-${weight}-${variant.style}${ext}`
 }
