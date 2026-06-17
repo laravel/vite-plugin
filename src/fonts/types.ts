@@ -1,6 +1,9 @@
+export type FontFormatKeyword = 'collection' | 'embedded-opentype' | 'opentype' | 'svg' | 'truetype' | 'woff' | 'woff2'
+
 export type FormatConfig = {
     extension: string
     type: FontFormat
+    keyword: FontFormatKeyword
 }
 
 export type FontProviderType = 'local' | 'google' | 'bunny' | 'fontsource'

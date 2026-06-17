@@ -67,13 +67,14 @@ function buildAssetFileName(name: string): string {
 async function runBuild(
     fonts: FontDefinition[],
     tmpRoot: string,
+    base = '/build/',
 ): Promise<{ ctx: MockContext, plugin: ReturnType<typeof resolveFontsPlugin>[number] }> {
     const hotFile = path.join(tmpRoot, 'hot')
-    const [plugin] = resolveFontsPlugin(fonts, hotFile, 'build')
+    const [plugin] = resolveFontsPlugin(fonts, hotFile)
 
     const ctx = createMockContext()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(plugin.configResolved as any).call(ctx, { root: tmpRoot, command: 'build' })
+    ;(plugin.configResolved as any).call(ctx, { root: tmpRoot, command: 'build', base, build: { assetsDir: 'assets' } })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (plugin.buildStart as any).call(ctx)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -147,6 +148,72 @@ describe('fonts plugin single-pass build', () => {
             // The @font-face weight itself must keep the space-separated range.
             const cssText = String(findCssAsset(ctx.bundle).source)
             expect(cssText).toContain('font-weight: 100 900;')
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('prefixes CSS font URLs with the resolved base for subdirectory deployments', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-base-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot, '/v2/build/')
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifest = JSON.parse(String(findManifestAsset(ctx.bundle).source))
+
+            expect(cssText).toMatch(/url\("\/v2\/build\/assets\/test-[^"]*\.woff2"\)/)
+            expect(cssText).not.toMatch(/url\("\/build\//)
+
+            // Inline family styles in the manifest must use the same base.
+            expect(manifest.style.familyStyles.test).toMatch(/url\("\/v2\/build\/assets\/test-[^"]*\.woff2"\)/)
+
+            // Manifest file paths stay relative so Laravel can resolve them itself.
+            expect(manifest.preloads[0].file).toMatch(/^assets\/test-[^"]*\.woff2$/)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('prefixes CSS font URLs with an absolute ASSET_URL base', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-cdn-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot, 'https://cdn.example.com/build/')
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+
+            expect(cssText).toMatch(/url\("https:\/\/cdn\.example\.com\/build\/assets\/test-[^"]*\.woff2"\)/)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('uses CSS-relative font URLs when Vite uses a relative base', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-relative-base-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot, './')
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifest = JSON.parse(String(findManifestAsset(ctx.bundle).source))
+
+            expect(cssText).toMatch(/url\("\.\/test-[^"]*\.woff2"\)/)
+            expect(cssText).not.toMatch(/url\("\.\/assets\//)
+
+            expect(manifest.style.familyStyles.test).toMatch(/url\("\.\/assets\/test-[^"]*\.woff2"\)/)
         } finally {
             fs.rmSync(tmpRoot, { recursive: true, force: true })
         }

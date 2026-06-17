@@ -1,3 +1,4 @@
+import { formatKeyword } from './config.js'
 import type { ResolvedFontFamily, ResolvedFontFile, FallbackMetrics } from './types.js'
 
 function generateSrc(files: ResolvedFontFile[], filePathMap: Map<string, string>): string {
@@ -5,7 +6,7 @@ function generateSrc(files: ResolvedFontFile[], filePathMap: Map<string, string>
         .map(file => {
             const url = filePathMap.get(file.source) ?? file.source
 
-            return `url("${url}") format("${file.format}")`
+            return `url("${url}") format("${formatKeyword(file.format)}")`
         })
         .join(',\n    ')
 }
@@ -21,7 +22,7 @@ export function generateFontFace(
         const nonRangedFiles = variant.files.filter(f => ! f.unicodeRange)
 
         for (const file of rangedFiles) {
-            const fileSrc = `url("${filePathMap.get(file.source) ?? file.source}") format("${file.format}")`
+            const fileSrc = `url("${filePathMap.get(file.source) ?? file.source}") format("${formatKeyword(file.format)}")`
 
             rules.push([
                 '@font-face {',

@@ -43,6 +43,31 @@ describe('fonts css generation', () => {
             expect(css).toContain('url("assets/inter-400-abc123.woff2") format("woff2")')
         })
 
+        it('uses the spec-compliant format keyword for each font format', () => {
+            const cases: [ResolvedFontFamily['variants'][number]['files'][number]['format'], string][] = [
+                ['woff2', 'woff2'],
+                ['woff', 'woff'],
+                ['ttf', 'truetype'],
+                ['otf', 'opentype'],
+                ['eot', 'embedded-opentype'],
+            ]
+
+            for (const [format, keyword] of cases) {
+                const source = `/fonts/inter-400.${format}`
+                const family = makeFamily({
+                    variants: [{
+                        weight: 400,
+                        style: 'normal',
+                        files: [{ source, format }],
+                    }],
+                })
+
+                const css = generateFontFace(family, new Map([[source, `assets/inter-400.${format}`]]))
+
+                expect(css).toContain(`url("assets/inter-400.${format}") format("${keyword}")`)
+            }
+        })
+
         it('generates separate rules for unicode-range subsets', () => {
             const family = makeFamily({
                 variants: [{
@@ -65,6 +90,23 @@ describe('fonts css generation', () => {
             expect(css.match(/@font-face/g)).toHaveLength(2)
             expect(css).toContain('unicode-range: U+0000-00FF')
             expect(css).toContain('unicode-range: U+0100-024F')
+        })
+
+        it('uses spec-compliant format keywords for unicode-range files', () => {
+            const family = makeFamily({
+                variants: [{
+                    weight: 400,
+                    style: 'normal',
+                    files: [{ source: '/fonts/inter-latin.otf', format: 'otf', unicodeRange: 'U+0000-00FF' }],
+                }],
+            })
+
+            const css = generateFontFace(family, new Map([
+                ['/fonts/inter-latin.otf', 'assets/inter-latin.otf'],
+            ]))
+
+            expect(css).toContain('url("assets/inter-latin.otf") format("opentype")')
+            expect(css).toContain('unicode-range: U+0000-00FF')
         })
 
         it('emits both ranged and non-ranged files when a variant mixes them', () => {
