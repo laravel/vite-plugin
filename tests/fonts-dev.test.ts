@@ -372,7 +372,7 @@ describe('fonts plugin hot-manifest cleanup', () => {
         hotManifestPath: string
         server: FakeServer
     } {
-        const [plugin] = resolveFontsPlugin([google('Inter')], hotFile, 'build')
+        const [plugin] = resolveFontsPlugin([google('Inter')], hotFile)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(plugin.configResolved as any)({ root: tmpDir, command: 'serve' })
 

@@ -105,6 +105,22 @@ function emitFontAssets(
     return fileRefMap
 }
 
+function resolvePublicAssetUrl(base: string, fileName: string): string {
+    const normalizedBase = base.endsWith('/') ? base : `${base}/`
+
+    return `${normalizedBase}${fileName}`
+}
+
+function resolveCssAssetUrl(base: string, fileName: string, assetsDir: string): string {
+    if (base !== './' && base !== '') {
+        return resolvePublicAssetUrl(base, fileName)
+    }
+
+    const relativePath = path.posix.relative(assetsDir.replace(/\/+$/, ''), fileName)
+
+    return relativePath.startsWith('.') ? relativePath : `./${relativePath}`
+}
+
 /** @internal Exported for tests; not part of the public plugin API. */
 export function assertFileRefsResolved(
     families: ResolvedFontFamily[],
@@ -127,7 +143,6 @@ export function assertFileRefsResolved(
 export function resolveFontsPlugin(
     fonts: FontDefinition[]|undefined,
     hotFile: string,
-    buildDirectory: string,
 ): Plugin[] {
     if (! fonts || fonts.length === 0) {
         return []
@@ -178,16 +193,18 @@ export function resolveFontsPlugin(
             assertFileRefsResolved(resolvedFamilies, fontsFileRefMap)
 
             const relativeFilePathMap = new Map<string, string>()
-            const absoluteFilePathMap = new Map<string, string>()
+            const cssFilePathMap = new Map<string, string>()
+            const publicFilePathMap = new Map<string, string>()
 
             for (const [source, ref] of fontsFileRefMap) {
                 const fileName = this.getFileName(ref)
                 relativeFilePathMap.set(source, fileName)
-                absoluteFilePathMap.set(source, `/${buildDirectory}/${fileName}`)
+                cssFilePathMap.set(source, resolveCssAssetUrl(resolvedConfig.base, fileName, resolvedConfig.build.assetsDir))
+                publicFilePathMap.set(source, resolvePublicAssetUrl(resolvedConfig.base, fileName))
             }
 
-            const finalCss = generateFontCss(resolvedFamilies, absoluteFilePathMap, fontsFallbackMap)
-            const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, absoluteFilePathMap, fontsFallbackMap)
+            const finalCss = generateFontCss(resolvedFamilies, cssFilePathMap, fontsFallbackMap)
+            const { familyStyles, variables } = generateFamilyStyles(resolvedFamilies, publicFilePathMap, fontsFallbackMap)
 
             const cssRef = this.emitFile({
                 type: 'asset',
