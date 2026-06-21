@@ -96,6 +96,96 @@ describe('laravel-vite-plugin', () => {
             fs.rmSync(certDir, { recursive: true, force: true })
         }
     })
+
+    it('resolves detectTls certificates from the Herd config directory', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-home-'))
+        const herdCerts = path.join(home, 'Library', 'Application Support', 'Herd', 'config', 'valet', 'Certificates')
+        fs.mkdirSync(herdCerts, { recursive: true })
+        const host = 'my-app.test'
+        fs.writeFileSync(path.join(herdCerts, `${host}.key`), 'key')
+        fs.writeFileSync(path.join(herdCerts, `${host}.crt`), 'cert')
+        const homedir = vi.spyOn(os, 'homedir').mockReturnValue(home)
+
+        try {
+            const plugin = laravel({ input: 'resources/js/app.ts', detectTls: host })[0]
+            const config = plugin.config({}, { command: 'serve', mode: 'development' })
+
+            expect(config.server.host).toBe(host)
+            expect(config.server.hmr.host).toBe(host)
+            expect(config.server.https.key).toBe(path.join(herdCerts, `${host}.key`))
+            expect(config.server.https.cert).toBe(path.join(herdCerts, `${host}.crt`))
+        } finally {
+            homedir.mockRestore()
+            fs.rmSync(home, { recursive: true, force: true })
+        }
+    })
+
+    it('resolves detectTls certificates from the Valet config directory', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-home-'))
+        const valetCerts = path.join(home, '.config', 'valet', 'Certificates')
+        fs.mkdirSync(valetCerts, { recursive: true })
+        const host = 'my-app.test'
+        fs.writeFileSync(path.join(valetCerts, `${host}.key`), 'key')
+        fs.writeFileSync(path.join(valetCerts, `${host}.crt`), 'cert')
+        const homedir = vi.spyOn(os, 'homedir').mockReturnValue(home)
+
+        try {
+            const plugin = laravel({ input: 'resources/js/app.ts', detectTls: host })[0]
+            const config = plugin.config({}, { command: 'serve', mode: 'development' })
+
+            expect(config.server.https.key).toBe(path.join(valetCerts, `${host}.key`))
+            expect(config.server.https.cert).toBe(path.join(valetCerts, `${host}.crt`))
+        } finally {
+            homedir.mockRestore()
+            fs.rmSync(home, { recursive: true, force: true })
+        }
+    })
+
+    it('prefers the Herd config directory over Valet when both exist', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-home-'))
+        const host = 'my-app.test'
+        const herdCerts = path.join(home, 'Library', 'Application Support', 'Herd', 'config', 'valet', 'Certificates')
+        const valetCerts = path.join(home, '.config', 'valet', 'Certificates')
+        for (const dir of [herdCerts, valetCerts]) {
+            fs.mkdirSync(dir, { recursive: true })
+            fs.writeFileSync(path.join(dir, `${host}.key`), 'key')
+            fs.writeFileSync(path.join(dir, `${host}.crt`), 'cert')
+        }
+        const homedir = vi.spyOn(os, 'homedir').mockReturnValue(home)
+
+        try {
+            const plugin = laravel({ input: 'resources/js/app.ts', detectTls: host })[0]
+            const config = plugin.config({}, { command: 'serve', mode: 'development' })
+
+            expect(config.server.https.key).toBe(path.join(herdCerts, `${host}.key`))
+        } finally {
+            homedir.mockRestore()
+            fs.rmSync(home, { recursive: true, force: true })
+        }
+    })
+
+    it('derives the host from the config directory TLD when detectTls is true', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-home-'))
+        const configDir = path.join(home, 'Library', 'Application Support', 'Herd', 'config', 'valet')
+        fs.mkdirSync(path.join(configDir, 'Certificates'), { recursive: true })
+        fs.writeFileSync(path.join(configDir, 'config.json'), JSON.stringify({ tld: 'test' }))
+        const host = `${path.basename(process.cwd())}.test`
+        fs.writeFileSync(path.join(configDir, 'Certificates', `${host}.key`), 'key')
+        fs.writeFileSync(path.join(configDir, 'Certificates', `${host}.crt`), 'cert')
+        const homedir = vi.spyOn(os, 'homedir').mockReturnValue(home)
+
+        try {
+            const plugin = laravel({ input: 'resources/js/app.ts', detectTls: true })[0]
+            const config = plugin.config({}, { command: 'serve', mode: 'development' })
+
+            expect(config.server.host).toBe(host)
+            expect(config.server.https.key).toBe(path.join(configDir, 'Certificates', `${host}.key`))
+        } finally {
+            homedir.mockRestore()
+            fs.rmSync(home, { recursive: true, force: true })
+        }
+    })
+
     it('accepts a full configuration', () => {
         const plugin = laravel({
             input: 'resources/js/app.ts',
