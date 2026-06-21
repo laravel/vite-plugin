@@ -162,7 +162,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const env = loadEnv(mode, userConfig.envDir || process.cwd(), '')
             const assetUrl = env.ASSET_URL ?? ''
             const serverConfig = command === 'serve'
-                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls) ?? resolveEnvironmentServerConfig(env))
+                ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls, env) ?? resolveEnvironmentServerConfig(env))
                 : undefined
 
             ensureCommandShouldRunInEnvironment(command, env)
@@ -589,7 +589,7 @@ function resolveHostFromEnv(env: Record<string, string>): string|undefined
 /**
  * Resolve the Herd or Valet server config for the given host.
  */
-function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
+function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null, env: Record<string, string>): {
     hmr?: { host: string }
     host?: string,
     https?: { cert: string, key: string }
@@ -598,29 +598,43 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
         return
     }
 
+    // An optional certificate directory. When set, certificates are read from
+    // here instead of the Herd/Valet `Certificates` directory — useful when the
+    // dev certificates live elsewhere, such as a custom or containerized local
+    // setup or CI. With an explicit `detectTls` host, Herd or Valet need not be
+    // installed at all.
+    const certificatesPathOverride = env.LARAVEL_VITE_DEV_SERVER_CERTS_PATH
+
     const configPath = determineDevelopmentEnvironmentConfigPath();
 
-    if (typeof configPath === 'undefined' && host === null) {
+    if (typeof configPath === 'undefined' && typeof certificatesPathOverride === 'undefined' && host === null) {
         return
     }
 
-    if (typeof configPath === 'undefined') {
+    if (typeof configPath === 'undefined' && typeof certificatesPathOverride === 'undefined') {
         throw Error(`Unable to find the Herd or Valet configuration directory. Please check they are correctly installed.`)
     }
 
+    if ((host === true || host === null) && typeof configPath === 'undefined') {
+        throw Error(`Unable to resolve the host's TLD without a Herd or Valet configuration directory. Set \`detectTls\` to your hostname when using LARAVEL_VITE_DEV_SERVER_CERTS_PATH outside of Herd or Valet.`)
+    }
+
     const resolvedHost = host === true || host === null
-        ? path.basename(process.cwd()) + '.' + resolveDevelopmentEnvironmentTld(configPath)
+        ? path.basename(process.cwd()) + '.' + resolveDevelopmentEnvironmentTld(configPath as string)
         : host
 
-    const keyPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.key`)
-    const certPath = path.resolve(configPath, 'Certificates', `${resolvedHost}.crt`)
+    const certificatesPath = certificatesPathOverride ?? path.resolve(configPath as string, 'Certificates')
+    const keyPath = path.resolve(certificatesPath, `${resolvedHost}.key`)
+    const certPath = path.resolve(certificatesPath, `${resolvedHost}.crt`)
 
     if (! fs.existsSync(keyPath) || ! fs.existsSync(certPath)) {
         if (host === null) {
             return
         }
 
-        if (configPath === herdMacConfigPath() || configPath === herdWindowsConfigPath()) {
+        if (typeof certificatesPathOverride === 'string') {
+            throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${certificatesPath}] directory specified by LARAVEL_VITE_DEV_SERVER_CERTS_PATH.`)
+        } else if (configPath === herdMacConfigPath() || configPath === herdWindowsConfigPath()) {
             throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site via the Herd UI.`)
         } else if (typeof host === 'string') {
             throw Error(`Unable to find certificate files for your host [${resolvedHost}] in the [${configPath}/Certificates] directory. Ensure you have secured the site by running \`valet secure ${host}\`.`)

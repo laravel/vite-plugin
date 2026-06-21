@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import fs from 'fs'
+import os from 'os'
 import laravel from '../src'
 import { resolvePageComponent } from '../src/inertia-helpers';
 import path from 'path';
@@ -61,6 +62,40 @@ describe('laravel-vite-plugin', () => {
         expect(ssrConfig.build.rolldownOptions.input).toEqual(['resources/js/app.ts', 'resources/js/other.js'])
     })
 
+    it('resolves detectTls certificates from LARAVEL_VITE_DEV_SERVER_CERTS_PATH', () => {
+        const certDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-certs-'))
+        const host = 'my-app.test'
+        fs.writeFileSync(path.join(certDir, `${host}.key`), 'key')
+        fs.writeFileSync(path.join(certDir, `${host}.crt`), 'cert')
+        process.env.LARAVEL_VITE_DEV_SERVER_CERTS_PATH = certDir
+
+        try {
+            const plugin = laravel({ input: 'resources/js/app.ts', detectTls: host })[0]
+            const config = plugin.config({}, { command: 'serve', mode: 'development' })
+
+            expect(config.server.host).toBe(host)
+            expect(config.server.hmr.host).toBe(host)
+            expect(config.server.https.key).toBe(path.join(certDir, `${host}.key`))
+            expect(config.server.https.cert).toBe(path.join(certDir, `${host}.crt`))
+        } finally {
+            delete process.env.LARAVEL_VITE_DEV_SERVER_CERTS_PATH
+            fs.rmSync(certDir, { recursive: true, force: true })
+        }
+    })
+
+    it('throws a LARAVEL_VITE_DEV_SERVER_CERTS_PATH-specific error when the certificate is missing', () => {
+        const certDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-certs-'))
+        process.env.LARAVEL_VITE_DEV_SERVER_CERTS_PATH = certDir
+
+        try {
+            const plugin = laravel({ input: 'resources/js/app.ts', detectTls: 'my-app.test' })[0]
+            expect(() => plugin.config({}, { command: 'serve', mode: 'development' }))
+                .toThrowError(/LARAVEL_VITE_DEV_SERVER_CERTS_PATH/)
+        } finally {
+            delete process.env.LARAVEL_VITE_DEV_SERVER_CERTS_PATH
+            fs.rmSync(certDir, { recursive: true, force: true })
+        }
+    })
     it('accepts a full configuration', () => {
         const plugin = laravel({
             input: 'resources/js/app.ts',
