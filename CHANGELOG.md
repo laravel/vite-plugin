@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.1.1...3.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.1.2...3.x)
+
+## [v3.1.2](https://github.com/laravel/vite-plugin/compare/v3.1.1...v3.1.2) - 2026-07-13
+
+### What's Changed
+
+* Bump publish workflow node version by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/vite-plugin/pull/383
+
+**Full Changelog**: https://github.com/laravel/vite-plugin/compare/v3.1.1...v3.1.2
 
 ## [v3.1.1](https://github.com/laravel/vite-plugin/compare/v3.1.0...v3.1.1) - 2026-07-13
 
