@@ -234,6 +234,10 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             }
         },
         configureServer(server) {
+            if (process.env.VITEST !== undefined) {
+                return
+            }
+
             const envDir = resolvedConfig.envDir || process.cwd()
             const appUrl = loadEnv(resolvedConfig.mode, envDir, 'APP_URL').APP_URL ?? 'undefined'
 
