@@ -564,6 +564,39 @@ describe('laravel-vite-plugin', () => {
 
 })
 
+describe('dev server listening', () => {
+    it('does not throw when the server address is null', () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        /* @ts-ignore */
+        plugin.configResolved({ envDir: null, mode: 'development', command: 'serve', server: {}, base: '/build/' })
+
+        const listeners: Array<() => void> = []
+        const server = {
+            config: { base: '/build/', server: {}, logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } },
+            middlewares: { use: vi.fn() },
+            httpServer: {
+                once: (event: string, listener: () => void) => {
+                    if (event === 'listening') {
+                        listeners.push(listener)
+                    }
+                },
+                address: () => null,
+            },
+        }
+
+        /* @ts-ignore */
+        plugin.configureServer(server)
+
+        const writeFileSync = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {})
+
+        expect(() => listeners.forEach(listener => listener())).not.toThrow()
+        expect(writeFileSync).not.toHaveBeenCalled()
+
+        writeFileSync.mockRestore()
+    })
+})
+
 describe('inertia-helpers', () => {
     const path = './__data__/dummy.ts'
     it('pass glob value to resolvePageComponent', async () => {
