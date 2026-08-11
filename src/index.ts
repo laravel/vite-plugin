@@ -488,9 +488,14 @@ function resolveWatchIgnored(
  * refresh plugin matches them, so anything it will refresh remains watched.
  */
 function resolveRefreshMatcher(refresh: Required<PluginConfig>['refresh']): (file: string) => boolean {
-    return picomatch(resolveRefreshConfigs(refresh).flatMap(
-        ({ paths, config }) => normalizePaths(config?.root ?? process.cwd(), paths)
-    ))
+    if (typeof refresh === 'boolean') {
+        return picomatch([])
+    }
+
+    const configs = (Array.isArray(refresh) ? refresh : [refresh])
+        .map(entry => typeof entry === 'string' ? { paths: [entry] } : entry)
+
+    return picomatch(configs.flatMap(({ paths, config }) => normalizePaths(config?.root ?? process.cwd(), paths)))
 }
 
 /**
@@ -521,22 +526,7 @@ function resolveAssetPlugin(assets: string|string[]): Plugin[] {
     }]
 }
 
-function resolveFullReloadConfig({ refresh }: Required<PluginConfig>): PluginOption[]{
-    return resolveRefreshConfigs(refresh).flatMap(c => {
-        const plugin = fullReload(c.paths, c.config)
-
-        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-        /** @ts-ignore */
-        plugin.__laravel_plugin_config = c
-
-        return plugin
-    })
-}
-
-/**
- * Resolve the refresh configuration to its normalised form.
- */
-function resolveRefreshConfigs(config: Required<PluginConfig>['refresh']): RefreshConfig[] {
+function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): PluginOption[]{
     if (typeof config === 'boolean') {
         return [];
     }
@@ -553,7 +543,15 @@ function resolveRefreshConfigs(config: Required<PluginConfig>['refresh']): Refre
         config = [{ paths: config }] as RefreshConfig[]
     }
 
-    return config as RefreshConfig[]
+    return (config as RefreshConfig[]).flatMap(c => {
+        const plugin = fullReload(c.paths, c.config)
+
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /** @ts-ignore */
+        plugin.__laravel_plugin_config = c
+
+        return plugin
+    })
 }
 
 /**
