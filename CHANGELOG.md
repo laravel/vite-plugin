@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.1.3...3.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.2.0...3.x)
+
+## [v3.2.0](https://github.com/laravel/vite-plugin/compare/v3.1.3...v3.2.0) - 2026-08-11
+
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/384
+* Bump the github-actions group with 5 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/386
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/387
+* Handle null addresses on dev server by [@adrum](https://github.com/adrum) in https://github.com/laravel/vite-plugin/pull/385
+* Prevent hot file cleanup when running Vitest by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/vite-plugin/pull/388
+* Update package.json to mitigate high severities by [@JohnMica](https://github.com/JohnMica) in https://github.com/laravel/vite-plugin/pull/347
 
 ## [v3.1.3](https://github.com/laravel/vite-plugin/compare/v3.1.2...v3.1.3) - 2026-07-13
 
