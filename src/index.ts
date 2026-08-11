@@ -457,26 +457,18 @@ function resolveWatchIgnored(pluginConfig: Required<PluginConfig>, userConfig: U
 
     const pathConfiguredToTriggerRefresh = resolveRefreshMatcher(pluginConfig.refresh)
 
-    console.debug(`Default ignored paths when watching`, ignorePathsWhenWatching)
-
     return (file: string): boolean => {
-        console.debug(`Checking if path should be ignored: ${file}`)
-
-        const absolutePath = path.resolve(file)
-
-        console.log(`Absolute path resolved to: ${absolutePath}`)
-
-        if (! shouldIgnorePath(absolutePath)) {
-            console.debug(`Path is being watched: ${absolutePath}`)
+        if (! shouldIgnorePath(file)) {
+            console.debug(`Path is being watched: ${file}`)
 
             return false
         }
 
-        console.debug(`Path configured to be ignored: ${absolutePath}`)
+        console.debug(`Path configured to be ignored: ${file}`)
 
-        const ignore = ! pathConfiguredToTriggerRefresh(normalizePath(absolutePath))
+        const ignore = ! pathConfiguredToTriggerRefresh(normalizePath(file))
 
-        console.debug(`Path is ${ignore ? 'ignored' : 'not ignored because it is configured to refresh'}: ${absolutePath}`)
+        console.debug(`Path is ${ignore ? 'ignored' : 'not ignored because it is configured to refresh'}: ${file}`)
 
         return ignore
     }

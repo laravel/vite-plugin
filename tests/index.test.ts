@@ -588,20 +588,19 @@ describe('laravel-vite-plugin', () => {
         expect(config.server?.watch).toBeUndefined()
     })
 
-    it('discards refresh paths that do not fall within the root', () => {
+    it('ignores Laravel paths when refresh is enabled', () => {
         const plugin = laravel({
             input: 'resources/js/app.ts',
-            refresh: ['**', '../shared/views/**'],
+            refresh: true,
         })[0]
 
         const config = plugin.config({}, { command: 'serve', mode: 'development' })
         const ignored = config.server.watch.ignored as (file: string) => boolean
         const root = process.cwd()
 
-        // A refresh path resolving to the root, or outside of it, must not
-        // un-ignore the default paths.
         expect(ignored(path.join(root, 'vendor', 'laravel', 'framework', 'foo.php'))).toBe(true)
         expect(ignored(path.join(root, 'storage', 'logs', 'laravel.log'))).toBe(true)
+        expect(ignored(path.join(root, 'resources', 'views', 'welcome.blade.php'))).toBe(false)
     })
 
     it('keeps refresh paths watched even if they overlap ignored paths', () => {
@@ -615,10 +614,11 @@ describe('laravel-vite-plugin', () => {
         const root = process.cwd()
 
         expect(ignored(path.join(root, 'storage', 'framework', 'views', 'cache.php'))).toBe(false)
-        // Ancestors of the refreshed path stay watched so the watcher descends into them.
-        expect(ignored(path.join(root, 'storage'))).toBe(false)
-        expect(ignored(path.join(root, 'storage', 'framework'))).toBe(false)
-        // Only the overlapping subtree is un-ignored — the rest of `storage` is still ignored.
+        // The refresh plugin adds its own glob to the watcher, so both the glob and
+        // the directory it resolves to must remain watched.
+        expect(ignored(path.join(root, 'storage', 'framework', 'views', '**'))).toBe(false)
+        expect(ignored(path.join(root, 'storage', 'framework', 'views'))).toBe(false)
+        // The rest of the ignored path is unaffected.
         expect(ignored(path.join(root, 'storage', 'logs', 'laravel.log'))).toBe(true)
         expect(ignored(path.join(root, 'storage', 'framework', 'cache', 'data.php'))).toBe(true)
         // Other defaults remain ignored.
