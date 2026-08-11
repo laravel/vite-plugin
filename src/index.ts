@@ -109,6 +109,16 @@ export const refreshPaths = [
     'routes/**',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
 
+export const ignorePathsWhenWatching = [
+    '.phpunit.cache/',
+    'bootstrap/',
+    'database/',
+    'public/storage/',
+    'storage/',
+    'tests/',
+    'vendor/',
+].filter(path => fs.existsSync(path))
+
 const logger = createLogger('info', {
     prefix: '[laravel-vite-plugin]'
 })
@@ -459,15 +469,7 @@ function resolveWatchIgnored(
 
     // The paths are resolved up front, as the matcher is called for every file
     // and directory the watcher encounters.
-    const ignoredPaths = resolveAbsolutePaths(root, [
-        '.phpunit.cache',
-        'bootstrap',
-        'database',
-        'public/storage',
-        'storage',
-        'tests',
-        'vendor',
-    ])
+    const ignoredPaths = resolveAbsolutePaths(root, ignorePathsWhenWatching)
     const refreshedPaths = resolveAbsolutePaths(root, resolveRefreshedPaths(pluginConfig.refresh))
 
     return (file: string): boolean => {

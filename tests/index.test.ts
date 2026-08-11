@@ -15,7 +15,14 @@ vi.mock('fs', async () => {
                 'app/View/Components/',
                 'resources/views/',
                 'lang/',
-                'routes/'
+                'routes/',
+                '.phpunit.cache/',
+                'bootstrap/',
+                'database/',
+                'public/storage/',
+                'storage/',
+                'tests/',
+                'vendor/'
             ].includes(path) || actual.existsSync(path)
         }
     }
