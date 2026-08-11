@@ -457,14 +457,28 @@ function resolveWatchIgnored(pluginConfig: Required<PluginConfig>, userConfig: U
 
     const pathConfiguredToTriggerRefresh = resolveRefreshMatcher(pluginConfig.refresh)
 
+    console.debug(`Default ignored paths when watching`, ignorePathsWhenWatching)
+
     return (file: string): boolean => {
+        console.debug(`Checking if path should be ignored: ${file}`)
+
         const absolutePath = path.resolve(file)
 
-        if (! ignorePathsWhenWatching.some(ignoredPath => pathMatches(absolutePath, ignoredPath))) {
+        console.log(`Absolute path resolved to: ${absolutePath}`)
+
+        if (! shouldIgnorePath(absolutePath)) {
+            console.debug(`Path is being watched: ${absolutePath}`)
+
             return false
         }
 
-        return ! pathConfiguredToTriggerRefresh(normalizePath(absolutePath))
+        console.debug(`Path configured to be ignored: ${absolutePath}`)
+
+        const ignore = ! pathConfiguredToTriggerRefresh(normalizePath(absolutePath))
+
+        console.debug(`Path is ${ignore ? 'ignored' : 'not ignored because it is configured to refresh'}: ${absolutePath}`)
+
+        return ignore
     }
 }
 
@@ -480,10 +494,10 @@ function resolveRefreshMatcher(refresh: Required<PluginConfig>['refresh']): (fil
 }
 
 /**
- * Determine whether the given path is, or is contained within, the other path.
+ * Determine whether the given path is, or is contained within, an ignored path.
  */
-function pathMatches(subject: string, parent: string): boolean {
-    return subject.startsWith(parent + path.sep) || subject === parent
+function shouldIgnorePath(absolutePath: string): boolean {
+    return ignorePathsWhenWatching.some(ignoredPath => absolutePath.startsWith(ignoredPath + path.sep) || absolutePath === ignoredPath)
 }
 
 /**
