@@ -109,16 +109,6 @@ export const refreshPaths = [
     'routes/**',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
 
-export const ignorePathsWhenWatching = [
-    '.phpunit.cache',
-    'bootstrap/**',
-    'database/**',
-    'public/storage/**',
-    'storage/**',
-    'tests/**',
-    'vendor/**',
-]
-
 const logger = createLogger('info', {
     prefix: '[laravel-vite-plugin]'
 })
@@ -469,7 +459,15 @@ function resolveWatchIgnored(
 
     // The paths are resolved up front, as the matcher is called for every file
     // and directory the watcher encounters.
-    const ignoredPaths = resolveAbsolutePaths(root, ignorePathsWhenWatching)
+    const ignoredPaths = resolveAbsolutePaths(root, [
+        '.phpunit.cache',
+        'bootstrap',
+        'database',
+        'public/storage',
+        'storage',
+        'tests',
+        'vendor',
+    ])
     const refreshedPaths = resolveAbsolutePaths(root, resolveRefreshedPaths(pluginConfig.refresh))
 
     return (file: string): boolean => {
@@ -485,14 +483,10 @@ function resolveWatchIgnored(
 /**
  * Resolve the given root-relative paths against the root, discarding any that
  * are the root itself or fall outside of it.
- *
- * A path is matched against the directory it points at and everything within
- * it, so any pattern segments are reduced to the static path leading up to
- * them, e.g. `vendor/**` matches the `vendor` directory and its contents.
  */
 function resolveAbsolutePaths(root: string, paths: string[]): string[] {
     return paths
-        .map(watchPath => path.resolve(root, stripGlob(watchPath)))
+        .map(watchPath => path.resolve(root, watchPath))
         .filter(absolutePath => absolutePath !== root && pathIsWithin(absolutePath, root))
 }
 
@@ -513,21 +507,14 @@ function resolveRefreshedPaths(refresh: Required<PluginConfig>['refresh']): stri
         }
     }
 
-    return paths
+    return paths.map(stripGlob)
 }
 
 /**
- * Normalise a watch path to a root-relative path with forward slashes.
- */
-function normalizeWatchPath(watchPath: string): string {
-    return watchPath.replace(/\\/g, '/').replace(/^(\.?\/)+/, '').replace(/\/+$/, '')
-}
-
-/**
- * Reduce a glob to the static path leading up to the first pattern segment.
+ * Reduce a refresh glob to the static path leading up to its first pattern segment.
  */
 function stripGlob(pattern: string): string {
-    const segments = normalizeWatchPath(pattern).split('/')
+    const segments = pattern.replace(/\\/g, '/').replace(/^(\.?\/)+/, '').split('/')
     const globIndex = segments.findIndex(segment => /[*?[{]/.test(segment))
 
     return (globIndex === -1 ? segments : segments.slice(0, globIndex)).join('/')
