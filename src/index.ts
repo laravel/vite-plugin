@@ -118,7 +118,7 @@ export const ignorePathsWhenWatching = [
     'storage/',
     'tests/',
     'vendor/',
-].filter(path => fs.existsSync(path))
+].filter(path => fs.existsSync(path)).map(directory => path.resolve(directory))
 
 const logger = createLogger('info', {
     prefix: '[laravel-vite-plugin]'
@@ -466,27 +466,19 @@ function resolveWatchIgnored(
         return userIgnored
     }
 
-    // The paths and matcher are resolved up front, as the matcher is called for
-    // every file and directory the watcher encounters.
-    const root = path.resolve(userConfig.root ?? process.cwd())
-    const ignoredPaths = ignorePathsWhenWatching.map(ignoredPath => path.resolve(root, ignoredPath))
-    const willRefresh = resolveRefreshMatcher(pluginConfig.refresh)
+    const pathConfiguredToTriggerRefresh = resolveRefreshMatcher(pluginConfig.refresh)
 
     return (file: string): boolean => {
         const absolutePath = path.resolve(file)
 
-        if (! ignoredPaths.some(ignoredPath => pathIsWithin(absolutePath, ignoredPath))) {
+        if (! ignorePathsWhenWatching.some(ignoredPath => pathMatches(absolutePath, ignoredPath))) {
             return false
         }
 
-        return ! willRefresh(normalizePath(absolutePath))
+        return ! pathConfiguredToTriggerRefresh(normalizePath(absolutePath))
     }
 }
 
-/**
- * Resolve a matcher for the paths that trigger a refresh, mirroring the way the
- * refresh plugin matches them, so anything it will refresh remains watched.
- */
 function resolveRefreshMatcher(refresh: Required<PluginConfig>['refresh']): (file: string) => boolean {
     if (typeof refresh === 'boolean') {
         return picomatch([])
@@ -501,8 +493,8 @@ function resolveRefreshMatcher(refresh: Required<PluginConfig>['refresh']): (fil
 /**
  * Determine whether the given path is, or is contained within, the other path.
  */
-function pathIsWithin(subject: string, parent: string): boolean {
-    return subject === parent || subject.startsWith(parent + path.sep)
+function pathMatches(subject: string, parent: string): boolean {
+    return subject.startsWith(parent + path.sep) || subject === parent
 }
 
 /**
