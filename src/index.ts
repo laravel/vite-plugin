@@ -98,8 +98,6 @@ interface LaravelPlugin extends Plugin {
 
 type DevServerUrl = `${'http'|'https'}://${string}:${number}`
 
-type WatchIgnored = NonNullable<NonNullable<UserConfig['server']>['watch']>['ignored']
-
 let exitHandlersBound = false
 
 export const refreshPaths = [
@@ -113,12 +111,12 @@ export const refreshPaths = [
 
 export const ignorePathsWhenWatching = [
     '.phpunit.cache',
-    'bootstrap',
-    'database',
-    'public/storage',
-    'storage',
-    'tests',
-    'vendor',
+    'bootstrap/**',
+    'database/**',
+    'public/storage/**',
+    'storage/**',
+    'tests/**',
+    'vendor/**',
 ]
 
 const logger = createLogger('info', {
@@ -456,7 +454,7 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
 function resolveWatchIgnored(
     pluginConfig: Required<PluginConfig>,
     userConfig: UserConfig,
-): WatchIgnored {
+): NonNullable<NonNullable<UserConfig['server']>['watch']>['ignored'] {
     if (userConfig.server?.watch === null) {
         return undefined
     }
@@ -487,10 +485,14 @@ function resolveWatchIgnored(
 /**
  * Resolve the given root-relative paths against the root, discarding any that
  * are the root itself or fall outside of it.
+ *
+ * A path is matched against the directory it points at and everything within
+ * it, so any pattern segments are reduced to the static path leading up to
+ * them, e.g. `vendor/**` matches the `vendor` directory and its contents.
  */
 function resolveAbsolutePaths(root: string, paths: string[]): string[] {
     return paths
-        .map(watchPath => path.resolve(root, normalizeWatchPath(watchPath)))
+        .map(watchPath => path.resolve(root, stripGlob(watchPath)))
         .filter(absolutePath => absolutePath !== root && pathIsWithin(absolutePath, root))
 }
 
@@ -511,7 +513,7 @@ function resolveRefreshedPaths(refresh: Required<PluginConfig>['refresh']): stri
         }
     }
 
-    return paths.map(stripGlob)
+    return paths
 }
 
 /**
