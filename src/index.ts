@@ -98,6 +98,8 @@ interface LaravelPlugin extends Plugin {
 
 type DevServerUrl = `${'http'|'https'}://${string}:${number}`
 
+type WatchIgnored = NonNullable<NonNullable<UserConfig['server']>['watch']>['ignored']
+
 let exitHandlersBound = false
 
 export const refreshPaths = [
@@ -109,16 +111,11 @@ export const refreshPaths = [
     'routes/**',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
 
-/**
- * The project-root directories excluded from Vite's dev-mode file watcher by default.
- *
- * Watching these directories can trigger unnecessary full page reloads and, on Linux,
- * contributes to inotify watch exhaustion. They are matched only at the project root,
- * so sibling directories such as `public/vendor` remain watched.
- */
-export const watchIgnoredDirectories = [
+export const ignorePathsWhenWatching = [
+    '.phpunit.cache',
     'bootstrap',
     'database',
+    'public/storage',
     'storage',
     'tests',
     'vendor',
@@ -209,7 +206,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                         },
                         https: userConfig.server?.https ?? serverConfig.https,
                     } : undefined),
-                    ...(watchIgnored ? {
+                    ...(typeof watchIgnored !== 'undefined' ? {
                         watch: {
                             ...userConfig.server?.watch,
                             ignored: watchIgnored,
@@ -452,82 +449,100 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
 /**
  * Resolve the file watcher `ignored` option.
  *
- * Falls back to the user-provided value when present. Otherwise returns a
- * matcher that ignores Laravel directories that typically change frequently
- * during development but should never trigger a page reload — while leaving
- * any directory the user has configured for refresh fully watched.
+ * Respects the user-provided value when present. Otherwise returns a matcher
+ * for the default ignored paths — while leaving any path the user has
+ * configured for refresh watched.
  */
 function resolveWatchIgnored(
     pluginConfig: Required<PluginConfig>,
     userConfig: UserConfig,
-): ((file: string) => boolean)|undefined {
-    const userIgnored = userConfig.server?.watch?.ignored
-    if (typeof userIgnored !== 'undefined') {
+): WatchIgnored {
+    if (userConfig.server?.watch === null) {
         return undefined
+    }
+
+    const userIgnored = userConfig.server?.watch?.ignored
+
+    if (typeof userIgnored !== 'undefined') {
+        return userIgnored
     }
 
     const root = path.resolve(userConfig.root ?? process.cwd())
-    const refreshTopDirectories = collectRefreshTopDirectories(pluginConfig.refresh)
-    const ignoredDirectories = watchIgnoredDirectories.filter(dir => ! refreshTopDirectories.has(dir))
 
-    if (ignoredDirectories.length === 0) {
-        return undefined
-    }
+    // The paths are resolved up front, as the matcher is called for every file
+    // and directory the watcher encounters.
+    const ignoredPaths = resolveAbsolutePaths(root, ignorePathsWhenWatching)
+    const refreshedPaths = resolveAbsolutePaths(root, resolveRefreshedPaths(pluginConfig.refresh))
 
     return (file: string): boolean => {
         const absolutePath = path.resolve(file)
 
-        if (absolutePath === root || ! absolutePath.startsWith(root + path.sep)) {
-            return false
-        }
-
-        const relativePath = path.relative(root, absolutePath).split(path.sep).join('/')
-        const topDirectory = relativePath.split('/')[0]
-
-        return ignoredDirectories.includes(topDirectory)
+        // The refreshed paths are matched in both directions, as ancestors must
+        // remain watched for the watcher to descend into a refreshed path.
+        return ignoredPaths.some(ignoredPath => pathIsWithin(absolutePath, ignoredPath))
+            && ! refreshedPaths.some(refreshedPath => pathsOverlap(absolutePath, refreshedPath))
     }
 }
 
 /**
- * Collect the top-level directory names that the user is refreshing on, so
- * they can be excluded from the default watch-ignore list.
+ * Resolve the given root-relative paths against the root, discarding any that
+ * are the root itself or fall outside of it.
  */
-function collectRefreshTopDirectories(refresh: Required<PluginConfig>['refresh']): Set<string> {
-    const directories = new Set<string>()
+function resolveAbsolutePaths(root: string, paths: string[]): string[] {
+    return paths
+        .map(watchPath => path.resolve(root, normalizeWatchPath(watchPath)))
+        .filter(absolutePath => absolutePath !== root && pathIsWithin(absolutePath, root))
+}
+
+/**
+ * Resolve the paths the user is refreshing on, so they can be excluded from
+ * the watch-ignore list.
+ */
+function resolveRefreshedPaths(refresh: Required<PluginConfig>['refresh']): string[] {
+    const paths: string[] = []
 
     if (typeof refresh === 'boolean') {
         if (refresh) {
-            for (const p of refreshPaths) {
-                addRefreshTopDirectory(directories, p)
-            }
+            paths.push(...refreshPaths)
         }
-
-        return directories
-    }
-
-    const configs = Array.isArray(refresh) ? refresh : [refresh]
-
-    for (const entry of configs) {
-        if (typeof entry === 'string') {
-            addRefreshTopDirectory(directories, entry)
-            continue
-        }
-
-        for (const p of entry.paths) {
-            addRefreshTopDirectory(directories, p)
+    } else {
+        for (const entry of Array.isArray(refresh) ? refresh : [refresh]) {
+            paths.push(...(typeof entry === 'string' ? [entry] : entry.paths))
         }
     }
 
-    return directories
+    return paths.map(stripGlob)
 }
 
-function addRefreshTopDirectory(target: Set<string>, refreshPath: string): void {
-    const normalized = refreshPath.replace(/^(\.?\/)+/, '')
-    const topDirectory = normalized.split(/[/\\]/)[0]
+/**
+ * Normalise a watch path to a root-relative path with forward slashes.
+ */
+function normalizeWatchPath(watchPath: string): string {
+    return watchPath.replace(/\\/g, '/').replace(/^(\.?\/)+/, '').replace(/\/+$/, '')
+}
 
-    if (topDirectory && ! topDirectory.includes('*')) {
-        target.add(topDirectory)
-    }
+/**
+ * Reduce a glob to the static path leading up to the first pattern segment.
+ */
+function stripGlob(pattern: string): string {
+    const segments = normalizeWatchPath(pattern).split('/')
+    const globIndex = segments.findIndex(segment => /[*?[{]/.test(segment))
+
+    return (globIndex === -1 ? segments : segments.slice(0, globIndex)).join('/')
+}
+
+/**
+ * Determine whether the given path is, or is contained within, the other path.
+ */
+function pathIsWithin(subject: string, parent: string): boolean {
+    return subject === parent || subject.startsWith(parent + path.sep)
+}
+
+/**
+ * Determine whether either path is, or is contained within, the other.
+ */
+function pathsOverlap(a: string, b: string): boolean {
+    return pathIsWithin(a, b) || pathIsWithin(b, a)
 }
 
 /**
