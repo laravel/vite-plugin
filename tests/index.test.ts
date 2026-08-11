@@ -15,7 +15,14 @@ vi.mock('fs', async () => {
                 'app/View/Components/',
                 'resources/views/',
                 'lang/',
-                'routes/'
+                'routes/',
+                '.phpunit.cache/',
+                'bootstrap/',
+                'database/',
+                'public/storage/',
+                'storage/',
+                'tests/',
+                'vendor/'
             ].includes(path) || actual.existsSync(path)
         }
     }
@@ -525,6 +532,97 @@ describe('laravel-vite-plugin', () => {
         })
 
         expect(resolvedConfig.server.cors).toBe(true)
+    })
+
+    it('ignores Laravel paths in the dev server watcher by default', () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        const ignored = config.server.watch.ignored as (file: string) => boolean
+        const root = process.cwd()
+
+        expect(typeof ignored).toBe('function')
+        expect(ignored(path.join(root, 'vendor', 'laravel', 'framework', 'foo.php'))).toBe(true)
+        expect(ignored(path.join(root, 'storage', 'framework', 'views', 'cache.php'))).toBe(true)
+        expect(ignored(path.join(root, 'bootstrap', 'app.php'))).toBe(true)
+        expect(ignored(path.join(root, 'database', 'migrations', '2024.php'))).toBe(true)
+        expect(ignored(path.join(root, 'tests', 'Feature', 'ExampleTest.php'))).toBe(true)
+        expect(ignored(path.join(root, '.phpunit.cache', 'test-results'))).toBe(true)
+
+        // The public/storage symlink resolves into the ignored storage directory,
+        // but the watcher follows symlinks and reports the symlinked path.
+        expect(ignored(path.join(root, 'public', 'storage', 'upload.jpg'))).toBe(true)
+
+        // public/vendor must remain watched — `/vendor/**` style globs would misfire here.
+        expect(ignored(path.join(root, 'public', 'vendor', 'asset.js'))).toBe(false)
+        expect(ignored(path.join(root, 'resources', 'views', 'welcome.blade.php'))).toBe(false)
+        expect(ignored(path.join(root, 'storagerelated', 'foo.php'))).toBe(false)
+    })
+
+    it('does not set the watch ignored matcher during build', () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        const config = plugin.config({}, { command: 'build', mode: 'production' })
+
+        expect(config.server?.watch).toBeUndefined()
+    })
+
+    it("respects the user's server.watch.ignored config", () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        const userIgnored = ['**/my-custom-dir/**']
+        const config = plugin.config({
+            server: { watch: { ignored: userIgnored } },
+        }, { command: 'serve', mode: 'development' })
+
+        expect(config.server.watch?.ignored).toBe(userIgnored)
+    })
+
+    it('does not re-enable the watcher when the user has disabled it', () => {
+        const plugin = laravel('resources/js/app.ts')[0]
+
+        const config = plugin.config({
+            server: { watch: null },
+        }, { command: 'serve', mode: 'development' })
+
+        expect(config.server?.watch).toBeUndefined()
+    })
+
+    it('discards refresh paths that do not fall within the root', () => {
+        const plugin = laravel({
+            input: 'resources/js/app.ts',
+            refresh: ['**', '../shared/views/**'],
+        })[0]
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        const ignored = config.server.watch.ignored as (file: string) => boolean
+        const root = process.cwd()
+
+        // A refresh path resolving to the root, or outside of it, must not
+        // un-ignore the default paths.
+        expect(ignored(path.join(root, 'vendor', 'laravel', 'framework', 'foo.php'))).toBe(true)
+        expect(ignored(path.join(root, 'storage', 'logs', 'laravel.log'))).toBe(true)
+    })
+
+    it('keeps refresh paths watched even if they overlap ignored paths', () => {
+        const plugin = laravel({
+            input: 'resources/js/app.ts',
+            refresh: ['storage/framework/views/**'],
+        })[0]
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+        const ignored = config.server.watch.ignored as (file: string) => boolean
+        const root = process.cwd()
+
+        expect(ignored(path.join(root, 'storage', 'framework', 'views', 'cache.php'))).toBe(false)
+        // Ancestors of the refreshed path stay watched so the watcher descends into them.
+        expect(ignored(path.join(root, 'storage'))).toBe(false)
+        expect(ignored(path.join(root, 'storage', 'framework'))).toBe(false)
+        // Only the overlapping subtree is un-ignored — the rest of `storage` is still ignored.
+        expect(ignored(path.join(root, 'storage', 'logs', 'laravel.log'))).toBe(true)
+        expect(ignored(path.join(root, 'storage', 'framework', 'cache', 'data.php'))).toBe(true)
+        // Other defaults remain ignored.
+        expect(ignored(path.join(root, 'vendor', 'laravel', 'framework', 'foo.php'))).toBe(true)
     })
 
     it('does not include assets plugin when no assets are configured', () => {
