@@ -444,17 +444,7 @@ function resolveOutDir(config: Required<PluginConfig>, ssr: boolean): string|und
     return path.join(config.publicDirectory, config.buildDirectory)
 }
 
-/**
- * Resolve the file watcher `ignored` option.
- *
- * Respects the user-provided value when present. Otherwise returns a matcher
- * for the default ignored paths — while leaving any path the user has
- * configured for refresh watched.
- */
-function resolveWatchIgnored(
-    pluginConfig: Required<PluginConfig>,
-    userConfig: UserConfig,
-): NonNullable<NonNullable<UserConfig['server']>['watch']>['ignored'] {
+function resolveWatchIgnored(pluginConfig: Required<PluginConfig>, userConfig: UserConfig): NonNullable<NonNullable<UserConfig['server']>['watch']>['ignored'] {
     if (userConfig.server?.watch === null) {
         return undefined
     }
