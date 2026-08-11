@@ -5,8 +5,9 @@ import { fileURLToPath } from 'url'
 import path from 'path'
 import { globSync } from 'tinyglobby'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
-import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
+import picomatch from 'picomatch'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins, normalizePath } from 'vite'
+import fullReload, { Config as FullReloadConfig, normalizePaths } from 'vite-plugin-full-reload'
 
 interface PluginConfig {
     /**
@@ -465,61 +466,31 @@ function resolveWatchIgnored(
         return userIgnored
     }
 
+    // The paths and matcher are resolved up front, as the matcher is called for
+    // every file and directory the watcher encounters.
     const root = path.resolve(userConfig.root ?? process.cwd())
-
-    // The paths are resolved up front, as the matcher is called for every file
-    // and directory the watcher encounters.
-    const ignoredPaths = resolveAbsolutePaths(root, ignorePathsWhenWatching)
-    const refreshedPaths = resolveAbsolutePaths(root, resolveRefreshedPaths(pluginConfig.refresh))
+    const ignoredPaths = ignorePathsWhenWatching.map(ignoredPath => path.resolve(root, ignoredPath))
+    const willRefresh = resolveRefreshMatcher(pluginConfig.refresh)
 
     return (file: string): boolean => {
         const absolutePath = path.resolve(file)
 
-        // The refreshed paths are matched in both directions, as ancestors must
-        // remain watched for the watcher to descend into a refreshed path.
-        return ignoredPaths.some(ignoredPath => pathIsWithin(absolutePath, ignoredPath))
-            && ! refreshedPaths.some(refreshedPath => pathsOverlap(absolutePath, refreshedPath))
+        if (! ignoredPaths.some(ignoredPath => pathIsWithin(absolutePath, ignoredPath))) {
+            return false
+        }
+
+        return ! willRefresh(normalizePath(absolutePath))
     }
 }
 
 /**
- * Resolve the given root-relative paths against the root, discarding any that
- * are the root itself or fall outside of it.
+ * Resolve a matcher for the paths that trigger a refresh, mirroring the way the
+ * refresh plugin matches them, so anything it will refresh remains watched.
  */
-function resolveAbsolutePaths(root: string, paths: string[]): string[] {
-    return paths
-        .map(watchPath => path.resolve(root, watchPath))
-        .filter(absolutePath => absolutePath !== root && pathIsWithin(absolutePath, root))
-}
-
-/**
- * Resolve the paths the user is refreshing on, so they can be excluded from
- * the watch-ignore list.
- */
-function resolveRefreshedPaths(refresh: Required<PluginConfig>['refresh']): string[] {
-    const paths: string[] = []
-
-    if (typeof refresh === 'boolean') {
-        if (refresh) {
-            paths.push(...refreshPaths)
-        }
-    } else {
-        for (const entry of Array.isArray(refresh) ? refresh : [refresh]) {
-            paths.push(...(typeof entry === 'string' ? [entry] : entry.paths))
-        }
-    }
-
-    return paths.map(stripGlob)
-}
-
-/**
- * Reduce a refresh glob to the static path leading up to its first pattern segment.
- */
-function stripGlob(pattern: string): string {
-    const segments = pattern.replace(/\\/g, '/').replace(/^(\.?\/)+/, '').split('/')
-    const globIndex = segments.findIndex(segment => /[*?[{]/.test(segment))
-
-    return (globIndex === -1 ? segments : segments.slice(0, globIndex)).join('/')
+function resolveRefreshMatcher(refresh: Required<PluginConfig>['refresh']): (file: string) => boolean {
+    return picomatch(resolveRefreshConfigs(refresh).flatMap(
+        ({ paths, config }) => normalizePaths(config?.root ?? process.cwd(), paths)
+    ))
 }
 
 /**
@@ -527,13 +498,6 @@ function stripGlob(pattern: string): string {
  */
 function pathIsWithin(subject: string, parent: string): boolean {
     return subject === parent || subject.startsWith(parent + path.sep)
-}
-
-/**
- * Determine whether either path is, or is contained within, the other.
- */
-function pathsOverlap(a: string, b: string): boolean {
-    return pathIsWithin(a, b) || pathIsWithin(b, a)
 }
 
 /**
@@ -557,7 +521,22 @@ function resolveAssetPlugin(assets: string|string[]): Plugin[] {
     }]
 }
 
-function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): PluginOption[]{
+function resolveFullReloadConfig({ refresh }: Required<PluginConfig>): PluginOption[]{
+    return resolveRefreshConfigs(refresh).flatMap(c => {
+        const plugin = fullReload(c.paths, c.config)
+
+        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+        /** @ts-ignore */
+        plugin.__laravel_plugin_config = c
+
+        return plugin
+    })
+}
+
+/**
+ * Resolve the refresh configuration to its normalised form.
+ */
+function resolveRefreshConfigs(config: Required<PluginConfig>['refresh']): RefreshConfig[] {
     if (typeof config === 'boolean') {
         return [];
     }
@@ -574,15 +553,7 @@ function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): P
         config = [{ paths: config }] as RefreshConfig[]
     }
 
-    return (config as RefreshConfig[]).flatMap(c => {
-        const plugin = fullReload(c.paths, c.config)
-
-        /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-        /** @ts-ignore */
-        plugin.__laravel_plugin_config = c
-
-        return plugin
-    })
+    return config as RefreshConfig[]
 }
 
 /**

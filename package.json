@@ -64,6 +64,7 @@
     },
     "dependencies": {
         "picocolors": "^1.0.0",
+        "picomatch": "^4.0.0",
         "tinyglobby": "^0.2.12",
         "vite-plugin-full-reload": "^1.1.0"
     }
