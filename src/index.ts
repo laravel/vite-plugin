@@ -162,12 +162,11 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             const serverConfig = command === 'serve'
                 ? (resolveDevelopmentEnvironmentServerConfig(pluginConfig.detectTls) ?? resolveEnvironmentServerConfig(env))
                 : undefined
-
-            ensureCommandShouldRunInEnvironment(command, env)
-
             const watchIgnored = command === 'serve'
                 ? resolveWatchIgnored(pluginConfig, userConfig)
                 : undefined
+
+            ensureCommandShouldRunInEnvironment(command, env)
 
             return {
                 base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
