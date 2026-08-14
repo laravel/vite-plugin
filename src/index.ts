@@ -57,6 +57,13 @@ interface PluginConfig {
     refresh?: boolean|string|string[]|RefreshConfig|RefreshConfig[]
 
     /**
+     * The paths to exclude from the dev server's file watcher, relative to the project root.
+     *
+     * @default defaultIgnorePathsWhenWatching
+     */
+    ignorePathsWhenWatching?: string[]
+
+    /**
      * Utilise the Herd or Valet TLS certificates.
      *
      * @default null
@@ -110,7 +117,7 @@ export const refreshPaths = [
     'routes/**',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')))
 
-export const ignorePathsWhenWatching = [
+export const defaultIgnorePathsWhenWatching = [
     '.phpunit.cache/',
     'bootstrap/',
     'database/',
@@ -118,7 +125,7 @@ export const ignorePathsWhenWatching = [
     'storage/',
     'tests/',
     'vendor/',
-].filter(path => fs.existsSync(path)).map(directory => path.resolve(directory))
+].filter(directory => fs.existsSync(directory))
 
 const logger = createLogger('info', {
     prefix: '[laravel-vite-plugin]'
@@ -407,6 +414,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         ssr: config.ssr ?? config.input,
         ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
         refresh: config.refresh ?? false,
+        ignorePathsWhenWatching: config.ignorePathsWhenWatching ?? defaultIgnorePathsWhenWatching,
         hotFile: config.hotFile ?? path.join((config.publicDirectory ?? 'public'), 'hot'),
         valetTls: config.valetTls ?? null,
         detectTls: config.detectTls ?? config.valetTls ?? null,
@@ -456,9 +464,10 @@ function resolveWatchIgnored(pluginConfig: Required<PluginConfig>, userConfig: U
     }
 
     const pathConfiguredToTriggerRefresh = resolveRefreshMatcher(pluginConfig.refresh)
+    const ignoredPaths = resolveIgnoredWatchPaths(pluginConfig.ignorePathsWhenWatching)
 
     return (file: string): boolean => {
-        if (! shouldIgnorePath(file)) {
+        if (! shouldIgnorePath(file, ignoredPaths)) {
             // console.debug(`Path is being watched: ${file}`)
 
             return false
@@ -486,10 +495,17 @@ function resolveRefreshMatcher(refresh: Required<PluginConfig>['refresh']): (fil
 }
 
 /**
+ * Resolve the configured ignore paths, relative to the project root, to absolute paths.
+ */
+function resolveIgnoredWatchPaths(paths: string[]): string[] {
+    return paths.map(directory => path.resolve(directory))
+}
+
+/**
  * Determine whether the given path is, or is contained within, an ignored path.
  */
-function shouldIgnorePath(absolutePath: string): boolean {
-    return ignorePathsWhenWatching.some(ignoredPath => absolutePath.startsWith(ignoredPath + path.sep) || absolutePath === ignoredPath)
+function shouldIgnorePath(absolutePath: string, ignoredPaths: string[]): boolean {
+    return ignoredPaths.some(ignoredPath => absolutePath.startsWith(ignoredPath + path.sep) || absolutePath === ignoredPath)
 }
 
 /**
