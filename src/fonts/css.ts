@@ -21,8 +21,18 @@ export function generateFontFace(
         const rangedFiles = variant.files.filter(f => f.unicodeRange)
         const nonRangedFiles = variant.files.filter(f => ! f.unicodeRange)
 
+        // Files sharing a unicode-range are alternate sources for the same face,
+        // so preserve their order in a single src list.
+        const filesByRange = new Map<string, ResolvedFontFile[]>()
+
         for (const file of rangedFiles) {
-            const fileSrc = `url("${filePathMap.get(file.source) ?? file.source}") format("${formatKeyword(file.format)}")`
+            const range = file.unicodeRange!
+
+            filesByRange.set(range, [...filesByRange.get(range) ?? [], file])
+        }
+
+        for (const [unicodeRange, files] of filesByRange) {
+            const src = generateSrc(files, filePathMap)
 
             rules.push([
                 '@font-face {',
@@ -30,8 +40,8 @@ export function generateFontFace(
                 `  font-style: ${variant.style};`,
                 `  font-weight: ${String(variant.weight)};`,
                 `  font-display: ${family.display};`,
-                `  src: ${fileSrc};`,
-                `  unicode-range: ${file.unicodeRange};`,
+                `  src: ${src};`,
+                `  unicode-range: ${unicodeRange};`,
                 '}',
             ].join('\n'))
         }
