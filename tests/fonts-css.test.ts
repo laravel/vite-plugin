@@ -92,6 +92,32 @@ describe('fonts css generation', () => {
             expect(css).toContain('unicode-range: U+0100-024F')
         })
 
+        it('merges formats of the same unicode range into one rule', () => {
+            const family = makeFamily({
+                variants: [{
+                    weight: 400,
+                    style: 'normal',
+                    files: [
+                        { source: '/fonts/inter-latin.woff2', format: 'woff2', unicodeRange: 'U+0000-00FF' },
+                        { source: '/fonts/inter-latin.woff', format: 'woff', unicodeRange: 'U+0000-00FF' },
+                    ],
+                }],
+            })
+
+            const css = generateFontFace(family, new Map([
+                ['/fonts/inter-latin.woff2', 'assets/inter-latin.woff2'],
+                ['/fonts/inter-latin.woff', 'assets/inter-latin.woff'],
+            ]))
+
+            // One rule with a format-fallback src list, matching the
+            // non-ranged path: browsers pick exactly one file instead of
+            // downloading a sibling rule per format.
+            expect(css.match(/@font-face/g)).toHaveLength(1)
+            expect(css).toContain('url("assets/inter-latin.woff2") format("woff2"),')
+            expect(css).toContain('url("assets/inter-latin.woff") format("woff")')
+            expect(css.match(/unicode-range: U\+0000-00FF/g)).toHaveLength(1)
+        })
+
         it('uses spec-compliant format keywords for unicode-range files', () => {
             const family = makeFamily({
                 variants: [{
