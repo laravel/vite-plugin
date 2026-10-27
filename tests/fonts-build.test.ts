@@ -1,0 +1,357 @@
+import { describe, expect, it } from 'vitest'
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
+import { assertFileRefsResolved, resolveFontsPlugin } from '../src/fonts/plugin'
+import { local } from '../src/fonts/providers/providers'
+import type { FontDefinition, ResolvedFontFamily } from '../src/fonts/types'
+
+const FIXTURE_FONT = path.resolve(__dirname, 'fixtures/fonts/test-font.woff2')
+const FIXTURE_FONT_2 = path.resolve(__dirname, 'fixtures/fonts/test-font-2.woff2')
+
+type EmittedAsset = {
+    type: 'asset'
+    fileName: string
+    name?: string
+    source: string | Buffer
+}
+
+type Bundle = Record<string, EmittedAsset>
+
+type MockContext = {
+    refs: Map<string, string>
+    counter: number
+    bundle: Bundle
+    warnings: string[]
+    emitFile: (opts: { type: 'asset', name?: string, fileName?: string, source: string | Buffer }) => string
+    getFileName: (ref: string) => string
+    warn: (message: string) => void
+}
+
+function createMockContext(): MockContext {
+    const refs = new Map<string, string>()
+    const bundle: Bundle = {}
+    const warnings: string[] = []
+    let counter = 0
+
+    const emitFile: MockContext['emitFile'] = (opts) => {
+        const ref = `ref-${++counter}`
+        const fileName = opts.fileName ?? buildAssetFileName(opts.name!)
+        refs.set(ref, fileName)
+        bundle[fileName] = {
+            type: 'asset',
+            fileName,
+            name: opts.name,
+            source: opts.source,
+        }
+        return ref
+    }
+
+    const getFileName = (ref: string): string => {
+        const name = refs.get(ref)
+
+        if (! name) {
+            throw new Error(`No filename registered for ref ${ref}`)
+        }
+
+        return name
+    }
+
+    return { refs, counter, bundle, warnings, emitFile, getFileName, warn: (message) => warnings.push(message) }
+}
+
+function buildAssetFileName(name: string): string {
+    const ext = path.extname(name)
+    const base = name.slice(0, -ext.length)
+
+    return `assets/${base}-abc123${ext}`
+}
+
+async function runBuild(
+    fonts: FontDefinition[],
+    tmpRoot: string,
+    base = '/build/',
+): Promise<{ ctx: MockContext, plugin: ReturnType<typeof resolveFontsPlugin>[number] }> {
+    const hotFile = path.join(tmpRoot, 'hot')
+    const [plugin] = resolveFontsPlugin(fonts, hotFile)
+
+    const ctx = createMockContext()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(plugin.configResolved as any).call(ctx, { root: tmpRoot, command: 'build', base, build: { assetsDir: 'assets' } })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (plugin.buildStart as any).call(ctx)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (plugin.generateBundle as any).call(ctx, {}, ctx.bundle)
+
+    return { ctx, plugin }
+}
+
+function findCssAsset(bundle: Bundle): EmittedAsset {
+    const entry = Object.values(bundle).find(a => a.fileName.endsWith('.css'))
+
+    if (! entry) {
+        throw new Error(`No CSS asset in bundle. Got: ${Object.keys(bundle).join(', ')}`)
+    }
+
+    return entry
+}
+
+function findManifestAsset(bundle: Bundle): EmittedAsset {
+    const entry = Object.values(bundle).find(a => a.fileName === 'fonts-manifest.json')
+
+    if (! entry) {
+        throw new Error(`No manifest asset in bundle. Got: ${Object.keys(bundle).join(', ')}`)
+    }
+
+    return entry
+}
+
+describe('fonts plugin single-pass build', () => {
+    it('emits CSS with final hashed asset URLs and no placeholder tokens', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-happy-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+
+            const cssAsset = findCssAsset(ctx.bundle)
+            const manifestAsset = findManifestAsset(ctx.bundle)
+
+            const cssText = String(cssAsset.source)
+            const manifestText = String(manifestAsset.source)
+
+            expect(cssText).not.toContain('__FONT_REF_')
+            expect(cssText).toMatch(/url\("\/build\/assets\/test-[^"]*\.woff2"\)/)
+
+            expect(manifestText).not.toContain('__FONT_REF_')
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('sanitizes variable font weight ranges in emitted asset filenames', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-vf-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: '100 900', style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+
+            const fontAssets = Object.keys(ctx.bundle).filter(name => name.endsWith('.woff2'))
+
+            expect(fontAssets.length).toBe(1)
+            expect(fontAssets[0]).toContain('test-100-900-normal')
+            expect(fontAssets.every(name => ! name.includes(' '))).toBe(true)
+
+            // The @font-face weight itself must keep the space-separated range.
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            expect(cssText).toContain('font-weight: 100 900;')
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('prefixes CSS font URLs with the resolved base for subdirectory deployments', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-base-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot, '/v2/build/')
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifest = JSON.parse(String(findManifestAsset(ctx.bundle).source))
+
+            expect(cssText).toMatch(/url\("\/v2\/build\/assets\/test-[^"]*\.woff2"\)/)
+            expect(cssText).not.toMatch(/url\("\/build\//)
+
+            // Inline family styles in the manifest must use the same base.
+            expect(manifest.style.familyStyles.test).toMatch(/url\("\/v2\/build\/assets\/test-[^"]*\.woff2"\)/)
+
+            // Manifest file paths stay relative so Laravel can resolve them itself.
+            expect(manifest.preloads[0].file).toMatch(/^assets\/test-[^"]*\.woff2$/)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('prefixes CSS font URLs with an absolute ASSET_URL base', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-cdn-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot, 'https://cdn.example.com/build/')
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+
+            expect(cssText).toMatch(/url\("https:\/\/cdn\.example\.com\/build\/assets\/test-[^"]*\.woff2"\)/)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('uses CSS-relative font URLs when Vite uses a relative base', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-relative-base-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot, './')
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifest = JSON.parse(String(findManifestAsset(ctx.bundle).source))
+
+            expect(cssText).toMatch(/url\("\.\/test-[^"]*\.woff2"\)/)
+            expect(cssText).not.toMatch(/url\("\.\/assets\//)
+
+            expect(manifest.style.familyStyles.test).toMatch(/url\("\.\/assets\/test-[^"]*\.woff2"\)/)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('warns and drops the fallback family when fallback metrics cannot be generated', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-fallback-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: true,
+                fallbacks: ['sans-serif'],
+                variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+
+            expect(ctx.warnings.length).toBeGreaterThan(0)
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifest = JSON.parse(String(findManifestAsset(ctx.bundle).source))
+
+            expect(cssText).toContain('--font-test: "Test", sans-serif;')
+            expect(cssText).not.toContain('Test fallback')
+            expect(manifest.families.test.fallbackFamily).toBeUndefined()
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('gives distinct hashed URLs to each of multiple families that share a fallback keyword', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-multi-'))
+        try {
+            const fontsConfig = [
+                local('Alpha', {
+                    fallbacks: ['sans-serif'],
+                    optimizedFallbacks: false,
+                    variants: [{ src: FIXTURE_FONT, weight: 400, style: 'normal' }],
+                }),
+                local('Beta', {
+                    fallbacks: ['sans-serif'],
+                    optimizedFallbacks: false,
+                    variants: [{ src: FIXTURE_FONT_2, weight: 400, style: 'normal' }],
+                }),
+            ]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+
+            const cssText = String(findCssAsset(ctx.bundle).source)
+
+            const urls = Array.from(cssText.matchAll(/url\("(\/build\/assets\/[^"]+\.woff2)"\)/g)).map(m => m[1])
+
+            expect(urls.length).toBeGreaterThanOrEqual(2)
+            expect(new Set(urls).size).toBe(urls.length)
+            expect(urls.some(u => u.includes('alpha'))).toBe(true)
+            expect(urls.some(u => u.includes('beta'))).toBe(true)
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+
+    it('names a source reused across multiple weights as variable', async () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fonts-build-variable-'))
+        try {
+            const fontsConfig = [local('Test', {
+                optimizedFallbacks: false,
+                variants: [
+                    { src: FIXTURE_FONT, weight: 400, style: 'normal' },
+                    { src: FIXTURE_FONT, weight: 500, style: 'normal' },
+                ],
+            })]
+
+            const { ctx } = await runBuild(fontsConfig, tmpRoot)
+            const cssText = String(findCssAsset(ctx.bundle).source)
+            const manifestText = String(findManifestAsset(ctx.bundle).source)
+
+            expect(cssText).toContain('/build/assets/test-variable-normal-abc123.woff2')
+            expect(cssText).not.toContain('/build/assets/test-400-normal-abc123.woff2')
+            expect(manifestText).toContain('assets/test-variable-normal-abc123.woff2')
+        } finally {
+            fs.rmSync(tmpRoot, { recursive: true, force: true })
+        }
+    })
+})
+
+describe('assertFileRefsResolved', () => {
+    function makeFamily(overrides?: Partial<ResolvedFontFamily>): ResolvedFontFamily {
+        return {
+            family: 'Inter',
+            alias: 'inter',
+            variable: '--font-inter',
+            display: 'swap',
+            optimizedFallbacks: false,
+            fallbacks: [],
+            preload: true,
+            provider: 'local',
+            variants: [{
+                weight: 400,
+                style: 'normal',
+                files: [{ source: '/fonts/inter-400.woff2', format: 'woff2' }],
+            }],
+            ...overrides,
+        }
+    }
+
+    it('throws a clear laravel-vite-plugin error naming the family when a source is missing', () => {
+        const family = makeFamily({ family: 'Inter' })
+        const emptyMap = new Map<string, string>()
+
+        expect(() => assertFileRefsResolved([family], emptyMap)).toThrow(
+            /laravel-vite-plugin.*Inter/,
+        )
+    })
+
+    it('does not throw when every source is present in the ref map', () => {
+        const family = makeFamily()
+        const refMap = new Map([['/fonts/inter-400.woff2', 'ref-1']])
+
+        expect(() => assertFileRefsResolved([family], refMap)).not.toThrow()
+    })
+
+    it('reports the first missing family, not just a generic error', () => {
+        const first = makeFamily({ family: 'Inter', alias: 'inter' })
+        const second = makeFamily({
+            family: 'Roboto',
+            alias: 'roboto',
+            variable: '--font-roboto',
+            variants: [{
+                weight: 400,
+                style: 'normal',
+                files: [{ source: '/fonts/roboto-400.woff2', format: 'woff2' }],
+            }],
+        })
+
+        const partialMap = new Map([['/fonts/inter-400.woff2', 'ref-1']])
+
+        expect(() => assertFileRefsResolved([first, second], partialMap)).toThrow(/Roboto/)
+    })
+})

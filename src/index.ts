@@ -8,6 +8,8 @@ import colors from 'picocolors'
 import picomatch from 'picomatch'
 import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins, normalizePath } from 'vite'
 import fullReload, { Config as FullReloadConfig, normalizePaths } from 'vite-plugin-full-reload'
+import { resolveFontsPlugin } from './fonts/plugin.js'
+import type { FontDefinition } from './fonts/types.js'
 
 interface PluginConfig {
     /**
@@ -93,6 +95,16 @@ interface PluginConfig {
      * @default []
      */
     assets?: string|string[]
+
+    /**
+     * Font configurations for automatic self-hosting and optimization.
+     *
+     * Use provider helpers from `laravel-vite-plugin/fonts`:
+     * `local()`, `google()`, `bunny()`, `fontsource()`.
+     *
+     * @default []
+     */
+    fonts?: FontDefinition[]
 }
 
 interface RefreshConfig {
@@ -142,6 +154,7 @@ export default function laravel(config: string|string[]|PluginConfig): [LaravelP
     return [
         resolveLaravelPlugin(pluginConfig),
         ...resolveAssetPlugin(pluginConfig.assets),
+        ...resolveFontsPlugin(pluginConfig.fonts, pluginConfig.hotFile),
         ...resolveFullReloadConfig(pluginConfig) as Plugin[],
     ];
 }
@@ -248,13 +261,17 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
             }
         },
         configureServer(server) {
+            if (process.env.VITEST !== undefined) {
+                return
+            }
+
             const envDir = resolvedConfig.envDir || process.cwd()
             const appUrl = loadEnv(resolvedConfig.mode, envDir, 'APP_URL').APP_URL ?? 'undefined'
 
             server.httpServer?.once('listening', () => {
                 const address = server.httpServer?.address()
 
-                const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object'
+                const isAddressInfo = (x: string|AddressInfo|null|undefined): x is AddressInfo => typeof x === 'object' && x !== null
                 if (isAddressInfo(address)) {
                     viteDevServerUrl = userConfig.server?.origin ? userConfig.server.origin as DevServerUrl : resolveDevServerUrl(address, server.config, userConfig)
 
@@ -420,6 +437,7 @@ function resolvePluginConfig(config: string|string[]|PluginConfig): Required<Plu
         detectTls: config.detectTls ?? config.valetTls ?? null,
         transformOnServe: config.transformOnServe ?? ((code) => code),
         assets: typeof config.assets === 'string' ? [config.assets] : config.assets ?? [],
+        fonts: config.fonts ?? [],
     }
 }
 
