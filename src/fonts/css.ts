@@ -21,17 +21,24 @@ export function generateFontFace(
         const rangedFiles = variant.files.filter(f => f.unicodeRange)
         const nonRangedFiles = variant.files.filter(f => ! f.unicodeRange)
 
-        for (const file of rangedFiles) {
-            const fileSrc = `url("${filePathMap.get(file.source) ?? file.source}") format("${formatKeyword(file.format)}")`
+        const rangedByRange = new Map<string, ResolvedFontFile[]>()
 
+        for (const file of rangedFiles) {
+            const files = rangedByRange.get(file.unicodeRange!) ?? []
+
+            files.push(file)
+            rangedByRange.set(file.unicodeRange!, files)
+        }
+
+        for (const [unicodeRange, files] of rangedByRange) {
             rules.push([
                 '@font-face {',
                 `  font-family: "${family.family}";`,
                 `  font-style: ${variant.style};`,
                 `  font-weight: ${String(variant.weight)};`,
                 `  font-display: ${family.display};`,
-                `  src: ${fileSrc};`,
-                `  unicode-range: ${file.unicodeRange};`,
+                `  src: ${generateSrc(files, filePathMap)};`,
+                `  unicode-range: ${unicodeRange};`,
                 '}',
             ].join('\n'))
         }
