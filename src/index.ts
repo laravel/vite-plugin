@@ -312,7 +312,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
  * Validate the command can run in the given environment.
  */
 function ensureCommandShouldRunInEnvironment(command: 'build'|'serve', env: Record<string, string>): void {
-    if (command === 'build' || env.LARAVEL_BYPASS_ENV_CHECK === '1') {
+    if (command === 'build' || env.LARAVEL_BYPASS_ENV_CHECK === '1' || typeof env.VITEST !== 'undefined') {
         return;
     }
 
