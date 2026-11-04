@@ -1,6 +1,30 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.2.0...3.x)
+## [Unreleased](https://github.com/laravel/vite-plugin/compare/v3.2.1...3.x)
+
+## [v3.2.1](https://github.com/laravel/vite-plugin/compare/v3.2.0...v3.2.1) - 2026-11-04
+
+### What's Changed
+
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/391
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/392
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/393
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/395
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/396
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/397
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/399
+* Remove security policy in favor of the org-wide default by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/vite-plugin/pull/400
+* Bump the github-actions group with 4 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/401
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/403
+* Bump the github-actions group with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/vite-plugin/pull/404
+* [3.x] Allow fontaine v1 by [@intrepidws](https://github.com/intrepidws) in https://github.com/laravel/vite-plugin/pull/398
+
+### New Contributors
+
+* [@pushpak1300](https://github.com/pushpak1300) made their first contribution in https://github.com/laravel/vite-plugin/pull/400
+* [@intrepidws](https://github.com/intrepidws) made their first contribution in https://github.com/laravel/vite-plugin/pull/398
+
+**Full Changelog**: https://github.com/laravel/vite-plugin/compare/v3.2.0...v3.2.1
 
 ## [v3.2.0](https://github.com/laravel/vite-plugin/compare/v3.1.3...v3.2.0) - 2026-08-11
 
