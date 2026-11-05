@@ -584,7 +584,7 @@ function resolveEnvironmentServerConfig(env: Record<string, string>): {
 function resolveHostFromEnv(env: Record<string, string>): string|undefined
 {
     try {
-        return new URL(env.APP_URL).host
+        return new URL(env.APP_URL).hostname
     } catch {
         return
     }

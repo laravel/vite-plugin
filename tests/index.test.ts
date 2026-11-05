@@ -452,6 +452,22 @@ describe('laravel-vite-plugin', () => {
         })
     })
 
+    it('resolves the server host from the APP_URL without the port', () => {
+        const certificate = path.join(__dirname, '__data__', 'dummy.ts')
+        fs.writeFileSync(path.join(__dirname, '.env'), `APP_URL=https://example.test:8000\nVITE_DEV_SERVER_KEY=${certificate}\nVITE_DEV_SERVER_CERT=${certificate}`)
+
+        const plugin = laravel({
+            input: 'resources/js/app.js',
+            detectTls: false,
+        })[0]
+        const config = plugin.config({ envDir: __dirname }, { command: 'serve', mode: 'development' })
+
+        expect(config.server.host).toBe('example.test')
+        expect(config.server.hmr.host).toBe('example.test')
+
+        fs.rmSync(path.join(__dirname, '.env'))
+    })
+
     it('configures default cors.origin values', () => {
         const test = (pattern: RegExp|string, value: string) => pattern instanceof RegExp ? pattern.test(value) : pattern === value
         fs.writeFileSync(path.join(__dirname, '.env'), 'APP_URL=http://example.com')
