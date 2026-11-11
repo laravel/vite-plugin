@@ -24,6 +24,7 @@ vi.mock('fs', async () => {
 describe('laravel-vite-plugin', () => {
     afterEach(() => {
         vi.clearAllMocks()
+        vi.unstubAllEnvs()
     })
 
     it('handles missing configuration', () => {
@@ -305,6 +306,23 @@ describe('laravel-vite-plugin', () => {
         expect(config.server.strictPort).toBe(false)
 
         delete process.env.LARAVEL_SAIL
+    })
+
+    it('prevents the Vite dev server from running in CI environments', () => {
+        vi.stubEnv('CI', 'true')
+        vi.stubEnv('VITEST', undefined)
+        vi.stubEnv('LARAVEL_BYPASS_ENV_CHECK', undefined)
+        const plugin = laravel('resources/js/app.js')[0]
+
+        expect(() => plugin.config({}, { command: 'serve', mode: 'development' })).toThrowError('You should not run the Vite HMR server in CI environments.')
+    })
+
+    it('allows Vitest to load the config in CI environments', () => {
+        vi.stubEnv('CI', 'true')
+        vi.stubEnv('LARAVEL_BYPASS_ENV_CHECK', undefined)
+        const plugin = laravel('resources/js/app.js')[0]
+
+        expect(() => plugin.config({}, { command: 'serve', mode: 'test' })).not.toThrow()
     })
 
     it('prevents the Inertia helpers from being externalized', () => {
