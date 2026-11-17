@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import path from 'path'
 import { globSync } from 'tinyglobby'
 import colors from 'picocolors'
-import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, createLogger, defaultAllowedOrigins } from 'vite'
+import { Plugin, loadEnv, UserConfig, ConfigEnv, ResolvedConfig, SSROptions, PluginOption, Rolldown, ServerOptions, createLogger, defaultAllowedOrigins, version as viteVersion } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 import { resolveFontsPlugin } from './fonts/plugin.js'
 import type { FontDefinition } from './fonts/types.js'
@@ -197,10 +197,7 @@ function resolveLaravelPlugin(pluginConfig: Required<PluginConfig>): LaravelPlug
                     } : undefined),
                     ...(serverConfig ? {
                         host: userConfig.server?.host ?? serverConfig.host,
-                        hmr: userConfig.server?.hmr === false ? false : {
-                            ...serverConfig.hmr,
-                            ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
-                        },
+                        ...resolveWebSocketServerConfig(userConfig, serverConfig.ws),
                         https: userConfig.server?.https ?? serverConfig.https,
                     } : undefined),
                 },
@@ -492,21 +489,75 @@ function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): P
 }
 
 /**
+ * Determine if Vite supports the `server.ws` options.
+ *
+ * Vite 8.1 moved the WebSocket options (`host`, `protocol`, `clientPort`, etc.)
+ * from `server.hmr` to `server.ws` and deprecated the `server.hmr` aliases.
+ */
+function supportsServerWsOptions(): boolean {
+    const [major, minor] = viteVersion.split('.').map(Number)
+
+    return major > 8 || (major === 8 && minor >= 1)
+}
+
+/**
+ * Resolve the WebSocket server config for a secured dev server.
+ *
+ * Setting the `server.hmr` WebSocket options from a plugin triggers Vite's
+ * deprecation warning, so `server.ws` is configured where it is supported.
+ */
+function resolveWebSocketServerConfig(userConfig: UserConfig, ws: { host: string }): Pick<ServerOptions, 'hmr'|'ws'> {
+    if (! supportsServerWsOptions()) {
+        return {
+            hmr: userConfig.server?.hmr === false ? false : {
+                ...ws,
+                ...(userConfig.server?.hmr === true ? {} : userConfig.server?.hmr),
+            },
+        }
+    }
+
+    if (userConfig.server?.ws === false || userConfig.server?.hmr === false) {
+        return {}
+    }
+
+    const userHmrConfig = typeof userConfig.server?.hmr === 'object' ? userConfig.server.hmr : {}
+
+    return {
+        ws: {
+            host: userConfig.server?.ws?.host ?? userHmrConfig.host ?? ws.host,
+        },
+    }
+}
+
+/**
+ * Resolve the WebSocket options the client connects with.
+ */
+function resolveClientWebSocketConfig(config: ResolvedConfig): { protocol?: string, host?: string, clientPort?: number }|null {
+    if (supportsServerWsOptions() && typeof config.server.ws === 'object') {
+        return config.server.ws
+    }
+
+    return typeof config.server.hmr === 'object' ? config.server.hmr : null
+}
+
+/**
  * Resolve the dev server URL from the server address and configuration.
  */
 function resolveDevServerUrl(address: AddressInfo, config: ResolvedConfig, userConfig: UserConfig): DevServerUrl {
-    const configHmrProtocol = typeof config.server.hmr === 'object' ? config.server.hmr.protocol : null
+    const clientWebSocketConfig = resolveClientWebSocketConfig(config)
+
+    const configHmrProtocol = clientWebSocketConfig?.protocol ?? null
     const clientProtocol = configHmrProtocol ? (configHmrProtocol === 'wss' ? 'https' : 'http') : null
     const serverProtocol = config.server.https ? 'https' : 'http'
     const protocol = clientProtocol ?? serverProtocol
 
-    const configHmrHost = typeof config.server.hmr === 'object' ? config.server.hmr.host : null
+    const configHmrHost = clientWebSocketConfig?.host ?? null
     const configHost = typeof config.server.host === 'string' ? config.server.host : null
     const sailHost = process.env.LARAVEL_SAIL && ! userConfig.server?.host ? 'localhost' : null
     const serverAddress = isIpv6(address) ? `[${address.address}]` : address.address
     const host = configHmrHost ?? sailHost ?? configHost ?? serverAddress
 
-    const configHmrClientPort = typeof config.server.hmr === 'object' ? config.server.hmr.clientPort : null
+    const configHmrClientPort = clientWebSocketConfig?.clientPort ?? null
     const port = configHmrClientPort ?? address.port
 
     return `${protocol}://${host}:${port}`
@@ -550,8 +601,8 @@ function noExternalInertiaHelpers(config: UserConfig): true|Array<string|RegExp>
  * Resolve the server config from the environment.
  */
 function resolveEnvironmentServerConfig(env: Record<string, string>): {
-    hmr?: { host: string }
-    host?: string,
+    ws: { host: string }
+    host: string,
     https?: { cert: Buffer, key: Buffer }
 }|undefined {
     if (! env.VITE_DEV_SERVER_KEY && ! env.VITE_DEV_SERVER_CERT) {
@@ -569,7 +620,7 @@ function resolveEnvironmentServerConfig(env: Record<string, string>): {
     }
 
     return {
-        hmr: { host },
+        ws: { host },
         host,
         https: {
             key: fs.readFileSync(env.VITE_DEV_SERVER_KEY),
@@ -594,8 +645,8 @@ function resolveHostFromEnv(env: Record<string, string>): string|undefined
  * Resolve the Herd or Valet server config for the given host.
  */
 function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
-    hmr?: { host: string }
-    host?: string,
+    ws: { host: string }
+    host: string,
     https?: { cert: string, key: string }
 }|undefined {
     if (host === false) {
@@ -634,7 +685,7 @@ function resolveDevelopmentEnvironmentServerConfig(host: string|boolean|null): {
     }
 
     return {
-        hmr: { host: resolvedHost },
+        ws: { host: resolvedHost },
         host: resolvedHost,
         https: {
             key: keyPath,

@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import fs from 'fs'
+import { resolveConfig } from 'vite'
 import laravel from '../src'
 import { resolvePageComponent } from '../src/inertia-helpers';
 import path from 'path';
@@ -562,6 +563,66 @@ describe('laravel-vite-plugin', () => {
     })
 
 
+})
+
+describe('secure dev server', () => {
+    const certificatePath = path.resolve(__dirname, '__data__/dummy.ts')
+
+    beforeEach(() => {
+        process.env.APP_URL = 'https://example.test'
+        process.env.VITE_DEV_SERVER_KEY = certificatePath
+        process.env.VITE_DEV_SERVER_CERT = certificatePath
+    })
+
+    afterEach(() => {
+        delete process.env.APP_URL
+        delete process.env.VITE_DEV_SERVER_KEY
+        delete process.env.VITE_DEV_SERVER_CERT
+        vi.restoreAllMocks()
+    })
+
+    it('configures the websocket host via server.ws', () => {
+        const plugin = laravel({ input: 'resources/js/app.js', detectTls: false })[0]
+
+        const config = plugin.config({}, { command: 'serve', mode: 'development' })
+
+        expect(config.server.host).toBe('example.test')
+        expect(config.server.ws).toEqual({ host: 'example.test' })
+        expect(config.server.hmr).toBeUndefined()
+    })
+
+    it('respects a users websocket host', () => {
+        const plugin = laravel({ input: 'resources/js/app.js', detectTls: false })[0]
+
+        const wsConfig = plugin.config({ server: { ws: { host: 'ws.example.test' } } }, { command: 'serve', mode: 'development' })
+        expect(wsConfig.server.ws).toEqual({ host: 'ws.example.test' })
+
+        const hmrConfig = plugin.config({ server: { hmr: { host: 'hmr.example.test' } } }, { command: 'serve', mode: 'development' })
+        expect(hmrConfig.server.ws).toEqual({ host: 'hmr.example.test' })
+        expect(hmrConfig.server.hmr).toBeUndefined()
+    })
+
+    it('does not re-enable a disabled websocket server', () => {
+        const plugin = laravel({ input: 'resources/js/app.js', detectTls: false })[0]
+
+        expect(plugin.config({ server: { ws: false } }, { command: 'serve', mode: 'development' }).server.ws).toBeUndefined()
+        expect(plugin.config({ server: { hmr: false } }, { command: 'serve', mode: 'development' }).server.ws).toBeUndefined()
+    })
+
+    it('does not trigger the server.hmr deprecation warning', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+        // Full reload adds `server.watch` before this plugin runs, so Vite
+        // merges our server options through its `server.hmr` compatibility layer.
+        const config = await resolveConfig({
+            configFile: false,
+            logLevel: 'silent',
+            plugins: [laravel({ input: 'resources/js/app.js', refresh: true, detectTls: false })],
+        }, 'serve', 'development')
+
+        expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('server.hmr'))
+        expect(config.server.ws).toMatchObject({ host: 'example.test' })
+    })
 })
 
 describe('dev server listening', () => {
